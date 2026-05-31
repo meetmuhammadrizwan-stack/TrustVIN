@@ -47,6 +47,7 @@ export default function App() {
     phone: "",
     country: "United States"
   });
+  const [policyAgreed, setPolicyAgreed] = useState(false);
 
   // Admin State
   const [adminEmail, setAdminEmail] = useState("");
@@ -116,6 +117,10 @@ export default function App() {
 
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!policyAgreed) {
+      alert("You must agree to the Policies, Terms & Conditions to proceed.");
+      return;
+    }
     setIsCheckoutLoading(true);
 
     try {
@@ -125,6 +130,7 @@ export default function App() {
         body: JSON.stringify({
           packageName: selectedPackage || "Basic",
           vin: vinInput,
+          policyAgreed,
           ...formData
         }),
       });
@@ -151,12 +157,14 @@ export default function App() {
       return;
     }
     setSelectedPackage(pkg);
+    setPolicyAgreed(false);
     window.scrollTo(0, 0);
     setView("order");
   };
 
   const navigateToHome = () => {
     setView("home");
+    setPolicyAgreed(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -199,7 +207,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen font-sans selection:bg-brand-accent selection:text-white bg-white">
-      {/* Navbar */}
+      {/* Navbar - hidden on admin dashboard since it has its own header */}
+      {view !== "admin-dashboard" && (
       <nav className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-slate-200/50">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <motion.button
@@ -269,6 +278,7 @@ export default function App() {
           </button>
         </div>
       </nav>
+      )}
 
       <AnimatePresence mode="wait">
         {view === "home" ? (
@@ -885,6 +895,44 @@ export default function App() {
                           <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                         </div>
                       </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                      <input
+                        type="checkbox"
+                        id="policyCheckbox"
+                        required
+                        checked={policyAgreed}
+                        onChange={(e) => setPolicyAgreed(e.target.checked)}
+                        className="mt-1 w-4 h-4 rounded border-slate-300 text-brand-accent focus:ring-brand-accent cursor-pointer"
+                      />
+                      <label htmlFor="policyCheckbox" className="text-xs font-semibold text-slate-600 leading-relaxed select-none cursor-pointer">
+                        I agree to the{" "}
+                        <button
+                          type="button"
+                          onClick={() => { setView("privacy"); window.scrollTo(0, 0); }}
+                          className="text-brand-accent hover:underline font-bold inline cursor-pointer"
+                        >
+                          Privacy Policy
+                        </button>
+                        ,{" "}
+                        <button
+                          type="button"
+                          onClick={() => { setView("terms"); window.scrollTo(0, 0); }}
+                          className="text-brand-accent hover:underline font-bold inline cursor-pointer"
+                        >
+                          Terms & Conditions
+                        </button>
+                        , and{" "}
+                        <button
+                          type="button"
+                          onClick={() => { setView("refund"); window.scrollTo(0, 0); }}
+                          className="text-brand-accent hover:underline font-bold inline cursor-pointer"
+                        >
+                          Refund Policy
+                        </button>
+                        .
+                      </label>
                     </div>
 
                     <div className="pt-4">
