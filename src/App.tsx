@@ -21,7 +21,9 @@ import {
   ChevronLeft,
   Lock,
   Globe,
-  Mail
+  Mail,
+  Menu,
+  X
 } from "lucide-react";
 
 import AdminDashboard from "./AdminDashboard";
@@ -56,6 +58,7 @@ export default function App() {
     return localStorage.getItem("adminAuth") === "true";
   });
   const [loginError, setLoginError] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Hash-based routing for direct admin access
   useEffect(() => {
@@ -263,20 +266,117 @@ export default function App() {
           ) : (
             <button
               onClick={navigateToHome}
-              className="flex items-center gap-2 text-sm font-black text-brand-accent hover:text-brand-accent-hover transition-colors uppercase tracking-widest"
+              className="hidden md:flex items-center gap-2 text-sm font-black text-brand-accent hover:text-brand-accent-hover transition-colors uppercase tracking-widest"
             >
               <ChevronLeft className="w-4 h-4" />
               Home
             </button>
           )}
 
+          {/* Mobile hamburger button */}
           <button
-            onClick={() => navigateToOrder("Basic", true)}
-            className="md:hidden bg-brand-accent text-white px-5 py-2.5 rounded-xl text-sm font-black shadow-lg shadow-brand-accent/20"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors"
+            aria-label="Toggle menu"
           >
-            {view === "home" ? "Get Started" : "Checkout"}
+            <AnimatePresence mode="wait" initial={false}>
+              {mobileMenuOpen ? (
+                <motion.div
+                  key="close"
+                  initial={{ opacity: 0, rotate: -90 }}
+                  animate={{ opacity: 1, rotate: 0 }}
+                  exit={{ opacity: 0, rotate: 90 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <X className="w-5 h-5 text-slate-700" />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="menu"
+                  initial={{ opacity: 0, rotate: 90 }}
+                  animate={{ opacity: 1, rotate: 0 }}
+                  exit={{ opacity: 0, rotate: -90 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Menu className="w-5 h-5 text-slate-700" />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </button>
         </div>
+
+        {/* Mobile dropdown menu */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="md:hidden overflow-hidden bg-white/95 backdrop-blur-xl border-t border-slate-100"
+            >
+              <div className="max-w-7xl mx-auto px-6 py-6 space-y-2">
+                {view === "home" ? (
+                  <>
+                    {[
+                      { label: "About", id: "about" },
+                      { label: "Pricing", id: "pricing" },
+                      { label: "Comparison", id: "comparison" }
+                    ].map((item) => (
+                      <a
+                        key={item.id}
+                        href={`#${item.id}`}
+                        onClick={(e) => {
+                          scrollToSection(e, item.id);
+                          setMobileMenuOpen(false);
+                        }}
+                        className="flex items-center gap-4 px-4 py-3.5 rounded-2xl text-slate-700 font-bold text-[15px] hover:bg-brand-accent/5 hover:text-brand-accent transition-all active:scale-[0.98]"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand-accent/40" />
+                        {item.label}
+                      </a>
+                    ))}
+                    <div className="pt-3">
+                      <button
+                        onClick={() => {
+                          navigateToOrder("Basic", true);
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-wider hover:bg-brand-accent transition-all shadow-xl shadow-brand-accent/10 active:scale-[0.98]"
+                      >
+                        Check VIN
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => {
+                        navigateToHome();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-brand-accent font-black text-[15px] hover:bg-brand-accent/5 transition-all w-full active:scale-[0.98]"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Back to Home
+                    </button>
+                    <div className="pt-3">
+                      <button
+                        onClick={() => {
+                          navigateToOrder("Basic", true);
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full bg-brand-accent text-white py-4 rounded-2xl font-black text-sm uppercase tracking-wider hover:bg-brand-accent-hover transition-all shadow-xl shadow-brand-accent/10 active:scale-[0.98]"
+                      >
+                        Checkout
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
       )}
 
@@ -523,7 +623,7 @@ export default function App() {
                     <p className="text-slate-500 max-w-2xl mx-auto text-lg font-medium">Choose the level of detail that fits your vehicle inspection needs.</p>
                   </motion.div>
 
-                  <div className="grid lg:grid-cols-3 gap-10 items-center">
+                  <div className="grid lg:grid-cols-3 gap-5 lg:gap-10 items-center">
                     {[
                       {
                         name: "Basic",
@@ -554,8 +654,8 @@ export default function App() {
                         viewport={{ once: true }}
                         transition={{ delay: idx * 0.15 }}
                         whileHover={{ y: -10 }}
-                        className={`relative p-12 rounded-[3rem] border-2 transition-all ${item.popular
-                          ? "bg-slate-900 text-white border-transparent shadow-[0_40px_80px_-15px_rgba(15,23,42,0.3)] py-16 z-10"
+                        className={`relative p-6 sm:p-8 lg:p-12 rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[3rem] border-2 transition-all ${item.popular
+                          ? "bg-slate-900 text-white border-transparent shadow-[0_40px_80px_-15px_rgba(15,23,42,0.3)] py-8 sm:py-12 lg:py-16 z-10"
                           : "bg-white text-slate-900 border-slate-100 hover:border-brand-accent/20"
                           }`}
                       >
@@ -564,21 +664,21 @@ export default function App() {
                             Most Popular
                           </div>
                         )}
-                        <div className="space-y-10">
+                        <div className="space-y-5 sm:space-y-7 lg:space-y-10">
                           <div className="space-y-3">
                             <h3 className={`text-xl font-black uppercase tracking-widest ${item.popular ? "text-brand-accent" : "text-slate-400"}`}>{item.name}</h3>
                             <div className="flex items-baseline gap-1">
-                              <span className="text-6xl font-black tracking-tighter">{item.price}</span>
+                              <span className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter">{item.price}</span>
                               <span className={`text-sm font-bold uppercase tracking-widest ${item.popular ? "text-slate-400" : "text-slate-400"}`}>/report</span>
                             </div>
                           </div>
 
                           <div className={`h-px w-full ${item.popular ? "bg-slate-800" : "bg-slate-100"}`} />
 
-                          <ul className="space-y-5 min-h-[260px]">
+                          <ul className="space-y-3 sm:space-y-4 lg:space-y-5 min-h-0 lg:min-h-[260px]">
                             {item.features.map((feature, fIdx) => (
-                              <li key={fIdx} className="flex items-start gap-4 text-[15px] font-bold">
-                                <CheckCircle2 className={`w-6 h-6 flex-shrink-0 ${item.popular ? "text-brand-accent" : "text-slate-900"}`} />
+                              <li key={fIdx} className="flex items-start gap-3 lg:gap-4 text-[13px] sm:text-[14px] lg:text-[15px] font-bold">
+                                <CheckCircle2 className={`w-5 h-5 lg:w-6 lg:h-6 flex-shrink-0 ${item.popular ? "text-brand-accent" : "text-slate-900"}`} />
                                 <span className={item.popular ? "text-slate-300" : "text-slate-600"}>{feature}</span>
                               </li>
                             ))}
@@ -586,7 +686,7 @@ export default function App() {
 
                           <button
                             onClick={() => navigateToOrder(item.type, true)}
-                            className={`w-full py-5 rounded-[1.5rem] font-black text-lg transition-all active:scale-95 ${item.popular
+                            className={`w-full py-3 sm:py-4 lg:py-5 rounded-xl sm:rounded-2xl lg:rounded-[1.5rem] font-black text-base lg:text-lg transition-all active:scale-95 ${item.popular
                               ? "bg-brand-accent text-white hover:bg-brand-accent-hover shadow-xl shadow-brand-accent/20"
                               : "bg-slate-900 text-white hover:bg-brand-accent shadow-xl shadow-slate-900/10"
                               }`}
@@ -862,7 +962,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-6">
+                    <div className="grid md:grid-cols-2 gap-6 lg:gap-10">
                       <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700">Phone Number (USA)</label>
                         <div className="flex">
@@ -938,7 +1038,8 @@ export default function App() {
                     <div className="pt-4">
                       <button
                         type="submit"
-                        disabled={isCheckoutLoading}
+                        // disabled={isCheckoutLoading}
+                        disabled={isCheckoutLoading || !policyAgreed}
                         className="w-full py-4 bg-brand-blue text-white rounded-2xl font-black text-lg hover:bg-brand-accent transition-all shadow-xl shadow-brand-blue/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isCheckoutLoading ? (
