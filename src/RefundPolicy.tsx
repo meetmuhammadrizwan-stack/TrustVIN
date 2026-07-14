@@ -103,7 +103,7 @@ export default function RefundPolicy({ onBack }: RefundPolicyProps) {
           <section>
             <h2 className="text-2xl font-black text-slate-900 mb-4">6. Refund Request Procedure</h2>
             <p>
-              <strong>6.1</strong> Refund requests must be submitted within <strong>7 days</strong> of purchase.
+              <strong>6.1</strong> Refund requests must be submitted within <strong>3 days</strong> of purchase.
             </p>
             <p><strong>6.2</strong> The customer must provide:</p>
             <ul className="list-[lower-alpha] pl-6 space-y-2 mt-4">
@@ -139,15 +139,15 @@ export default function RefundPolicy({ onBack }: RefundPolicyProps) {
             </p>
           </section>
 
-          <section>
+          {/* <section>
             <h2 className="text-2xl font-black text-slate-900 mb-4">9. Contact Information</h2>
             <p><strong>9.1</strong> Refund-related inquiries should be directed to:</p>
             <p className="mt-4">
-              <strong>Email:</strong> trustedvinreport@gmail.com
+              <strong>Email:</strong> VinTrustreport@gmail.com
               <br />
               <strong>Subject Line:</strong> Refund Request – Order #[Order Number]
             </p>
-          </section>
+          </section> */}
 
         </div>
       </div>

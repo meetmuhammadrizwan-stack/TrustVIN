@@ -106,7 +106,7 @@ export default function PrivacyPolicy({ onBack }: PrivacyPolicyProps) {
           <section>
             <h2 className="text-2xl font-black text-slate-900 mb-4">Children's Online Privacy Protection Act Compliance; Minor's Right to Deletion</h2>
             <p>
-              In compliance with COPPA, we do not collect information from anyone under 13 years old. Minors may request information deletion by contacting us at <strong>trustedvin@gmail.com</strong>.
+              In compliance with COPPA, we do not collect information from anyone under 13 years old. Minors may request information deletion by contacting us at <strong>VinTrust@gmail.com</strong>.
             </p>
           </section>
 
@@ -136,7 +136,7 @@ export default function PrivacyPolicy({ onBack }: PrivacyPolicyProps) {
             <p>
               For questions about the privacy policy, contact us at:
               <br />
-              <strong>Email:</strong> trustedvin@gmail.com
+              <strong>Email:</strong> VinTrust@gmail.com
               <br />
               <strong>Phone:</strong> +13462966970
             </p>

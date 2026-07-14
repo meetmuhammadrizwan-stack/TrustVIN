@@ -201,7 +201,7 @@ export default function TermsAndConditions({ onBack }: TermsAndConditionsProps) 
             <p>
               For questions regarding these Terms & Conditions, please contact:
               <br />
-              <strong>Email:</strong> info@worldvinreport.com
+              <strong>Email:</strong> info@vintrustreport.com
             </p>
           </section>
 

@@ -281,7 +281,7 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `trustedvin_orders_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `VinTrust_orders_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -307,14 +307,14 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             </div>
             <div>
               <h1 className="text-lg font-black text-slate-900 tracking-tight">Admin Portal</h1>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">TrustedVIN Control Center</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">VinTrust Control Center</p>
             </div>
           </div>
 
           <div className="flex items-center gap-6">
             <div className="text-right hidden sm:block">
               <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Logged in as</div>
-              <div className="text-sm font-black text-slate-700">trustedvin@gmail.com</div>
+              <div className="text-sm font-black text-slate-700">VinTrust@gmail.com</div>
             </div>
             <button
               onClick={onLogout}

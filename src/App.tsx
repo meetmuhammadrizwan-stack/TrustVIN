@@ -101,7 +101,7 @@ export default function App() {
 
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (adminEmail === "trustedvin@gmail.com" && adminPassword === "trustedvin@!") {
+    if (adminEmail === "VinTrust@gmail.com" && adminPassword === "VinTrust@!") {
       localStorage.setItem("adminAuth", "true");
       setIsAdminAuthenticated(true);
       setView("admin-dashboard");
@@ -225,7 +225,7 @@ export default function App() {
             <div className="w-10 h-10 md:w-11 md:h-11 bg-brand-accent rounded-xl flex items-center justify-center shadow-lg shadow-brand-accent/20">
               <ShieldCheck className="text-white w-6 h-6 md:w-7 md:h-7" />
             </div>
-            <span className="text-2xl md:text-2xl font-black text-slate-900 tracking-tighter">TrustedVIN</span>
+            <span className="text-2xl md:text-2xl font-black text-slate-900 tracking-tighter">VinTrust</span>
           </motion.button>
 
           {view === "home" ? (
@@ -591,7 +591,7 @@ export default function App() {
                       <div className="w-24 h-2 bg-brand-accent rounded-full" />
                     </div>
                     <p className="text-slate-400 text-xl leading-relaxed font-medium">
-                      At TrustedVIN, we believe every car buyer deserves the full picture. Our mission is to provide accurate, real-time vehicle data that protects you from hidden damage, odometer fraud, and title scams.
+                      At VinTrust, we believe every car buyer deserves the full picture. Our mission is to provide accurate, real-time vehicle data that protects you from hidden damage, odometer fraud, and title scams.
                     </p>
                     <div className="grid sm:grid-cols-2 gap-6">
                       {[
@@ -725,7 +725,7 @@ export default function App() {
                       <thead>
                         <tr className="text-slate-400 text-xs font-black uppercase tracking-[0.2em]">
                           <th className="px-10 py-4">Feature</th>
-                          <th className="px-10 py-4 text-brand-accent">TrustedVIN</th>
+                          <th className="px-10 py-4 text-brand-accent">VinTrust</th>
                           <th className="px-10 py-4">CarFax</th>
                           <th className="px-10 py-4">AutoCheck</th>
                           <th className="px-10 py-4">InstaVIN</th>
@@ -733,7 +733,7 @@ export default function App() {
                       </thead>
                       <tbody className="space-y-4">
                         {[
-                          { feature: "Price per Report", us: "$14.99", f1: "$44.99", f2: "$24.99", f3: "$20.00" },
+                          { feature: "Price per Report", us: "$39.99", f1: "$44.99", f2: "$24.99", f3: "$20.00" },
                           { feature: "NMVTIS Data", us: true, f1: true, f2: true, f3: true },
                           { feature: "Auction Photos", us: true, f1: false, f2: false, f3: false },
                           { feature: "Instant Delivery", us: true, f1: true, f2: true, f3: true },
@@ -807,7 +807,7 @@ export default function App() {
                       required
                       value={adminEmail}
                       onChange={(e) => setAdminEmail(e.target.value)}
-                      placeholder="admin@trustedvin.com"
+                      placeholder="admin@VinTrust.com"
                       className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-brand-accent/50 focus:bg-white transition-all text-slate-900 font-bold"
                     />
                     <Mail className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5" />
@@ -1116,7 +1116,7 @@ export default function App() {
               <div className="w-10 h-10 bg-brand-accent rounded-xl flex items-center justify-center">
                 <ShieldCheck className="text-white w-6 h-6" />
               </div>
-              <span className="text-2xl font-black text-white tracking-tighter">TrustedVIN</span>
+              <span className="text-2xl font-black text-white tracking-tighter">VinTrust</span>
             </button>
             <p className="text-[15px] leading-relaxed font-medium">
               Premium automotive data intelligence. Helping buyers make confident decisions since 2018 with real-time global data.
@@ -1128,7 +1128,7 @@ export default function App() {
               </div>
             </div>
           </div>
-          <div className="space-y-6">
+          {/* <div className="space-y-6">
             <h4 className="text-white font-black uppercase tracking-[0.2em] text-xs">Services</h4>
             <ul className="space-y-4 text-sm font-bold">
               <li><button onClick={() => navigateToOrder()} className="hover:text-brand-accent transition-colors">VIN Lookup</button></li>
@@ -1136,7 +1136,7 @@ export default function App() {
               <li><a href="#" className="hover:text-brand-accent transition-colors">Recall Check</a></li>
               <li><button onClick={(e) => scrollToSection(e as any, "pricing")} className="hover:text-brand-accent transition-colors">Market Value</button></li>
             </ul>
-          </div>
+          </div> */}
           <div className="space-y-6">
             <h4 className="text-white font-black uppercase tracking-[0.2em] text-xs">Company</h4>
             <ul className="space-y-4 text-sm font-bold">
@@ -1160,13 +1160,13 @@ export default function App() {
                 </div>
               </div>
               <div className="text-[13px] font-black text-white hover:text-brand-accent transition-colors cursor-pointer">
-                support@trustedvin.com
+                support@VinTrust.com
               </div>
             </div>
           </div>
         </div>
         <div className="max-w-7xl mx-auto pt-12 flex flex-col md:flex-row justify-between items-center gap-6 text-[11px] font-black uppercase tracking-[0.2em]">
-          <p className="text-slate-600">© 2024 TrustedVIN Data Systems. All rights reserved.</p>
+          <p className="text-slate-600">© 2024 VinTrust Data Systems. All rights reserved.</p>
           <div className="flex gap-10">
             <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
             <a href="#" className="hover:text-white transition-colors">Sitemap</a>
