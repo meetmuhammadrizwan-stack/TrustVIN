@@ -14,8 +14,9 @@ const __filename = typeof import.meta !== "undefined" && import.meta.url
   : (typeof module !== "undefined" && module.filename ? module.filename : "");
 const __dirname = path.dirname(__filename);
 
-const ORDERS_FILE = path.join(__dirname, "orders.json");
-const UPLOADS_DIR = path.join(__dirname, "uploads");
+const isVercel = process.env.VERCEL === "1";
+const ORDERS_FILE = isVercel ? "/tmp/orders.json" : path.join(__dirname, "orders.json");
+const UPLOADS_DIR = isVercel ? "/tmp/uploads" : path.join(__dirname, "uploads");
 
 // Initialize orders file if it doesn't exist
 if (!fs.existsSync(ORDERS_FILE)) {
@@ -28,11 +29,8 @@ if (!fs.existsSync(UPLOADS_DIR)) {
 }
 dotenv.config();
 
-async function startServer() {
-  const app = express();
-  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
-
-  app.use(express.json({ limit: "50mb" }));
+const app = express();
+app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
   // Stripe Implementation
@@ -488,23 +486,28 @@ async function startServer() {
   });
 
   // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(__dirname, "dist");
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
+  if (!isVercel) {
+    const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
+    if (process.env.NODE_ENV !== "production") {
+      createViteServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      }).then((vite) => {
+        app.use(vite.middlewares);
+        app.listen(PORT, "0.0.0.0", () => {
+          console.log(`Server running on http://localhost:${PORT}`);
+        });
+      });
+    } else {
+      const distPath = path.join(__dirname, "dist");
+      app.use(express.static(distPath));
+      app.get("*", (req, res) => {
+        res.sendFile(path.join(distPath, "index.html"));
+      });
+      app.listen(PORT, "0.0.0.0", () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+      });
+    }
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-}
-
-startServer();
+export default app;
