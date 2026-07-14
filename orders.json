@@ -148,6 +148,15 @@
     "amount": 39.99,
     "createdAt": "2026-07-14T16:33:06.684Z",
     "status": "pending",
-    "policyAgreed": true
+    "policyAgreed": true,
+    "reportFileName": "House Cost Srs.pdf",
+    "reportFilePath": "https://res.cloudinary.com/dpswtr8md/raw/upload/v1784047342/House_Cost_Srs_snkdzo.pdf",
+    "reportStatus": "sent",
+    "downloads": [
+      {
+        "timestamp": "2026-07-14T16:42:28.789Z",
+        "ip": "127.0.0.1"
+      }
+    ]
   }
 ]
