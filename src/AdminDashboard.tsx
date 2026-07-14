@@ -161,47 +161,68 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     if (!selectedOrder || !e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
     
+    // Validate file type
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      alert("Please upload a PDF file.");
+      return;
+    }
+
     setIsUploadingReport(true);
     try {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const base64Data = event.target?.result as string;
-        const fileContent = base64Data.split(",")[1];
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "trustvin_reports");
 
-        const response = await fetch(`/api/orders/${selectedOrder.id}/report`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fileName: file.name,
-            fileData: fileContent
-          })
-        });
+      const cloudinaryUrl = "https://api.cloudinary.com/v1_1/dpswtr8md/raw/upload";
+      const response = await fetch(cloudinaryUrl, {
+        method: "POST",
+        body: formData
+      });
 
-        if (response.ok) {
-          const result = await response.json();
-          setOrders(prev => prev.map(o => o.id === selectedOrder.id ? { 
-            ...o, 
-            reportFileName: file.name, 
-            reportFilePath: result.reportFilePath,
-            reportStatus: "sent" 
-          } : o));
-        } else {
-          let errorMessage = "Unknown server error";
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || "Failed to upload to Cloudinary");
+      }
+
+      const data = await response.json();
+      const secureUrl = data.secure_url;
+
+      if (!secureUrl) {
+        throw new Error("No secure URL returned from Cloudinary");
+      }
+
+      const serverResponse = await fetch(`/api/orders/${selectedOrder.id}/report`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileName: file.name,
+          secureUrl: secureUrl
+        })
+      });
+
+      if (serverResponse.ok) {
+        const result = await serverResponse.json();
+        setOrders(prev => prev.map(o => o.id === selectedOrder.id ? { 
+          ...o, 
+          reportFileName: file.name, 
+          reportFilePath: result.reportFilePath || secureUrl,
+          reportStatus: "sent" 
+        } : o));
+      } else {
+        let errorMessage = "Unknown server error";
+        try {
+          const err = await serverResponse.json();
+          errorMessage = err.error || errorMessage;
+        } catch (e) {
           try {
-            const err = await response.json();
-            errorMessage = err.error || errorMessage;
-          } catch (e) {
-            try {
-              errorMessage = await response.text();
-            } catch (textErr) {}
-          }
-          alert(`Failed to upload file: ${errorMessage}`);
+            errorMessage = await serverResponse.text();
+          } catch (textErr) {}
         }
-      };
-      reader.readAsDataURL(file);
-    } catch (err) {
-      console.error("Error reading file:", err);
-      alert("Error reading file. Please try again.");
+        alert(`Failed to save report details: ${errorMessage}`);
+      }
+    } catch (err: any) {
+      console.error("Error uploading report:", err);
+      alert(`Error uploading report: ${err.message || err}`);
     } finally {
       setIsUploadingReport(false);
       e.target.value = "";

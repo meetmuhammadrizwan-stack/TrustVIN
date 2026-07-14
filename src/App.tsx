@@ -30,6 +30,7 @@ import AdminDashboard from "./AdminDashboard";
 import PrivacyPolicy from "./PrivacyPolicy";
 import TermsAndConditions from "./TermsAndConditions";
 import RefundPolicy from "./RefundPolicy";
+import LiveChat from "./LiveChat";
 
 type View = "home" | "order" | "admin-login" | "admin-dashboard" | "thanks" | "privacy" | "terms" | "refund";
 type PackageType = "Basic" | "Premium" | "Gold" | null;
@@ -210,6 +211,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen font-sans selection:bg-brand-accent selection:text-white bg-white">
+      <LiveChat />
       {/* Navbar - hidden on admin dashboard since it has its own header */}
       {view !== "admin-dashboard" && (
       <nav className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-slate-200/50">

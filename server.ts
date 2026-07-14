@@ -255,19 +255,13 @@ async function startServer() {
   // API: Upload Report
   app.post("/api/orders/:id/report", async (req, res) => {
     const { id } = req.params;
-    const { fileName, fileData } = req.body;
+    const { fileName, secureUrl } = req.body;
 
-    if (!fileName || !fileData) {
-      return res.status(400).json({ error: "fileName and fileData are required" });
+    if (!fileName || !secureUrl) {
+      return res.status(400).json({ error: "fileName and secureUrl are required" });
     }
 
     try {
-      const buffer = Buffer.from(fileData, "base64");
-      const safeFileName = `${id}_${fileName.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-      const filePath = path.join(UPLOADS_DIR, safeFileName);
-
-      fs.writeFileSync(filePath, buffer);
-
       // Update in Firebase Firestore
       let updatedInFirebase = false;
       try {
@@ -278,7 +272,7 @@ async function startServer() {
           const docRef = doc(db, "orders", fbDoc.id);
           await updateDoc(docRef, {
             reportFileName: fileName,
-            reportFilePath: safeFileName,
+            reportFilePath: secureUrl,
             reportStatus: "sent"
           });
           updatedInFirebase = true;
@@ -298,7 +292,7 @@ async function startServer() {
             return {
               ...order,
               reportFileName: fileName,
-              reportFilePath: safeFileName,
+              reportFilePath: secureUrl,
               reportStatus: "sent"
             };
           }
@@ -315,9 +309,9 @@ async function startServer() {
         return res.status(404).json({ error: "Order not found" });
       }
 
-      res.json({ success: true, reportFileName: fileName, reportFilePath: safeFileName });
+      res.json({ success: true, reportFileName: fileName, reportFilePath: secureUrl });
     } catch (error: any) {
-      console.error("Error uploading report:", error);
+      console.error("Error updating report status:", error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -339,7 +333,7 @@ async function startServer() {
         console.error("Failed to read report file path from local JSON:", fsError);
       }
 
-      if (reportFilePath) {
+      if (reportFilePath && !reportFilePath.startsWith("http://") && !reportFilePath.startsWith("https://")) {
         const fullPath = path.join(UPLOADS_DIR, reportFilePath);
         if (fs.existsSync(fullPath)) {
           fs.unlinkSync(fullPath);
@@ -429,9 +423,13 @@ async function startServer() {
         return res.status(404).send("Report not found or not yet uploaded.");
       }
 
-      const filePath = path.join(UPLOADS_DIR, order.reportFilePath);
-      if (!fs.existsSync(filePath)) {
-        return res.status(404).send("Report file not found on server.");
+      const isCloudinaryUrl = order.reportFilePath.startsWith("http://") || order.reportFilePath.startsWith("https://");
+
+      if (!isCloudinaryUrl) {
+        const filePath = path.join(UPLOADS_DIR, order.reportFilePath);
+        if (!fs.existsSync(filePath)) {
+          return res.status(404).send("Report file not found on server.");
+        }
       }
 
       // Record download details
@@ -475,7 +473,12 @@ async function startServer() {
       }
 
       // Serve the file
-      res.download(filePath, order.reportFileName || "report.pdf");
+      if (isCloudinaryUrl) {
+        res.redirect(order.reportFilePath);
+      } else {
+        const filePath = path.join(UPLOADS_DIR, order.reportFilePath);
+        res.download(filePath, order.reportFileName || "report.pdf");
+      }
     } catch (error: any) {
       console.error("Error during download:", error);
       res.status(500).send("Internal server error during download.");

@@ -112,6 +112,14 @@
     "createdAt": "2026-06-01T11:14:09.165Z",
     "status": "pending",
     "policyAgreed": true,
-    "reportStatus": "not sent"
+    "reportStatus": "sent",
+    "reportFileName": "namecheap-order-197226071.pdf",
+    "reportFilePath": "https://res.cloudinary.com/dpswtr8md/raw/upload/v1783975785/namecheap-order-197226071_qlpgjh.pdf",
+    "downloads": [
+      {
+        "timestamp": "2026-07-13T20:50:03.650Z",
+        "ip": "127.0.0.1"
+      }
+    ]
   }
 ]
