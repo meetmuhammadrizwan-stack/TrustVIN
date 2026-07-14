@@ -397,7 +397,7 @@ app.use(express.json({ limit: "50mb" }));
     try {
       let order: any = null;
 
-      // 1. Fetch from Firestore
+      // 1. Fetch from Firestore (primary, works in all environments)
       try {
         const q = query(collection(db, "orders"), where("id", "==", id));
         const querySnapshot = await getDocs(q);
@@ -408,8 +408,8 @@ app.use(express.json({ limit: "50mb" }));
         console.error("Failed to fetch order from Firebase for download:", fbError);
       }
 
-      // 2. Fallback to local JSON
-      if (!order) {
+      // 2. Fallback to local JSON (only on non-Vercel; /tmp/orders.json is ephemeral on Vercel)
+      if (!order && !isVercel) {
         try {
           const fileDataJson = fs.readFileSync(ORDERS_FILE, "utf-8");
           const orders = JSON.parse(fileDataJson);
@@ -423,9 +423,16 @@ app.use(express.json({ limit: "50mb" }));
         return res.status(404).send("Report not found or not yet uploaded.");
       }
 
-      const isCloudinaryUrl = order.reportFilePath.startsWith("http://") || order.reportFilePath.startsWith("https://");
+      const isCloudUrl = order.reportFilePath.startsWith("http://") || order.reportFilePath.startsWith("https://");
 
-      if (!isCloudinaryUrl) {
+      // On Vercel, local file storage is ephemeral (/tmp is wiped between invocations).
+      // All uploads go to Cloudinary (https URL), so a non-http path on Vercel means
+      // the file is gone — return a clear error rather than a confusing 404.
+      if (!isCloudUrl && isVercel) {
+        return res.status(410).send("This report was stored locally and is no longer available. Please re-upload the report from the Admin Dashboard.");
+      }
+
+      if (!isCloudUrl) {
         const filePath = path.join(UPLOADS_DIR, order.reportFilePath);
         if (!fs.existsSync(filePath)) {
           return res.status(404).send("Report file not found on server.");
@@ -441,7 +448,7 @@ app.use(express.json({ limit: "50mb" }));
 
       const downloads = order.downloads ? [...order.downloads, downloadEvent] : [downloadEvent];
 
-      // Update in Firebase Firestore
+      // Update download count in Firebase Firestore
       try {
         const q = query(collection(db, "orders"), where("id", "==", id));
         const querySnapshot = await getDocs(q);
@@ -454,26 +461,25 @@ app.use(express.json({ limit: "50mb" }));
         console.error("Failed to update Firebase downloads count:", fbError);
       }
 
-      // Update in local orders.json
-      try {
-        const fileDataJson = fs.readFileSync(ORDERS_FILE, "utf-8");
-        let orders = JSON.parse(fileDataJson);
-        orders = orders.map((o: any) => {
-          if (o.id === id) {
-            return {
-              ...o,
-              downloads
-            };
-          }
-          return o;
-        });
-        fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
-      } catch (fsError) {
-        console.error("Failed to update local JSON downloads count:", fsError);
+      // Update download count in local orders.json (non-Vercel only)
+      if (!isVercel) {
+        try {
+          const fileDataJson = fs.readFileSync(ORDERS_FILE, "utf-8");
+          let orders = JSON.parse(fileDataJson);
+          orders = orders.map((o: any) => {
+            if (o.id === id) {
+              return { ...o, downloads };
+            }
+            return o;
+          });
+          fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
+        } catch (fsError) {
+          console.error("Failed to update local JSON downloads count:", fsError);
+        }
       }
 
       // Serve the file
-      if (isCloudinaryUrl) {
+      if (isCloudUrl) {
         res.redirect(order.reportFilePath);
       } else {
         const filePath = path.join(UPLOADS_DIR, order.reportFilePath);
