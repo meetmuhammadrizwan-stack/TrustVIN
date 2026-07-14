@@ -9,7 +9,9 @@ import fs from "fs";
 import { collection, addDoc, getDocs, doc, updateDoc, query, where } from "firebase/firestore";
 import { db } from "./firebaseConfig.js";
 
-const __filename = fileURLToPath(import.meta.url);
+const __filename = typeof import.meta !== "undefined" && import.meta.url
+  ? fileURLToPath(import.meta.url)
+  : (typeof module !== "undefined" && module.filename ? module.filename : "");
 const __dirname = path.dirname(__filename);
 
 const ORDERS_FILE = path.join(__dirname, "orders.json");
