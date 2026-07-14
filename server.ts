@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import express from "express";
-import { createServer as createViteServer } from "vite";
+
 import path from "path";
 import { fileURLToPath } from "url";
 import Stripe from "stripe";
@@ -489,13 +489,17 @@ app.use(express.json({ limit: "50mb" }));
   if (!isVercel) {
     const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
     if (process.env.NODE_ENV !== "production") {
-      createViteServer({
-        server: { middlewareMode: true },
-        appType: "spa",
-      }).then((vite) => {
-        app.use(vite.middlewares);
-        app.listen(PORT, "0.0.0.0", () => {
-          console.log(`Server running on http://localhost:${PORT}`);
+      // Dynamically import vite only in local dev - it is a devDependency not
+      // available in production / Vercel environments.
+      import("vite").then(({ createServer: createViteServer }) => {
+        createViteServer({
+          server: { middlewareMode: true },
+          appType: "spa",
+        }).then((vite) => {
+          app.use(vite.middlewares);
+          app.listen(PORT, "0.0.0.0", () => {
+            console.log(`Server running on http://localhost:${PORT}`);
+          });
         });
       });
     } else {
