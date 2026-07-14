@@ -733,7 +733,7 @@ export default function App() {
                       </thead>
                       <tbody className="space-y-4">
                         {[
-                          { feature: "Price per Report", us: "$39.99", f1: "$44.99", f2: "$24.99", f3: "$20.00" },
+                          { feature: "Price per Report", us: "$39.99", f1: "$44.99", f2: "$48.99", f3: "$52.00" },
                           { feature: "NMVTIS Data", us: true, f1: true, f2: true, f3: true },
                           { feature: "Auction Photos", us: true, f1: false, f2: false, f3: false },
                           { feature: "Instant Delivery", us: true, f1: true, f2: true, f3: true },
