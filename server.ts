@@ -14,13 +14,7 @@ const __filename = typeof import.meta !== "undefined" && import.meta.url
 const __dirname = path.dirname(__filename);
 
 const isVercel = process.env.VERCEL === "1";
-const ORDERS_FILE = isVercel ? "/tmp/orders.json" : path.join(__dirname, "orders.json");
 const UPLOADS_DIR = isVercel ? "/tmp/uploads" : path.join(__dirname, "uploads");
-
-// Initialize orders file if it doesn't exist
-if (!fs.existsSync(ORDERS_FILE)) {
-  fs.writeFileSync(ORDERS_FILE, JSON.stringify([]));
-}
 
 // Initialize uploads directory if it doesn't exist
 if (!fs.existsSync(UPLOADS_DIR)) {
@@ -86,7 +80,7 @@ app.use(express.json({ limit: "50mb" }));
         customer_email: email,
       });
 
-      // Save order data locally and to Firebase
+      // Save order data directly to Firebase Firestore
       const newOrder = {
         id: session.id,
         packageName,
@@ -102,16 +96,7 @@ app.use(express.json({ limit: "50mb" }));
         policyAgreed: !!policyAgreed
       };
 
-      // Still save to local JSON for backup, but primary is Firestore
-      const orders = JSON.parse(fs.readFileSync(ORDERS_FILE, "utf-8"));
-      orders.push(newOrder);
-      fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
-
-      try {
-        await db.collection("orders").add(newOrder);
-      } catch (fbError) {
-        console.error("Error saving to Firebase:", fbError);
-      }
+      await db.collection("orders").add(newOrder);
 
       res.json({ url: session.url });
     } catch (error: any) {
@@ -152,7 +137,7 @@ app.use(express.json({ limit: "50mb" }));
         }
       });
 
-      // Save order data locally and to Firebase
+      // Save order data directly to Firebase Firestore
       const newOrder = {
         id: paymentIntent.id,
         packageName,
@@ -168,15 +153,7 @@ app.use(express.json({ limit: "50mb" }));
         policyAgreed: !!policyAgreed
       };
 
-      const orders = JSON.parse(fs.readFileSync(ORDERS_FILE, "utf-8"));
-      orders.push(newOrder);
-      fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
-
-      try {
-        await db.collection("orders").add(newOrder);
-      } catch (fbError) {
-        console.error("Error saving to Firebase:", fbError);
-      }
+      await db.collection("orders").add(newOrder);
 
       res.json({ clientSecret: paymentIntent.client_secret });
     } catch (error: any) {
@@ -191,15 +168,9 @@ app.use(express.json({ limit: "50mb" }));
       const querySnapshot = await db.collection("orders").get();
       const orders = querySnapshot.docs.map(doc => ({ fbId: doc.id, ...doc.data() }));
       res.json(orders);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch orders from Firebase:", error);
-      // Fallback to local JSON
-      try {
-        const orders = JSON.parse(fs.readFileSync(ORDERS_FILE, "utf-8"));
-        res.json(orders);
-      } catch (fsError) {
-        res.status(500).json({ error: "Failed to fetch orders" });
-      }
+      res.status(500).json({ error: "Failed to fetch orders from Firebase: " + error.message });
     }
   });
 
@@ -208,45 +179,24 @@ app.use(express.json({ limit: "50mb" }));
     const { id } = req.params;
     const { status, reportStatus } = req.body;
 
-    // 1. Update in Firebase Firestore
+    // Update in Firebase Firestore
     try {
       const querySnapshot = await db.collection("orders").where("id", "==", id).get();
-      if (!querySnapshot.empty) {
-        const fbDoc = querySnapshot.docs[0];
-        const docRef = db.collection("orders").doc(fbDoc.id);
-        const updates: any = {};
-        if (status !== undefined) updates.status = status;
-        if (reportStatus !== undefined) updates.reportStatus = reportStatus;
-        
-        await docRef.update(updates);
+      if (querySnapshot.empty) {
+        return res.status(404).json({ error: "Order not found" });
       }
-    } catch (fbError) {
-      console.error("Failed to update in Firebase:", fbError);
-    }
-
-    // 2. Update in local orders.json
-    try {
-      const fileData = fs.readFileSync(ORDERS_FILE, "utf-8");
-      let orders = JSON.parse(fileData);
-      let updated = false;
-      orders = orders.map((order: any) => {
-        if (order.id === id) {
-          updated = true;
-          return {
-            ...order,
-            ...(status !== undefined && { status }),
-            ...(reportStatus !== undefined && { reportStatus })
-          };
-        }
-        return order;
-      });
-      if (updated) {
-        fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
-      }
+      
+      const fbDoc = querySnapshot.docs[0];
+      const docRef = db.collection("orders").doc(fbDoc.id);
+      const updates: any = {};
+      if (status !== undefined) updates.status = status;
+      if (reportStatus !== undefined) updates.reportStatus = reportStatus;
+      
+      await docRef.update(updates);
       res.json({ success: true });
-    } catch (fsError) {
-      console.error("Failed to update in local JSON:", fsError);
-      res.status(500).json({ error: "Failed to update order in file storage" });
+    } catch (fbError: any) {
+      console.error("Failed to update in Firebase:", fbError);
+      res.status(500).json({ error: "Failed to update in Firebase: " + fbError.message });
     }
   });
 
@@ -261,50 +211,18 @@ app.use(express.json({ limit: "50mb" }));
 
     try {
       // Update in Firebase Firestore
-      let updatedInFirebase = false;
-      try {
-        const querySnapshot = await db.collection("orders").where("id", "==", id).get();
-        if (!querySnapshot.empty) {
-          const fbDoc = querySnapshot.docs[0];
-          const docRef = db.collection("orders").doc(fbDoc.id);
-          await docRef.update({
-            reportFileName: fileName,
-            reportFilePath: secureUrl,
-            reportStatus: "sent"
-          });
-          updatedInFirebase = true;
-        }
-      } catch (fbError) {
-        console.error("Failed to update Firebase with report info:", fbError);
-      }
-
-      // Update in local orders.json
-      let updatedInLocal = false;
-      try {
-        const fileDataJson = fs.readFileSync(ORDERS_FILE, "utf-8");
-        let orders = JSON.parse(fileDataJson);
-        orders = orders.map((order: any) => {
-          if (order.id === id) {
-            updatedInLocal = true;
-            return {
-              ...order,
-              reportFileName: fileName,
-              reportFilePath: secureUrl,
-              reportStatus: "sent"
-            };
-          }
-          return order;
-        });
-        if (updatedInLocal) {
-          fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
-        }
-      } catch (fsError) {
-        console.error("Failed to update local JSON with report info:", fsError);
-      }
-
-      if (!updatedInFirebase && !updatedInLocal) {
+      const querySnapshot = await db.collection("orders").where("id", "==", id).get();
+      if (querySnapshot.empty) {
         return res.status(404).json({ error: "Order not found" });
       }
+
+      const fbDoc = querySnapshot.docs[0];
+      const docRef = db.collection("orders").doc(fbDoc.id);
+      await docRef.update({
+        reportFileName: fileName,
+        reportFilePath: secureUrl,
+        reportStatus: "sent"
+      });
 
       res.json({ success: true, reportFileName: fileName, reportFilePath: secureUrl });
     } catch (error: any) {
@@ -317,18 +235,14 @@ app.use(express.json({ limit: "50mb" }));
   app.delete("/api/orders/:id/report", async (req, res) => {
     const { id } = req.params;
     try {
-      let reportFilePath = "";
-      
-      try {
-        const fileDataJson = fs.readFileSync(ORDERS_FILE, "utf-8");
-        const orders = JSON.parse(fileDataJson);
-        const order = orders.find((o: any) => o.id === id);
-        if (order && order.reportFilePath) {
-          reportFilePath = order.reportFilePath;
-        }
-      } catch (fsError) {
-        console.error("Failed to read report file path from local JSON:", fsError);
+      const querySnapshot = await db.collection("orders").where("id", "==", id).get();
+      if (querySnapshot.empty) {
+        return res.status(404).json({ error: "Order not found" });
       }
+
+      const fbDoc = querySnapshot.docs[0];
+      const order = fbDoc.data();
+      const reportFilePath = order.reportFilePath || "";
 
       if (reportFilePath && !reportFilePath.startsWith("http://") && !reportFilePath.startsWith("https://")) {
         const fullPath = path.join(UPLOADS_DIR, reportFilePath);
@@ -337,47 +251,13 @@ app.use(express.json({ limit: "50mb" }));
         }
       }
 
-      // Update Firebase
-      try {
-        const querySnapshot = await db.collection("orders").where("id", "==", id).get();
-        if (!querySnapshot.empty) {
-          const fbDoc = querySnapshot.docs[0];
-          const docRef = db.collection("orders").doc(fbDoc.id);
-          await docRef.update({
-            reportFileName: "",
-            reportFilePath: "",
-            reportStatus: "not sent",
-            downloads: []
-          });
-        }
-      } catch (fbError) {
-        console.error("Failed to update Firebase for delete:", fbError);
-      }
-
-      // Update Local JSON
-      let updated = false;
-      try {
-        const fileDataJson = fs.readFileSync(ORDERS_FILE, "utf-8");
-        const orders = JSON.parse(fileDataJson);
-        const updatedOrders = orders.map((o: any) => {
-          if (o.id === id) {
-            updated = true;
-            return {
-              ...o,
-              reportFileName: "",
-              reportFilePath: "",
-              reportStatus: "not sent",
-              downloads: []
-            };
-          }
-          return o;
-        });
-        if (updated) {
-          fs.writeFileSync(ORDERS_FILE, JSON.stringify(updatedOrders, null, 2));
-        }
-      } catch (fsError) {
-        console.error("Failed to update local JSON for delete:", fsError);
-      }
+      const docRef = db.collection("orders").doc(fbDoc.id);
+      await docRef.update({
+        reportFileName: "",
+        reportFilePath: "",
+        reportStatus: "not sent",
+        downloads: []
+      });
 
       res.json({ success: true });
     } catch (error: any) {
@@ -392,26 +272,12 @@ app.use(express.json({ limit: "50mb" }));
 
     try {
       let order: any = null;
+      let fbDocId = "";
 
-      // 1. Fetch from Firestore (primary, works in all environments)
-      try {
-        const querySnapshot = await db.collection("orders").where("id", "==", id).get();
-        if (!querySnapshot.empty) {
-          order = querySnapshot.docs[0].data();
-        }
-      } catch (fbError) {
-        console.error("Failed to fetch order from Firebase for download:", fbError);
-      }
-
-      // 2. Fallback to local JSON (only on non-Vercel; /tmp/orders.json is ephemeral on Vercel)
-      if (!order && !isVercel) {
-        try {
-          const fileDataJson = fs.readFileSync(ORDERS_FILE, "utf-8");
-          const orders = JSON.parse(fileDataJson);
-          order = orders.find((o: any) => o.id === id);
-        } catch (fsError) {
-          console.error("Failed to fetch order from local JSON for download:", fsError);
-        }
+      const querySnapshot = await db.collection("orders").where("id", "==", id).get();
+      if (!querySnapshot.empty) {
+        fbDocId = querySnapshot.docs[0].id;
+        order = querySnapshot.docs[0].data();
       }
 
       if (!order || !order.reportFilePath) {
@@ -420,9 +286,6 @@ app.use(express.json({ limit: "50mb" }));
 
       const isCloudUrl = order.reportFilePath.startsWith("http://") || order.reportFilePath.startsWith("https://");
 
-      // On Vercel, local file storage is ephemeral (/tmp is wiped between invocations).
-      // All uploads go to Cloudinary (https URL), so a non-http path on Vercel means
-      // the file is gone — return a clear error rather than a confusing 404.
       if (!isCloudUrl && isVercel) {
         return res.status(410).send("This report was stored locally and is no longer available. Please re-upload the report from the Admin Dashboard.");
       }
@@ -444,33 +307,8 @@ app.use(express.json({ limit: "50mb" }));
       const downloads = order.downloads ? [...order.downloads, downloadEvent] : [downloadEvent];
 
       // Update download count in Firebase Firestore
-      try {
-        const querySnapshot = await db.collection("orders").where("id", "==", id).get();
-        if (!querySnapshot.empty) {
-          const fbDoc = querySnapshot.docs[0];
-          const docRef = db.collection("orders").doc(fbDoc.id);
-          await docRef.update({ downloads });
-        }
-      } catch (fbError) {
-        console.error("Failed to update Firebase downloads count:", fbError);
-      }
-
-      // Update download count in local orders.json (non-Vercel only)
-      if (!isVercel) {
-        try {
-          const fileDataJson = fs.readFileSync(ORDERS_FILE, "utf-8");
-          let orders = JSON.parse(fileDataJson);
-          orders = orders.map((o: any) => {
-            if (o.id === id) {
-              return { ...o, downloads };
-            }
-            return o;
-          });
-          fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
-        } catch (fsError) {
-          console.error("Failed to update local JSON downloads count:", fsError);
-        }
-      }
+      const docRef = db.collection("orders").doc(fbDocId);
+      await docRef.update({ downloads });
 
       // Serve the file
       if (isCloudUrl) {

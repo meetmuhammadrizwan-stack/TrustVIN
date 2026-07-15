@@ -26,3 +26,6 @@ Thumbs.db
 # editor
 .vscode/
 .idea/
+
+#service account key
+serviceAccountKey.json
