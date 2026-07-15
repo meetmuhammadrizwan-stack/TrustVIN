@@ -24,7 +24,8 @@ import {
   CheckSquare,
   FileText,
   Trash2,
-  UploadCloud
+  UploadCloud,
+  RefreshCw
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -920,7 +921,17 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                         {selectedOrder.reportFileName && (
                           <div className="space-y-3 pt-2">
                             <div className="flex items-center justify-between border-t border-slate-200/60 pt-4">
-                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Download History Logs</span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Download History Logs</span>
+                                <button
+                                  onClick={fetchOrders}
+                                  disabled={isLoading}
+                                  className="text-slate-400 hover:text-slate-600 transition-colors p-0.5 rounded hover:bg-slate-100 disabled:opacity-50 flex items-center justify-center"
+                                  title="Refresh logs"
+                                >
+                                  <RefreshCw className={`w-3 h-3 ${isLoading ? "animate-spin" : ""}`} />
+                                </button>
+                              </div>
                               <span className="text-[10px] font-black bg-slate-900 text-white px-2 py-0.5 rounded-full">
                                 {selectedOrder.downloads?.length || 0} {selectedOrder.downloads?.length === 1 ? "download" : "downloads"}
                               </span>
