@@ -6,7 +6,6 @@ import { fileURLToPath } from "url";
 import Stripe from "stripe";
 import dotenv from "dotenv";
 import fs from "fs";
-import { collection, addDoc, getDocs, doc, updateDoc, query, where } from "firebase/firestore";
 import { db } from "./firebaseConfig.js";
 
 const __filename = typeof import.meta !== "undefined" && import.meta.url
@@ -109,7 +108,7 @@ app.use(express.json({ limit: "50mb" }));
       fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
 
       try {
-        await addDoc(collection(db, "orders"), newOrder);
+        await db.collection("orders").add(newOrder);
       } catch (fbError) {
         console.error("Error saving to Firebase:", fbError);
       }
@@ -174,7 +173,7 @@ app.use(express.json({ limit: "50mb" }));
       fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
 
       try {
-        await addDoc(collection(db, "orders"), newOrder);
+        await db.collection("orders").add(newOrder);
       } catch (fbError) {
         console.error("Error saving to Firebase:", fbError);
       }
@@ -189,7 +188,7 @@ app.use(express.json({ limit: "50mb" }));
   // API: Get All Orders (Admin Only)
   app.get("/api/orders", async (req, res) => {
     try {
-      const querySnapshot = await getDocs(collection(db, "orders"));
+      const querySnapshot = await db.collection("orders").get();
       const orders = querySnapshot.docs.map(doc => ({ fbId: doc.id, ...doc.data() }));
       res.json(orders);
     } catch (error) {
@@ -211,16 +210,15 @@ app.use(express.json({ limit: "50mb" }));
 
     // 1. Update in Firebase Firestore
     try {
-      const q = query(collection(db, "orders"), where("id", "==", id));
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await db.collection("orders").where("id", "==", id).get();
       if (!querySnapshot.empty) {
         const fbDoc = querySnapshot.docs[0];
-        const docRef = doc(db, "orders", fbDoc.id);
+        const docRef = db.collection("orders").doc(fbDoc.id);
         const updates: any = {};
         if (status !== undefined) updates.status = status;
         if (reportStatus !== undefined) updates.reportStatus = reportStatus;
         
-        await updateDoc(docRef, updates);
+        await docRef.update(updates);
       }
     } catch (fbError) {
       console.error("Failed to update in Firebase:", fbError);
@@ -265,12 +263,11 @@ app.use(express.json({ limit: "50mb" }));
       // Update in Firebase Firestore
       let updatedInFirebase = false;
       try {
-        const q = query(collection(db, "orders"), where("id", "==", id));
-        const querySnapshot = await getDocs(q);
+        const querySnapshot = await db.collection("orders").where("id", "==", id).get();
         if (!querySnapshot.empty) {
           const fbDoc = querySnapshot.docs[0];
-          const docRef = doc(db, "orders", fbDoc.id);
-          await updateDoc(docRef, {
+          const docRef = db.collection("orders").doc(fbDoc.id);
+          await docRef.update({
             reportFileName: fileName,
             reportFilePath: secureUrl,
             reportStatus: "sent"
@@ -342,12 +339,11 @@ app.use(express.json({ limit: "50mb" }));
 
       // Update Firebase
       try {
-        const q = query(collection(db, "orders"), where("id", "==", id));
-        const querySnapshot = await getDocs(q);
+        const querySnapshot = await db.collection("orders").where("id", "==", id).get();
         if (!querySnapshot.empty) {
           const fbDoc = querySnapshot.docs[0];
-          const docRef = doc(db, "orders", fbDoc.id);
-          await updateDoc(docRef, {
+          const docRef = db.collection("orders").doc(fbDoc.id);
+          await docRef.update({
             reportFileName: "",
             reportFilePath: "",
             reportStatus: "not sent",
@@ -399,8 +395,7 @@ app.use(express.json({ limit: "50mb" }));
 
       // 1. Fetch from Firestore (primary, works in all environments)
       try {
-        const q = query(collection(db, "orders"), where("id", "==", id));
-        const querySnapshot = await getDocs(q);
+        const querySnapshot = await db.collection("orders").where("id", "==", id).get();
         if (!querySnapshot.empty) {
           order = querySnapshot.docs[0].data();
         }
@@ -450,12 +445,11 @@ app.use(express.json({ limit: "50mb" }));
 
       // Update download count in Firebase Firestore
       try {
-        const q = query(collection(db, "orders"), where("id", "==", id));
-        const querySnapshot = await getDocs(q);
+        const querySnapshot = await db.collection("orders").where("id", "==", id).get();
         if (!querySnapshot.empty) {
           const fbDoc = querySnapshot.docs[0];
-          const docRef = doc(db, "orders", fbDoc.id);
-          await updateDoc(docRef, { downloads });
+          const docRef = db.collection("orders").doc(fbDoc.id);
+          await docRef.update({ downloads });
         }
       } catch (fbError) {
         console.error("Failed to update Firebase downloads count:", fbError);

@@ -5,24 +5,22 @@ export default function LiveChat() {
     // Prevent duplicate script elements
     if (document.getElementById("tawk-script")) return;
 
-    const s1 = document.createElement("script");
-    const s0 = document.getElementsByTagName("script")[0];
-
-    s1.id = "tawk-script";
-    s1.async = true;
-    s1.src = "https://embed.tawk.to/69ad8c2bb90e871c36a78999/1jtes68b3";
-    s1.charset = "UTF-8";
-    s1.setAttribute("crossorigin", "*");
-
-    // Set up Tawk_API and Tawk_LoadStart variables
+    // IMPORTANT: Tawk_API and Tawk_LoadStart MUST be set before the script
+    // is inserted into the DOM, otherwise the widget initialises before the
+    // variables exist and silently fails.
     (window as any).Tawk_API = (window as any).Tawk_API || {};
     (window as any).Tawk_LoadStart = new Date();
 
-    if (s0 && s0.parentNode) {
-      s0.parentNode.insertBefore(s1, s0);
-    } else {
-      document.head.appendChild(s1);
-    }
+    const script = document.createElement("script");
+    script.id = "tawk-script";
+    script.async = true;
+    script.src = "https://embed.tawk.to/69ad8c2bb90e871c36a78999/1jtes68b3";
+    script.charset = "UTF-8";
+    script.setAttribute("crossorigin", "*");
+
+    // Append to <head> — safer than insertBefore(s1, s0) which can race
+    // with React's own <script type="module"> tag.
+    document.head.appendChild(script);
   }, []);
 
   return null;
