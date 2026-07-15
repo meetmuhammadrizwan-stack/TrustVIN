@@ -630,23 +630,52 @@ export default function App() {
                       {
                         name: "Basic",
                         type: "Basic" as PackageType,
-                        price: "$39.99",
-                        features: ["Title Check", "Odometer Check", "Lien Records", "Partial Salvage History"],
+                        price: "$49.99",
+                        features: [
+                          { text: "Vehicle Overview", enabled: true },
+                          { text: "Title Status", enabled: true },
+                          { text: "Accident Records", enabled: true },
+                          { text: "Ownership History", enabled: true },
+                          { text: "Basic Vehicle Specifications", enabled: true },
+                          { text: "Mileage Verification", enabled: false },
+                          { text: "Theft Records", enabled: false },
+                          { text: "Salvage History", enabled: false }
+                        ],
+                        popular: false
+                      },
+                      {
+                        name: "Gold",
+                        type: "Gold" as PackageType,
+                        price: "$89.99",
+                        features: [
+                          { text: "Vehicle Overview", enabled: true },
+                          { text: "Title Status", enabled: true },
+                          { text: "Accident Records", enabled: true },
+                          { text: "Ownership Timeline", enabled: true },
+                          { text: "Mileage Verification", enabled: true },
+                          { text: "Open Recall Information", enabled: true },
+                          { text: "Service History", enabled: true },
+                          { text: "Theft & Salvage Check", enabled: false }
+                        ],
                         popular: false
                       },
                       {
                         name: "Premium",
                         type: "Premium" as PackageType,
-                        price: "$49.99",
-                        features: ["Detailed Title History", "Accident Records", "Auction Photos", "Full Salvage History", "Owner Count"],
+                        price: "$99.99",
+                        features: [
+                          { text: "Complete Vehicle History", enabled: true },
+                          { text: "Title & Ownership Records", enabled: true },
+                          { text: "Accident & Damage History", enabled: true },
+                          { text: "Mileage Verification", enabled: true },
+                          { text: "Theft Check", enabled: true },
+                          { text: "Salvage & Flood Records", enabled: true },
+                          { text: "Market Value Analysis", enabled: true },
+                          { text: "Open Recalls", enabled: true },
+                          { text: "Auction History", enabled: true },
+                          { text: "Service Records", enabled: true }
+                        ],
                         popular: true
-                      },
-                      {
-                        name: "Gold",
-                        type: "Gold" as PackageType,
-                        price: "$59.99",
-                        features: ["All Premium Features", "Maintenance History", "Recalls & Defects", "Price Analysis", "Extended Warranty Check", "Market Value Report"],
-                        popular: false
                       }
                     ].map((item, idx) => (
                       <motion.div
@@ -670,7 +699,7 @@ export default function App() {
                           <div className="space-y-3">
                             <h3 className={`text-xl font-black uppercase tracking-widest ${item.popular ? "text-brand-accent" : "text-slate-400"}`}>{item.name}</h3>
                             <div className="flex items-baseline gap-1">
-                              <span className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter">{item.price}</span>
+                               <span className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter">{item.price}</span>
                               <span className={`text-sm font-bold uppercase tracking-widest ${item.popular ? "text-slate-400" : "text-slate-400"}`}>/report</span>
                             </div>
                           </div>
@@ -679,9 +708,13 @@ export default function App() {
 
                           <ul className="space-y-3 sm:space-y-4 lg:space-y-5 min-h-0 lg:min-h-[260px]">
                             {item.features.map((feature, fIdx) => (
-                              <li key={fIdx} className="flex items-start gap-3 lg:gap-4 text-[13px] sm:text-[14px] lg:text-[15px] font-bold">
-                                <CheckCircle2 className={`w-5 h-5 lg:w-6 lg:h-6 flex-shrink-0 ${item.popular ? "text-brand-accent" : "text-slate-900"}`} />
-                                <span className={item.popular ? "text-slate-300" : "text-slate-600"}>{feature}</span>
+                              <li key={fIdx} className={`flex items-start gap-3 lg:gap-4 text-[13px] sm:text-[14px] lg:text-[15px] font-bold ${!feature.enabled ? "opacity-45" : ""}`}>
+                                {feature.enabled ? (
+                                  <CheckCircle2 className={`w-5 h-5 lg:w-6 lg:h-6 flex-shrink-0 ${item.popular ? "text-brand-accent" : "text-slate-900"}`} />
+                                ) : (
+                                  <XCircle className={`w-5 h-5 lg:w-6 lg:h-6 flex-shrink-0 ${item.popular ? "text-slate-500" : "text-slate-300"}`} />
+                                )}
+                                <span className={item.popular ? "text-slate-300" : "text-slate-600"}>{feature.text}</span>
                               </li>
                             ))}
                           </ul>
@@ -733,7 +766,7 @@ export default function App() {
                       </thead>
                       <tbody className="space-y-4">
                         {[
-                          { feature: "Price per Report", us: "$39.99", f1: "$44.99", f2: "$48.99", f3: "$52.00" },
+                          { feature: "Price per Report", us: "$49.99", f1: "$54.99", f2: "$58.99", f3: "$62.00" },
                           { feature: "NMVTIS Data", us: true, f1: true, f2: true, f3: true },
                           { feature: "Auction Photos", us: true, f1: false, f2: false, f3: false },
                           { feature: "Instant Delivery", us: true, f1: true, f2: true, f3: true },
@@ -1083,7 +1116,7 @@ export default function App() {
                     <div className="space-y-2">
                       <div className="flex justify-between items-center text-2xl font-black text-brand-blue">
                         <span>Total</span>
-                        <span>{selectedPackage === "Gold" ? "$59.99" : selectedPackage === "Premium" ? "$49.99" : "$39.99"}</span>
+                        <span>{selectedPackage === "Gold" ? "$89.99" : selectedPackage === "Premium" ? "$99.99" : "$49.99"}</span>
                       </div>
                       <p className="text-xs text-slate-500 italic">No hidden fees. One-time payment.</p>
                     </div>
@@ -1167,10 +1200,10 @@ export default function App() {
         </div>
         <div className="max-w-7xl mx-auto pt-12 flex flex-col md:flex-row justify-between items-center gap-6 text-[11px] font-black uppercase tracking-[0.2em]">
           <p className="text-slate-600">© 2024 VinTrust Data Systems. All rights reserved.</p>
-          <div className="flex gap-10">
+          {/* <div className="flex gap-10">
             <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
             <a href="#" className="hover:text-white transition-colors">Sitemap</a>
-          </div>
+          </div> */}
         </div>
       </footer>
     </div>
