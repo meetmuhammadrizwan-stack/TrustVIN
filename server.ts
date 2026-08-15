@@ -266,6 +266,35 @@ app.use(express.json({ limit: "50mb" }));
     }
   });
 
+  // API: Delete Order Record (Admin Only)
+  app.delete("/api/orders/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+      const querySnapshot = await db.collection("orders").where("id", "==", id).get();
+      if (querySnapshot.empty) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      const fbDoc = querySnapshot.docs[0];
+      const order = fbDoc.data();
+      const reportFilePath = order.reportFilePath || "";
+
+      // Cleanup local report file if it exists
+      if (reportFilePath && !reportFilePath.startsWith("http://") && !reportFilePath.startsWith("https://")) {
+        const fullPath = path.join(UPLOADS_DIR, reportFilePath);
+        if (fs.existsSync(fullPath)) {
+          fs.unlinkSync(fullPath);
+        }
+      }
+
+      await db.collection("orders").doc(fbDoc.id).delete();
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting order:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // API: Download Report (Captured and tracked)
   app.get("/download/:id", async (req, res) => {
     const { id } = req.params;

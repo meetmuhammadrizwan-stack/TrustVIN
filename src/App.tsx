@@ -193,19 +193,21 @@ export default function App() {
         }
       }, 100);
     } else {
-      const element = document.getElementById(id);
-      if (element) {
-        const offset = 80; // Navbar height
-        const bodyRect = document.body.getBoundingClientRect().top;
-        const elementRect = element.getBoundingClientRect().top;
-        const elementPosition = elementRect - bodyRect;
-        const offsetPosition = elementPosition - offset;
+      setTimeout(() => {
+        const element = document.getElementById(id);
+        if (element) {
+          const offset = 80; // Navbar height
+          const bodyRect = document.body.getBoundingClientRect().top;
+          const elementRect = element.getBoundingClientRect().top;
+          const elementPosition = elementRect - bodyRect;
+          const offsetPosition = elementPosition - offset;
 
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: "smooth"
-        });
-      }
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth"
+          });
+        }
+      }, 150);
     }
   };
 
@@ -214,172 +216,172 @@ export default function App() {
       <LiveChat />
       {/* Navbar - hidden on admin dashboard since it has its own header */}
       {view !== "admin-dashboard" && (
-      <nav className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-slate-200/50">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <motion.button
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            onClick={navigateToHome}
-            className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
-          >
-            <div className="w-10 h-10 md:w-11 md:h-11 bg-brand-accent rounded-xl flex items-center justify-center shadow-lg shadow-brand-accent/20">
-              <ShieldCheck className="text-white w-6 h-6 md:w-7 md:h-7" />
-            </div>
-            <span className="text-2xl md:text-2xl font-black text-slate-900 tracking-tighter">VinTrust</span>
-          </motion.button>
-
-          {view === "home" ? (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="hidden md:flex items-center gap-10 text-[15px] font-bold text-slate-500"
-            >
-              <a
-                href="#about"
-                onClick={(e) => scrollToSection(e, "about")}
-                className="hover:text-brand-accent transition-colors relative group"
-              >
-                About
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-brand-accent transition-all group-hover:w-full" />
-              </a>
-              <a
-                href="#pricing"
-                onClick={(e) => scrollToSection(e, "pricing")}
-                className="hover:text-brand-accent transition-colors relative group"
-              >
-                Pricing
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-brand-accent transition-all group-hover:w-full" />
-              </a>
-              <a
-                href="#comparison"
-                onClick={(e) => scrollToSection(e, "comparison")}
-                className="hover:text-brand-accent transition-colors relative group"
-              >
-                Comparison
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-brand-accent transition-all group-hover:w-full" />
-              </a>
-              <button
-                onClick={() => navigateToOrder("Basic", true)}
-                className="bg-slate-900 text-white px-7 py-3 rounded-2xl hover:bg-brand-accent transition-all hover:shadow-2xl hover:shadow-brand-accent/30 font-black text-sm uppercase tracking-wider"
-              >
-                Check VIN
-              </button>
-            </motion.div>
-          ) : (
-            <button
+        <nav className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-slate-200/50">
+          <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <motion.button
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
               onClick={navigateToHome}
-              className="hidden md:flex items-center gap-2 text-sm font-black text-brand-accent hover:text-brand-accent-hover transition-colors uppercase tracking-widest"
+              className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
             >
-              <ChevronLeft className="w-4 h-4" />
-              Home
-            </button>
-          )}
-
-          {/* Mobile hamburger button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors"
-            aria-label="Toggle menu"
-          >
-            <AnimatePresence mode="wait" initial={false}>
-              {mobileMenuOpen ? (
-                <motion.div
-                  key="close"
-                  initial={{ opacity: 0, rotate: -90 }}
-                  animate={{ opacity: 1, rotate: 0 }}
-                  exit={{ opacity: 0, rotate: 90 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <X className="w-5 h-5 text-slate-700" />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="menu"
-                  initial={{ opacity: 0, rotate: 90 }}
-                  animate={{ opacity: 1, rotate: 0 }}
-                  exit={{ opacity: 0, rotate: -90 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Menu className="w-5 h-5 text-slate-700" />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </button>
-        </div>
-
-        {/* Mobile dropdown menu */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="md:hidden overflow-hidden bg-white/95 backdrop-blur-xl border-t border-slate-100"
-            >
-              <div className="max-w-7xl mx-auto px-6 py-6 space-y-2">
-                {view === "home" ? (
-                  <>
-                    {[
-                      { label: "About", id: "about" },
-                      { label: "Pricing", id: "pricing" },
-                      { label: "Comparison", id: "comparison" }
-                    ].map((item) => (
-                      <a
-                        key={item.id}
-                        href={`#${item.id}`}
-                        onClick={(e) => {
-                          scrollToSection(e, item.id);
-                          setMobileMenuOpen(false);
-                        }}
-                        className="flex items-center gap-4 px-4 py-3.5 rounded-2xl text-slate-700 font-bold text-[15px] hover:bg-brand-accent/5 hover:text-brand-accent transition-all active:scale-[0.98]"
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full bg-brand-accent/40" />
-                        {item.label}
-                      </a>
-                    ))}
-                    <div className="pt-3">
-                      <button
-                        onClick={() => {
-                          navigateToOrder("Basic", true);
-                          setMobileMenuOpen(false);
-                        }}
-                        className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-wider hover:bg-brand-accent transition-all shadow-xl shadow-brand-accent/10 active:scale-[0.98]"
-                      >
-                        Check VIN
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => {
-                        navigateToHome();
-                        setMobileMenuOpen(false);
-                      }}
-                      className="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-brand-accent font-black text-[15px] hover:bg-brand-accent/5 transition-all w-full active:scale-[0.98]"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                      Back to Home
-                    </button>
-                    <div className="pt-3">
-                      <button
-                        onClick={() => {
-                          navigateToOrder("Basic", true);
-                          setMobileMenuOpen(false);
-                        }}
-                        className="w-full bg-brand-accent text-white py-4 rounded-2xl font-black text-sm uppercase tracking-wider hover:bg-brand-accent-hover transition-all shadow-xl shadow-brand-accent/10 active:scale-[0.98]"
-                      >
-                        Checkout
-                      </button>
-                    </div>
-                  </>
-                )}
+              <div className="w-10 h-10 md:w-11 md:h-11 bg-brand-accent rounded-xl flex items-center justify-center shadow-lg shadow-brand-accent/20">
+                <ShieldCheck className="text-white w-6 h-6 md:w-7 md:h-7" />
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
+              <span className="text-2xl md:text-2xl font-black text-slate-900 tracking-tighter">VinTrust</span>
+            </motion.button>
+
+            {view === "home" ? (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="hidden md:flex items-center gap-10 text-[15px] font-bold text-slate-500"
+              >
+                <a
+                  href="#about"
+                  onClick={(e) => scrollToSection(e, "about")}
+                  className="hover:text-brand-accent transition-colors relative group"
+                >
+                  About
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-brand-accent transition-all group-hover:w-full" />
+                </a>
+                <a
+                  href="#pricing"
+                  onClick={(e) => scrollToSection(e, "pricing")}
+                  className="hover:text-brand-accent transition-colors relative group"
+                >
+                  Pricing
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-brand-accent transition-all group-hover:w-full" />
+                </a>
+                <a
+                  href="#comparison"
+                  onClick={(e) => scrollToSection(e, "comparison")}
+                  className="hover:text-brand-accent transition-colors relative group"
+                >
+                  Comparison
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-brand-accent transition-all group-hover:w-full" />
+                </a>
+                <button
+                  onClick={() => navigateToOrder("Basic", true)}
+                  className="bg-slate-900 text-white px-7 py-3 rounded-2xl hover:bg-brand-accent transition-all hover:shadow-2xl hover:shadow-brand-accent/30 font-black text-sm uppercase tracking-wider"
+                >
+                  Check VIN
+                </button>
+              </motion.div>
+            ) : (
+              <button
+                onClick={navigateToHome}
+                className="hidden md:flex items-center gap-2 text-sm font-black text-brand-accent hover:text-brand-accent-hover transition-colors uppercase tracking-widest"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Home
+              </button>
+            )}
+
+            {/* Mobile hamburger button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors"
+              aria-label="Toggle menu"
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                {mobileMenuOpen ? (
+                  <motion.div
+                    key="close"
+                    initial={{ opacity: 0, rotate: -90 }}
+                    animate={{ opacity: 1, rotate: 0 }}
+                    exit={{ opacity: 0, rotate: 90 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <X className="w-5 h-5 text-slate-700" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="menu"
+                    initial={{ opacity: 0, rotate: 90 }}
+                    animate={{ opacity: 1, rotate: 0 }}
+                    exit={{ opacity: 0, rotate: -90 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Menu className="w-5 h-5 text-slate-700" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </button>
+          </div>
+
+          {/* Mobile dropdown menu */}
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="md:hidden overflow-hidden bg-white/95 backdrop-blur-xl border-t border-slate-100"
+              >
+                <div className="max-w-7xl mx-auto px-6 py-6 space-y-2">
+                  {view === "home" ? (
+                    <>
+                      {[
+                        { label: "About", id: "about" },
+                        { label: "Pricing", id: "pricing" },
+                        { label: "Comparison", id: "comparison" }
+                      ].map((item) => (
+                        <a
+                          key={item.id}
+                          href={`#${item.id}`}
+                          onClick={(e) => {
+                            scrollToSection(e, item.id);
+                            setMobileMenuOpen(false);
+                          }}
+                          className="flex items-center gap-4 px-4 py-3.5 rounded-2xl text-slate-700 font-bold text-[15px] hover:bg-brand-accent/5 hover:text-brand-accent transition-all active:scale-[0.98]"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-brand-accent/40" />
+                          {item.label}
+                        </a>
+                      ))}
+                      <div className="pt-3">
+                        <button
+                          onClick={() => {
+                            navigateToOrder("Basic", true);
+                            setMobileMenuOpen(false);
+                          }}
+                          className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-wider hover:bg-brand-accent transition-all shadow-xl shadow-brand-accent/10 active:scale-[0.98]"
+                        >
+                          Check VIN
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => {
+                          navigateToHome();
+                          setMobileMenuOpen(false);
+                        }}
+                        className="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-brand-accent font-black text-[15px] hover:bg-brand-accent/5 transition-all w-full active:scale-[0.98]"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                        Back to Home
+                      </button>
+                      <div className="pt-3">
+                        <button
+                          onClick={() => {
+                            navigateToOrder("Basic", true);
+                            setMobileMenuOpen(false);
+                          }}
+                          className="w-full bg-brand-accent text-white py-4 rounded-2xl font-black text-sm uppercase tracking-wider hover:bg-brand-accent-hover transition-all shadow-xl shadow-brand-accent/10 active:scale-[0.98]"
+                        >
+                          Checkout
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </nav>
       )}
 
       <AnimatePresence mode="wait">
@@ -699,7 +701,7 @@ export default function App() {
                           <div className="space-y-3">
                             <h3 className={`text-xl font-black uppercase tracking-widest ${item.popular ? "text-brand-accent" : "text-slate-400"}`}>{item.name}</h3>
                             <div className="flex items-baseline gap-1">
-                               <span className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter">{item.price}</span>
+                              <span className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter">{item.price}</span>
                               <span className={`text-sm font-bold uppercase tracking-widest ${item.popular ? "text-slate-400" : "text-slate-400"}`}>/report</span>
                             </div>
                           </div>
@@ -1198,12 +1200,21 @@ export default function App() {
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto pt-12 flex flex-col md:flex-row justify-between items-center gap-6 text-[11px] font-black uppercase tracking-[0.2em]">
-          <p className="text-slate-600">© 2024 VinTrust Data Systems. All rights reserved.</p>
-          {/* <div className="flex gap-10">
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-white transition-colors">Sitemap</a>
-          </div> */}
+        <div className="max-w-7xl mx-auto pt-12 flex flex-col md:flex-row justify-between items-center gap-6">
+          <p className="text-slate-600 text-[11px] font-black uppercase tracking-[0.2em]">
+            © 2024 VinTrust Data Systems. All rights reserved.
+          </p>
+          <div className="flex items-center gap-4 flex-wrap justify-center">
+            <span className="text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] mr-1">
+              Accepted Payment Methods
+            </span>
+            <img src="/visa.svg" alt="Visa" className="h-5 w-auto opacity-40 hover:opacity-80 transition-opacity object-contain" />
+            <img src="/mastercard.svg" alt="Mastercard" className="h-5 w-auto opacity-40 hover:opacity-80 transition-opacity object-contain" />
+            <img src="/paypal.svg" alt="PayPal" className="h-5 w-auto opacity-40 hover:opacity-80 transition-opacity object-contain" />
+            <img src="/apple-pay.svg" alt="Apple Pay" className="h-5 w-auto opacity-40 hover:opacity-80 transition-opacity object-contain" />
+            <img src="/american-express.svg" alt="American Express" className="h-5 w-auto opacity-40 hover:opacity-80 transition-opacity object-contain" />
+            <img src="/maestro.svg" alt="Maestro" className="h-5 w-auto opacity-40 hover:opacity-80 transition-opacity object-contain" />
+          </div>
         </div>
       </footer>
     </div>

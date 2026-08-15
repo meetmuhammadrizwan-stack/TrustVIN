@@ -68,6 +68,7 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [showFilters, setShowFilters] = useState(false);
   const [isUploadingReport, setIsUploadingReport] = useState(false);
   const [isDeletingReport, setIsDeletingReport] = useState(false);
+  const [isDeletingOrder, setIsDeletingOrder] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -256,6 +257,41 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       alert("Error deleting report. Please try again.");
     } finally {
       setIsDeletingReport(false);
+    }
+  };
+
+  const handleDeleteOrder = async () => {
+    if (!selectedOrder) return;
+    if (!confirm("Are you sure you want to permanently delete this entire order record? This will delete the customer and VIN entry from the registry database and cannot be undone.")) return;
+
+    setIsDeletingOrder(true);
+    try {
+      const response = await fetch(`/api/orders/${selectedOrder.id}`, {
+        method: "DELETE"
+      });
+
+      if (response.ok) {
+        // Find next order to select in UI
+        const currentIdx = filteredOrders.findIndex(o => o.id === selectedOrder.id);
+        let nextSelectedId: string | null = null;
+        if (filteredOrders.length > 1) {
+          if (currentIdx < filteredOrders.length - 1) {
+            nextSelectedId = filteredOrders[currentIdx + 1].id;
+          } else {
+            nextSelectedId = filteredOrders[currentIdx - 1].id;
+          }
+        }
+
+        setOrders(prev => prev.filter(o => o.id !== selectedOrder.id));
+        setSelectedOrderId(nextSelectedId);
+      } else {
+        alert("Failed to delete order record from server.");
+      }
+    } catch (err) {
+      console.error("Error deleting order:", err);
+      alert("Error deleting order. Please try again.");
+    } finally {
+      setIsDeletingOrder(false);
     }
   };
 
@@ -587,6 +623,16 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                         </p>
                       </div>
                     </div>
+                    
+                    <button
+                      onClick={handleDeleteOrder}
+                      disabled={isDeletingOrder}
+                      className="flex items-center gap-2 bg-rose-50 hover:bg-rose-100 text-rose-600 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all border border-rose-200/60 active:scale-95 cursor-pointer disabled:opacity-50"
+                      title="Delete entire order record permanently"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {isDeletingOrder ? "Deleting..." : "Delete Order"}
+                    </button>
                   </div>
 
                   {/* Detail Panel Content */}
