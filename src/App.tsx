@@ -811,7 +811,7 @@ export default function App() {
                   </div>
                   <div className="text-slate-400 text-base md:text-lg leading-relaxed font-medium opacity-80 italic space-y-4 max-w-3xl mx-auto">
                     <p>
-                      Information contained in our reports is compiled from various independent sources and is provided "as is" without any warranty, expressed or implied. While we strive for accuracy, Global Smart History does not guarantee the completeness or accuracy of the information provided. We are not responsible for any errors or omissions.
+                      Information contained in our reports is compiled from various independent sources and is provided "as is" without any warranty, expressed or implied. While we strive for accuracy, VIN TRUST REPORT does not guarantee the completeness or accuracy of the information provided. We are not responsible for any errors or omissions.
                     </p>
                     <p>
                       Our reports are intended for informational purposes only and should not be used as the sole basis for purchasing or selling any vehicle, vessel, or equipment.
