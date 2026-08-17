@@ -809,9 +809,17 @@ export default function App() {
                   <div className="inline-flex items-center gap-3 px-5 py-2 bg-white/5 rounded-full text-[10px] font-black uppercase tracking-[0.3em] border border-white/10">
                     <Info className="w-4 h-4 text-brand-accent" /> Important Disclaimer
                   </div>
-                  <p className="text-slate-400 text-base md:text-lg leading-relaxed font-medium opacity-80 italic">
-                    "Vehicle reports are generated using data from public records and trusted third-party sources. Some information may be unavailable or not yet updated in official databases. Report details can vary by selected package. Due to the digital nature of this service, all sales are final and non-refundable."
-                  </p>
+                  <div className="text-slate-400 text-base md:text-lg leading-relaxed font-medium opacity-80 italic space-y-4 max-w-3xl mx-auto">
+                    <p>
+                      Information contained in our reports is compiled from various independent sources and is provided "as is" without any warranty, expressed or implied. While we strive for accuracy, Global Smart History does not guarantee the completeness or accuracy of the information provided. We are not responsible for any errors or omissions.
+                    </p>
+                    <p>
+                      Our reports are intended for informational purposes only and should not be used as the sole basis for purchasing or selling any vehicle, vessel, or equipment.
+                    </p>
+                    <p>
+                      Always verify critical information with official records or the relevant authorities.
+                    </p>
+                  </div>
                 </div>
               </section>
             </main>
