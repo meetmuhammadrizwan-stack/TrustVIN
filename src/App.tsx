@@ -213,7 +213,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen font-sans selection:bg-brand-accent selection:text-white bg-white">
-      <LiveChat />
+      <LiveChat disabled={view === "admin-dashboard"} />
       {/* Navbar - hidden on admin dashboard since it has its own header */}
       {view !== "admin-dashboard" && (
         <nav className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-slate-200/50">
@@ -722,7 +722,10 @@ export default function App() {
                           </ul>
 
                           <button
-                            onClick={() => navigateToOrder(item.type, true)}
+                            onClick={() => {
+                              window.location.hash = item.name.toLowerCase();
+                              navigateToOrder(item.type, true);
+                            }}
                             className={`w-full py-3 sm:py-4 lg:py-5 rounded-xl sm:rounded-2xl lg:rounded-[1.5rem] font-black text-base lg:text-lg transition-all active:scale-95 ${item.popular
                               ? "bg-brand-accent text-white hover:bg-brand-accent-hover shadow-xl shadow-brand-accent/20"
                               : "bg-slate-900 text-white hover:bg-brand-accent shadow-xl shadow-slate-900/10"
