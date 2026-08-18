@@ -61,39 +61,93 @@ export default function App() {
   const [loginError, setLoginError] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Hash-based routing for direct admin access
+  // Centralized hash-based routing
   useEffect(() => {
-    const handleHashChange = () => {
-      if (window.location.hash === "#admin") {
-        if (localStorage.getItem("adminAuth") === "true") {
-          setIsAdminAuthenticated(true);
-          setView("admin-dashboard");
-        } else {
-          setView("admin-login");
-        }
+    const parseHashAndSetState = (hash: string) => {
+      const normalized = hash.replace("#", "").toLowerCase();
+
+      switch (normalized) {
+        case "basic":
+          setSelectedPackage("Basic");
+          setView("order");
+          window.scrollTo(0, 0);
+          break;
+        case "gold":
+          setSelectedPackage("Gold");
+          setView("order");
+          window.scrollTo(0, 0);
+          break;
+        case "premium":
+          setSelectedPackage("Premium");
+          setView("order");
+          window.scrollTo(0, 0);
+          break;
+        case "admin":
+          if (localStorage.getItem("adminAuth") === "true") {
+            setIsAdminAuthenticated(true);
+            setView("admin-dashboard");
+          } else {
+            setView("admin-login");
+          }
+          window.scrollTo(0, 0);
+          break;
+        case "privacy":
+          setView("privacy");
+          window.scrollTo(0, 0);
+          break;
+        case "terms":
+          setView("terms");
+          window.scrollTo(0, 0);
+          break;
+        case "refund":
+          setView("refund");
+          window.scrollTo(0, 0);
+          break;
+        case "thanks":
+          setView("thanks");
+          window.scrollTo(0, 0);
+          break;
+        default:
+          setView("home");
+          if (normalized === "about" || normalized === "pricing" || normalized === "comparison") {
+            setTimeout(() => {
+              const element = document.getElementById(normalized);
+              if (element) {
+                const offset = 80; // Navbar height
+                const bodyRect = document.body.getBoundingClientRect().top;
+                const elementRect = element.getBoundingClientRect().top;
+                const elementPosition = elementRect - bodyRect;
+                const offsetPosition = elementPosition - offset;
+                window.scrollTo({
+                  top: offsetPosition,
+                  behavior: "smooth"
+                });
+              }
+            }, 150);
+          } else if (!normalized) {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+          break;
       }
     };
+
+    const handleHashChange = () => {
+      parseHashAndSetState(window.location.hash);
+    };
+
     window.addEventListener("hashchange", handleHashChange);
-    // Initial check
-    if (window.location.hash === "#admin") {
-      if (localStorage.getItem("adminAuth") === "true") {
-        setIsAdminAuthenticated(true);
-        setView("admin-dashboard");
-      } else {
-        setView("admin-login");
-      }
-    }
+
+    // Initial check on page load
+    parseHashAndSetState(window.location.hash);
 
     // Check for Stripe Checkout redirect parameters
     const query = new URLSearchParams(window.location.search);
     if (query.get("success")) {
-      setView("thanks");
-      // Clear the query parameter
-      window.history.replaceState({}, document.title, window.location.pathname);
+      window.location.hash = "thanks";
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
     } else if (query.get("canceled")) {
       alert("Payment was canceled. You can try again when you're ready.");
-      // Clear the query parameter
-      window.history.replaceState({}, document.title, window.location.pathname);
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
     }
 
     return () => window.removeEventListener("hashchange", handleHashChange);
@@ -160,54 +214,33 @@ export default function App() {
       setTimeout(() => setVinError(false), 2000);
       return;
     }
-    setSelectedPackage(pkg);
     setPolicyAgreed(false);
-    window.scrollTo(0, 0);
-    setView("order");
+    const targetHash = pkg ? pkg.toLowerCase() : "basic";
+    window.location.hash = targetHash;
   };
 
   const navigateToHome = () => {
-    setView("home");
     setPolicyAgreed(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.location.hash = "";
   };
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>, id: string) => {
-    e.preventDefault();
-    if (view !== "home") {
-      setView("home");
-      // Wait for view transition
-      setTimeout(() => {
-        const element = document.getElementById(id);
-        if (element) {
-          const offset = 80; // Navbar height
-          const bodyRect = document.body.getBoundingClientRect().top;
-          const elementRect = element.getBoundingClientRect().top;
-          const elementPosition = elementRect - bodyRect;
-          const offsetPosition = elementPosition - offset;
-
-          window.scrollTo({
-            top: offsetPosition,
-            behavior: "smooth"
-          });
-        }
-      }, 100);
+    if (e) e.preventDefault();
+    if (window.location.hash === `#${id}`) {
+      const element = document.getElementById(id);
+      if (element) {
+        const offset = 80; // Navbar height
+        const bodyRect = document.body.getBoundingClientRect().top;
+        const elementRect = element.getBoundingClientRect().top;
+        const elementPosition = elementRect - bodyRect;
+        const offsetPosition = elementPosition - offset;
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth"
+        });
+      }
     } else {
-      setTimeout(() => {
-        const element = document.getElementById(id);
-        if (element) {
-          const offset = 80; // Navbar height
-          const bodyRect = document.body.getBoundingClientRect().top;
-          const elementRect = element.getBoundingClientRect().top;
-          const elementPosition = elementRect - bodyRect;
-          const offsetPosition = elementPosition - offset;
-
-          window.scrollTo({
-            top: offsetPosition,
-            behavior: "smooth"
-          });
-        }
-      }, 150);
+      window.location.hash = id;
     }
   };
 
@@ -682,6 +715,7 @@ export default function App() {
                     ].map((item, idx) => (
                       <motion.div
                         key={idx}
+                        id={item.name.toLowerCase()}
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
@@ -723,7 +757,6 @@ export default function App() {
 
                           <button
                             onClick={() => {
-                              window.location.hash = item.name.toLowerCase();
                               navigateToOrder(item.type, true);
                             }}
                             className={`w-full py-3 sm:py-4 lg:py-5 rounded-xl sm:rounded-2xl lg:rounded-[1.5rem] font-black text-base lg:text-lg transition-all active:scale-95 ${item.popular
@@ -1058,7 +1091,7 @@ export default function App() {
                         I agree to the{" "}
                         <button
                           type="button"
-                          onClick={() => { setView("privacy"); window.scrollTo(0, 0); }}
+                          onClick={() => { window.location.hash = "privacy"; }}
                           className="text-brand-accent hover:underline font-bold inline cursor-pointer"
                         >
                           Privacy Policy
@@ -1066,7 +1099,7 @@ export default function App() {
                         ,{" "}
                         <button
                           type="button"
-                          onClick={() => { setView("terms"); window.scrollTo(0, 0); }}
+                          onClick={() => { window.location.hash = "terms"; }}
                           className="text-brand-accent hover:underline font-bold inline cursor-pointer"
                         >
                           Terms & Conditions
@@ -1074,7 +1107,7 @@ export default function App() {
                         , and{" "}
                         <button
                           type="button"
-                          onClick={() => { setView("refund"); window.scrollTo(0, 0); }}
+                          onClick={() => { window.location.hash = "refund"; }}
                           className="text-brand-accent hover:underline font-bold inline cursor-pointer"
                         >
                           Refund Policy
@@ -1188,9 +1221,9 @@ export default function App() {
             <ul className="space-y-4 text-sm font-bold">
               <li><a href="#about" className="hover:text-brand-accent transition-colors">About Us</a></li>
               <li><a href="#" className="hover:text-brand-accent transition-colors">Contact</a></li>
-              <li><button onClick={() => { setView("terms"); window.scrollTo(0, 0); }} className="hover:text-brand-accent transition-colors">Terms & Conditions</button></li>
-              <li><button onClick={() => { setView("privacy"); window.scrollTo(0, 0); }} className="hover:text-brand-accent transition-colors">Privacy Policy</button></li>
-              <li><button onClick={() => { setView("refund"); window.scrollTo(0, 0); }} className="hover:text-brand-accent transition-colors">Refund Policy</button></li>
+              <li><button onClick={() => { window.location.hash = "terms"; }} className="hover:text-brand-accent transition-colors">Terms & Conditions</button></li>
+              <li><button onClick={() => { window.location.hash = "privacy"; }} className="hover:text-brand-accent transition-colors">Privacy Policy</button></li>
+              <li><button onClick={() => { window.location.hash = "refund"; }} className="hover:text-brand-accent transition-colors">Refund Policy</button></li>
             </ul>
           </div>
           <div className="space-y-6">
