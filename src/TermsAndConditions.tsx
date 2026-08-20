@@ -26,7 +26,7 @@ export default function TermsAndConditions({ onBack }: TermsAndConditionsProps) 
         </button>
 
         <div className="flex items-center gap-4 mb-10">
-          <img src="/allvinreport.jpeg" alt="AllVinReport Logo" className="w-16 h-16 rounded-[1.5rem] object-cover shadow-xl shadow-brand-accent/20" />
+          <img src="/allvinreport.jpeg" alt="AllVinReport Logo" className="h-16 w-auto object-contain shadow-xl shadow-brand-accent/20" />
           <div>
             <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter">
               Terms & Conditions

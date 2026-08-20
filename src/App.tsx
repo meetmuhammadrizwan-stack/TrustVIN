@@ -257,7 +257,7 @@ export default function App() {
               onClick={navigateToHome}
               className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
             >
-              <img src="/allvinreport.jpeg" alt="AllVinReport Logo" className="w-10 h-10 md:w-11 md:h-11 rounded-xl object-cover shadow-lg shadow-brand-accent/20" />
+              <img src="/allvinreport.jpeg" alt="AllVinReport Logo" className="h-10 md:h-11 w-auto object-contain" />
               <span className="text-2xl md:text-2xl font-black text-slate-900 tracking-tighter">AllVinReport</span>
             </motion.button>
 
@@ -1190,7 +1190,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-16 pb-20 border-b border-white/5">
           <div className="space-y-8">
             <button onClick={navigateToHome} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <img src="/allvinreport.jpeg" alt="AllVinReport Logo" className="w-10 h-10 rounded-xl object-cover" />
+              <img src="/allvinreport.jpeg" alt="AllVinReport Logo" className="h-10 w-auto object-contain" />
               <span className="text-2xl font-black text-white tracking-tighter">AllVinReport</span>
             </button>
             <p className="text-[15px] leading-relaxed font-medium">
