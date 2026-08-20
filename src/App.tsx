@@ -23,7 +23,7 @@ import {
   Globe,
   Mail,
   Menu,
-  X
+  X,
 } from "lucide-react";
 
 import AdminDashboard from "./AdminDashboard";
@@ -32,7 +32,15 @@ import TermsAndConditions from "./TermsAndConditions";
 import RefundPolicy from "./RefundPolicy";
 import LiveChat from "./LiveChat";
 
-type View = "home" | "order" | "admin-login" | "admin-dashboard" | "thanks" | "privacy" | "terms" | "refund";
+type View =
+  | "home"
+  | "order"
+  | "admin-login"
+  | "admin-dashboard"
+  | "thanks"
+  | "privacy"
+  | "terms"
+  | "refund";
 type PackageType = "Basic" | "Premium" | "Gold" | null;
 
 export default function App() {
@@ -48,7 +56,7 @@ export default function App() {
     lastName: "",
     email: "",
     phone: "",
-    country: "United States"
+    country: "United States",
   });
   const [policyAgreed, setPolicyAgreed] = useState(false);
 
@@ -109,7 +117,11 @@ export default function App() {
           break;
         default:
           setView("home");
-          if (normalized === "about" || normalized === "pricing" || normalized === "comparison") {
+          if (
+            normalized === "about" ||
+            normalized === "pricing" ||
+            normalized === "comparison"
+          ) {
             setTimeout(() => {
               const element = document.getElementById(normalized);
               if (element) {
@@ -120,7 +132,7 @@ export default function App() {
                 const offsetPosition = elementPosition - offset;
                 window.scrollTo({
                   top: offsetPosition,
-                  behavior: "smooth"
+                  behavior: "smooth",
                 });
               }
             }, 150);
@@ -144,10 +156,18 @@ export default function App() {
     const query = new URLSearchParams(window.location.search);
     if (query.get("success")) {
       window.location.hash = "thanks";
-      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+      window.history.replaceState(
+        {},
+        document.title,
+        window.location.pathname + window.location.hash,
+      );
     } else if (query.get("canceled")) {
       alert("Payment was canceled. You can try again when you're ready.");
-      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+      window.history.replaceState(
+        {},
+        document.title,
+        window.location.pathname + window.location.hash,
+      );
     }
 
     return () => window.removeEventListener("hashchange", handleHashChange);
@@ -155,7 +175,10 @@ export default function App() {
 
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (adminEmail === "AllVinReport@gmail.com" && adminPassword === "AllVinReport@!") {
+    if (
+      adminEmail === "AllVinReport@gmail.com" &&
+      adminPassword === "AllVinReport@!"
+    ) {
       localStorage.setItem("adminAuth", "true");
       setIsAdminAuthenticated(true);
       setView("admin-dashboard");
@@ -189,7 +212,7 @@ export default function App() {
           packageName: selectedPackage || "Basic",
           vin: vinInput,
           policyAgreed,
-          ...formData
+          ...formData,
         }),
       });
 
@@ -224,7 +247,10 @@ export default function App() {
     window.location.hash = "";
   };
 
-  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>, id: string) => {
+  const scrollToSection = (
+    e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>,
+    id: string,
+  ) => {
     if (e) e.preventDefault();
     if (window.location.hash === `#${id}`) {
       const element = document.getElementById(id);
@@ -236,7 +262,7 @@ export default function App() {
         const offsetPosition = elementPosition - offset;
         window.scrollTo({
           top: offsetPosition,
-          behavior: "smooth"
+          behavior: "smooth",
         });
       }
     } else {
@@ -257,8 +283,14 @@ export default function App() {
               onClick={navigateToHome}
               className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
             >
-              <img src="/allvinreport.jpeg" alt="AllVinReport Logo" className="h-10 md:h-11 w-auto object-contain" />
-              <span className="text-2xl md:text-2xl font-black text-slate-900 tracking-tighter">All VIN Report</span>
+              <img
+                src="/allvinreport.jpeg"
+                alt="AllVinReport Logo"
+                className="h-10 md:h-11 w-auto object-contain"
+              />
+              <span className="text-2xl md:text-2xl font-black text-slate-900 tracking-tighter">
+                All VIN REPORT
+              </span>
             </motion.button>
 
             {view === "home" ? (
@@ -356,7 +388,7 @@ export default function App() {
                       {[
                         { label: "About", id: "about" },
                         { label: "Pricing", id: "pricing" },
-                        { label: "Comparison", id: "comparison" }
+                        { label: "Comparison", id: "comparison" },
                       ].map((item) => (
                         <a
                           key={item.id}
@@ -446,24 +478,35 @@ export default function App() {
                     </motion.div>
 
                     <h1 className="text-6xl md:text-8xl font-black text-slate-900 leading-[0.95] tracking-tighter">
-                      Know the <span className="text-brand-accent">history</span> before you buy.
+                      Know the{" "}
+                      <span className="text-brand-accent">history</span> before
+                      you buy.
                     </h1>
 
                     <p className="text-xl md:text-2xl text-slate-500 max-w-xl leading-relaxed font-medium">
-                      Unlock detailed vehicle reports, accident history, and ownership records in seconds. Don't risk your investment.
+                      Unlock detailed vehicle reports, accident history, and
+                      ownership records in seconds. Don't risk your investment.
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 p-2.5 bg-white rounded-[2rem] shadow-2xl shadow-slate-200/60 border border-slate-100 transition-all duration-500 hover:shadow-brand-accent/5">
-                      <div className={`flex-1 flex items-center gap-4 px-6 py-4 rounded-2xl transition-all ${vinError ? "bg-red-50 border border-red-200" : "bg-slate-50"}`}>
-                        <Car className={`w-6 h-6 shrink-0 ${vinError ? "text-red-500" : "text-slate-400"}`} />
+                      <div
+                        className={`flex-1 flex items-center gap-4 px-6 py-4 rounded-2xl transition-all ${vinError ? "bg-red-50 border border-red-200" : "bg-slate-50"}`}
+                      >
+                        <Car
+                          className={`w-6 h-6 shrink-0 ${vinError ? "text-red-500" : "text-slate-400"}`}
+                        />
                         <input
                           type="text"
                           value={vinInput}
-                          onChange={(e: { target: { value: any; }; }) => {
+                          onChange={(e: { target: { value: any } }) => {
                             setVinInput(e.target.value);
                             if (vinError) setVinError(false);
                           }}
-                          placeholder={vinError ? "VIN IS REQUIRED" : "Enter 17-digit VIN number"}
+                          placeholder={
+                            vinError
+                              ? "VIN IS REQUIRED"
+                              : "Enter 17-digit VIN number"
+                          }
                           className="w-full bg-transparent outline-none text-slate-900 font-bold placeholder:text-slate-400 text-lg"
                         />
                       </div>
@@ -517,8 +560,12 @@ export default function App() {
                             <CheckCircle2 className="text-white w-8 h-8" />
                           </div>
                           <div>
-                            <div className="text-lg font-black text-slate-900 leading-none mb-1">Report Ready</div>
-                            <div className="text-sm text-slate-500 font-bold uppercase tracking-wider">VIN Verified • 2m ago</div>
+                            <div className="text-lg font-black text-slate-900 leading-none mb-1">
+                              Report Ready
+                            </div>
+                            <div className="text-sm text-slate-500 font-bold uppercase tracking-wider">
+                              VIN Verified • 2m ago
+                            </div>
                           </div>
                         </div>
                       </motion.div>
@@ -536,8 +583,13 @@ export default function App() {
                     viewport={{ once: true }}
                     className="text-center space-y-5 mb-20 md:mb-28"
                   >
-                    <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter">How it <span className="text-brand-accent">Works</span></h2>
-                    <p className="text-slate-500 max-w-2xl mx-auto text-lg font-medium">Getting your vehicle history report is simple, fast, and secure.</p>
+                    <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter">
+                      How it <span className="text-brand-accent">Works</span>
+                    </h2>
+                    <p className="text-slate-500 max-w-2xl mx-auto text-lg font-medium">
+                      Getting your vehicle history report is simple, fast, and
+                      secure.
+                    </p>
                   </motion.div>
 
                   <div className="grid md:grid-cols-3 gap-10">
@@ -546,20 +598,20 @@ export default function App() {
                         step: "01",
                         title: "Enter VIN",
                         text: "Enter the unique 17-digit Vehicle Identification Number located on the dashboard or insurance card.",
-                        icon: Search
+                        icon: Search,
                       },
                       {
                         step: "02",
                         title: "Choose Package",
                         text: "Select the report package that fits your needs. We offer Basic, Premium, and Gold options.",
-                        icon: Zap
+                        icon: Zap,
                       },
                       {
                         step: "03",
                         title: "Get Report",
                         text: "Instantly download your comprehensive report. Check records, damage history, and more.",
-                        icon: History
-                      }
+                        icon: History,
+                      },
                     ].map((item, idx) => (
                       <motion.div
                         key={idx}
@@ -570,12 +622,18 @@ export default function App() {
                         whileHover={{ y: -10 }}
                         className="p-10 bg-slate-50 rounded-[2.5rem] border border-slate-100 hover:border-brand-accent/20 transition-all cursor-default group"
                       >
-                        <div className="text-6xl font-black text-slate-200 mb-8 transition-colors group-hover:text-brand-accent/10">{item.step}</div>
+                        <div className="text-6xl font-black text-slate-200 mb-8 transition-colors group-hover:text-brand-accent/10">
+                          {item.step}
+                        </div>
                         <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-8 shadow-xl shadow-slate-200 group-hover:bg-brand-accent transition-colors">
                           <item.icon className="text-brand-accent w-8 h-8 group-hover:text-white transition-colors" />
                         </div>
-                        <h3 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">{item.title}</h3>
-                        <p className="text-slate-500 text-[15px] leading-relaxed font-medium">{item.text}</p>
+                        <h3 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">
+                          {item.title}
+                        </h3>
+                        <p className="text-slate-500 text-[15px] leading-relaxed font-medium">
+                          {item.text}
+                        </p>
                       </motion.div>
                     ))}
                   </div>
@@ -583,7 +641,10 @@ export default function App() {
               </section>
 
               {/* About Us Section */}
-              <section id="about" className="section-padding bg-slate-900 overflow-hidden relative">
+              <section
+                id="about"
+                className="section-padding bg-slate-900 overflow-hidden relative"
+              >
                 <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_30%,rgba(59,130,246,0.1),transparent)]" />
                 <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-24 items-center relative z-10">
                   <motion.div
@@ -619,25 +680,34 @@ export default function App() {
                   >
                     <div className="space-y-5">
                       <h2 className="text-5xl md:text-6xl font-black text-white tracking-tighter leading-[0.95]">
-                        Transparent <span className="text-brand-accent">Intelligence</span>
+                        Transparent{" "}
+                        <span className="text-brand-accent">Intelligence</span>
                       </h2>
                       <div className="w-24 h-2 bg-brand-accent rounded-full" />
                     </div>
                     <p className="text-slate-400 text-xl leading-relaxed font-medium">
-                      At All VIN Report, we believe every car buyer deserves the full picture. Our mission is to provide accurate, real-time vehicle data that protects you from hidden damage, odometer fraud, and title scams.
+                      At All VIN REPORT, we believe every car buyer deserves the
+                      full picture. Our mission is to provide accurate,
+                      real-time vehicle data that protects you from hidden
+                      damage, odometer fraud, and title scams.
                     </p>
                     <div className="grid sm:grid-cols-2 gap-6">
                       {[
                         "Official NMVTIS partner data",
                         "Over 9,000+ data sources globally",
                         "Exhaustive title and salvage checks",
-                        "Ownership and auction history"
+                        "Ownership and auction history",
                       ].map((item, idx) => (
-                        <div key={idx} className="flex items-center gap-4 group">
+                        <div
+                          key={idx}
+                          className="flex items-center gap-4 group"
+                        >
                           <div className="w-6 h-6 rounded-full bg-brand-accent/20 flex items-center justify-center shrink-0 group-hover:bg-brand-accent transition-colors">
                             <CheckCircle2 className="text-brand-accent w-4 h-4 group-hover:text-white transition-colors" />
                           </div>
-                          <span className="text-slate-300 font-bold text-sm tracking-wide">{item}</span>
+                          <span className="text-slate-300 font-bold text-sm tracking-wide">
+                            {item}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -654,8 +724,13 @@ export default function App() {
                     viewport={{ once: true }}
                     className="text-center space-y-5 mb-24"
                   >
-                    <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter">Simple <span className="text-brand-accent">Pricing</span></h2>
-                    <p className="text-slate-500 max-w-2xl mx-auto text-lg font-medium">Choose the level of detail that fits your vehicle inspection needs.</p>
+                    <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter">
+                      Simple <span className="text-brand-accent">Pricing</span>
+                    </h2>
+                    <p className="text-slate-500 max-w-2xl mx-auto text-lg font-medium">
+                      Choose the level of detail that fits your vehicle
+                      inspection needs.
+                    </p>
                   </motion.div>
 
                   <div className="grid lg:grid-cols-3 gap-5 lg:gap-10 items-center">
@@ -669,12 +744,15 @@ export default function App() {
                           { text: "Title Status", enabled: true },
                           { text: "Accident Records", enabled: true },
                           { text: "Ownership History", enabled: true },
-                          { text: "Basic Vehicle Specifications", enabled: true },
+                          {
+                            text: "Basic Vehicle Specifications",
+                            enabled: true,
+                          },
                           { text: "Mileage Verification", enabled: false },
                           { text: "Theft Records", enabled: false },
-                          { text: "Salvage History", enabled: false }
+                          { text: "Salvage History", enabled: false },
                         ],
-                        popular: false
+                        popular: false,
                       },
                       {
                         name: "Gold",
@@ -688,9 +766,9 @@ export default function App() {
                           { text: "Mileage Verification", enabled: true },
                           { text: "Open Recall Information", enabled: true },
                           { text: "Service History", enabled: true },
-                          { text: "Theft & Salvage Check", enabled: false }
+                          { text: "Theft & Salvage Check", enabled: false },
                         ],
-                        popular: false
+                        popular: false,
                       },
                       {
                         name: "Premium",
@@ -706,10 +784,10 @@ export default function App() {
                           { text: "Market Value Analysis", enabled: true },
                           { text: "Open Recalls", enabled: true },
                           { text: "Auction History", enabled: true },
-                          { text: "Service Records", enabled: true }
+                          { text: "Service Records", enabled: true },
                         ],
-                        popular: true
-                      }
+                        popular: true,
+                      },
                     ].map((item, idx) => (
                       <motion.div
                         key={idx}
@@ -719,10 +797,11 @@ export default function App() {
                         viewport={{ once: true }}
                         transition={{ delay: idx * 0.15 }}
                         whileHover={{ y: -10 }}
-                        className={`relative p-6 sm:p-8 lg:p-12 rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[3rem] border-2 transition-all ${item.popular
-                          ? "bg-slate-900 text-white border-transparent shadow-[0_40px_80px_-15px_rgba(15,23,42,0.3)] py-8 sm:py-12 lg:py-16 z-10"
-                          : "bg-white text-slate-900 border-slate-100 hover:border-brand-accent/20"
-                          }`}
+                        className={`relative p-6 sm:p-8 lg:p-12 rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[3rem] border-2 transition-all ${
+                          item.popular
+                            ? "bg-slate-900 text-white border-transparent shadow-[0_40px_80px_-15px_rgba(15,23,42,0.3)] py-8 sm:py-12 lg:py-16 z-10"
+                            : "bg-white text-slate-900 border-slate-100 hover:border-brand-accent/20"
+                        }`}
                       >
                         {item.popular && (
                           <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-brand-accent text-white px-6 py-2 rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-brand-accent/20">
@@ -731,24 +810,51 @@ export default function App() {
                         )}
                         <div className="space-y-5 sm:space-y-7 lg:space-y-10">
                           <div className="space-y-3">
-                            <h3 className={`text-xl font-black uppercase tracking-widest ${item.popular ? "text-brand-accent" : "text-slate-400"}`}>{item.name}</h3>
+                            <h3
+                              className={`text-xl font-black uppercase tracking-widest ${item.popular ? "text-brand-accent" : "text-slate-400"}`}
+                            >
+                              {item.name}
+                            </h3>
                             <div className="flex items-baseline gap-1">
-                              <span className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter">{item.price}</span>
-                              <span className={`text-sm font-bold uppercase tracking-widest ${item.popular ? "text-slate-400" : "text-slate-400"}`}>/report</span>
+                              <span className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter">
+                                {item.price}
+                              </span>
+                              <span
+                                className={`text-sm font-bold uppercase tracking-widest ${item.popular ? "text-slate-400" : "text-slate-400"}`}
+                              >
+                                /report
+                              </span>
                             </div>
                           </div>
 
-                          <div className={`h-px w-full ${item.popular ? "bg-slate-800" : "bg-slate-100"}`} />
+                          <div
+                            className={`h-px w-full ${item.popular ? "bg-slate-800" : "bg-slate-100"}`}
+                          />
 
                           <ul className="space-y-3 sm:space-y-4 lg:space-y-5 min-h-0 lg:min-h-[260px]">
                             {item.features.map((feature, fIdx) => (
-                              <li key={fIdx} className={`flex items-start gap-3 lg:gap-4 text-[13px] sm:text-[14px] lg:text-[15px] font-bold ${!feature.enabled ? "opacity-45" : ""}`}>
+                              <li
+                                key={fIdx}
+                                className={`flex items-start gap-3 lg:gap-4 text-[13px] sm:text-[14px] lg:text-[15px] font-bold ${!feature.enabled ? "opacity-45" : ""}`}
+                              >
                                 {feature.enabled ? (
-                                  <CheckCircle2 className={`w-5 h-5 lg:w-6 lg:h-6 flex-shrink-0 ${item.popular ? "text-brand-accent" : "text-slate-900"}`} />
+                                  <CheckCircle2
+                                    className={`w-5 h-5 lg:w-6 lg:h-6 flex-shrink-0 ${item.popular ? "text-brand-accent" : "text-slate-900"}`}
+                                  />
                                 ) : (
-                                  <XCircle className={`w-5 h-5 lg:w-6 lg:h-6 flex-shrink-0 ${item.popular ? "text-slate-500" : "text-slate-300"}`} />
+                                  <XCircle
+                                    className={`w-5 h-5 lg:w-6 lg:h-6 flex-shrink-0 ${item.popular ? "text-slate-500" : "text-slate-300"}`}
+                                  />
                                 )}
-                                <span className={item.popular ? "text-slate-300" : "text-slate-600"}>{feature.text}</span>
+                                <span
+                                  className={
+                                    item.popular
+                                      ? "text-slate-300"
+                                      : "text-slate-600"
+                                  }
+                                >
+                                  {feature.text}
+                                </span>
                               </li>
                             ))}
                           </ul>
@@ -757,10 +863,11 @@ export default function App() {
                             onClick={() => {
                               navigateToOrder(item.type, true);
                             }}
-                            className={`w-full py-3 sm:py-4 lg:py-5 rounded-xl sm:rounded-2xl lg:rounded-[1.5rem] font-black text-base lg:text-lg transition-all active:scale-95 ${item.popular
-                              ? "bg-brand-accent text-white hover:bg-brand-accent-hover shadow-xl shadow-brand-accent/20"
-                              : "bg-slate-900 text-white hover:bg-brand-accent shadow-xl shadow-slate-900/10"
-                              }`}
+                            className={`w-full py-3 sm:py-4 lg:py-5 rounded-xl sm:rounded-2xl lg:rounded-[1.5rem] font-black text-base lg:text-lg transition-all active:scale-95 ${
+                              item.popular
+                                ? "bg-brand-accent text-white hover:bg-brand-accent-hover shadow-xl shadow-brand-accent/20"
+                                : "bg-slate-900 text-white hover:bg-brand-accent shadow-xl shadow-slate-900/10"
+                            }`}
                           >
                             Get {item.name}
                           </button>
@@ -772,7 +879,10 @@ export default function App() {
               </section>
 
               {/* Comparison Section */}
-              <section id="comparison" className="section-padding bg-white overflow-hidden">
+              <section
+                id="comparison"
+                className="section-padding bg-white overflow-hidden"
+              >
                 <div className="max-w-7xl mx-auto">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -780,8 +890,14 @@ export default function App() {
                     viewport={{ once: true }}
                     className="text-center space-y-5 mb-24"
                   >
-                    <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter">Market <span className="text-brand-accent">Comparison</span></h2>
-                    <p className="text-slate-500 max-w-2xl mx-auto text-lg font-medium">See how we stack up against the competition in value and detail.</p>
+                    <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter">
+                      Market{" "}
+                      <span className="text-brand-accent">Comparison</span>
+                    </h2>
+                    <p className="text-slate-500 max-w-2xl mx-auto text-lg font-medium">
+                      See how we stack up against the competition in value and
+                      detail.
+                    </p>
                   </motion.div>
 
                   <motion.div
@@ -794,7 +910,9 @@ export default function App() {
                       <thead>
                         <tr className="text-slate-400 text-xs font-black uppercase tracking-[0.2em]">
                           <th className="px-10 py-4">Feature</th>
-                          <th className="px-10 py-4 text-brand-accent">All VIN Report</th>
+                          <th className="px-10 py-4 text-brand-accent">
+                            All VIN REPORT
+                          </th>
                           <th className="px-10 py-4">CarFax</th>
                           <th className="px-10 py-4">AutoCheck</th>
                           <th className="px-10 py-4">InstaVIN</th>
@@ -802,31 +920,100 @@ export default function App() {
                       </thead>
                       <tbody className="space-y-4">
                         {[
-                          { feature: "Price per Report", us: "$49.99", f1: "$54.99", f2: "$58.99", f3: "$62.00" },
-                          { feature: "NMVTIS Data", us: true, f1: true, f2: true, f3: true },
-                          { feature: "Auction Photos", us: true, f1: false, f2: false, f3: false },
-                          { feature: "Instant Delivery", us: true, f1: true, f2: true, f3: true },
-                          { feature: "Live Market Value", us: true, f1: false, f2: true, f3: false },
-                          { feature: "Theft Records", us: true, f1: true, f2: true, f3: true }
+                          {
+                            feature: "Price per Report",
+                            us: "$49.99",
+                            f1: "$54.99",
+                            f2: "$58.99",
+                            f3: "$62.00",
+                          },
+                          {
+                            feature: "NMVTIS Data",
+                            us: true,
+                            f1: true,
+                            f2: true,
+                            f3: true,
+                          },
+                          {
+                            feature: "Auction Photos",
+                            us: true,
+                            f1: false,
+                            f2: false,
+                            f3: false,
+                          },
+                          {
+                            feature: "Instant Delivery",
+                            us: true,
+                            f1: true,
+                            f2: true,
+                            f3: true,
+                          },
+                          {
+                            feature: "Live Market Value",
+                            us: true,
+                            f1: false,
+                            f2: true,
+                            f3: false,
+                          },
+                          {
+                            feature: "Theft Records",
+                            us: true,
+                            f1: true,
+                            f2: true,
+                            f3: true,
+                          },
                         ].map((row, idx) => (
-                          <tr key={idx} className="bg-slate-50 rounded-3xl group hover:bg-slate-100 transition-colors">
-                            <td className="px-10 py-7 font-black text-slate-900 rounded-l-[2rem]">{row.feature}</td>
+                          <tr
+                            key={idx}
+                            className="bg-slate-50 rounded-3xl group hover:bg-slate-100 transition-colors"
+                          >
+                            <td className="px-10 py-7 font-black text-slate-900 rounded-l-[2rem]">
+                              {row.feature}
+                            </td>
                             <td className="px-10 py-7 text-emerald-500 font-black">
                               {/* Modified output logic for visual clarity */}
-                              {typeof row.us === 'boolean' ? (
+                              {typeof row.us === "boolean" ? (
                                 <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-200">
                                   <CheckCircle2 className="w-5 h-5 text-white" />
                                 </div>
-                              ) : <span className="text-xl tracking-tighter text-emerald-600">{row.us}</span>}
+                              ) : (
+                                <span className="text-xl tracking-tighter text-emerald-600">
+                                  {row.us}
+                                </span>
+                              )}
                             </td>
                             <td className="px-10 py-7 text-slate-400 font-bold">
-                              {typeof row.f1 === 'boolean' ? (row.f1 ? <CheckCircle2 className="w-6 h-6 text-emerald-500/60" /> : <XCircle className="w-6 h-6 text-rose-500/60" />) : row.f1}
+                              {typeof row.f1 === "boolean" ? (
+                                row.f1 ? (
+                                  <CheckCircle2 className="w-6 h-6 text-emerald-500/60" />
+                                ) : (
+                                  <XCircle className="w-6 h-6 text-rose-500/60" />
+                                )
+                              ) : (
+                                row.f1
+                              )}
                             </td>
                             <td className="px-10 py-7 text-slate-400 font-bold">
-                              {typeof row.f2 === 'boolean' ? (row.f2 ? <CheckCircle2 className="w-6 h-6 text-emerald-500/60" /> : <XCircle className="w-6 h-6 text-rose-500/60" />) : row.f2}
+                              {typeof row.f2 === "boolean" ? (
+                                row.f2 ? (
+                                  <CheckCircle2 className="w-6 h-6 text-emerald-500/60" />
+                                ) : (
+                                  <XCircle className="w-6 h-6 text-rose-500/60" />
+                                )
+                              ) : (
+                                row.f2
+                              )}
                             </td>
                             <td className="px-10 py-7 text-slate-400 font-bold rounded-r-[2rem]">
-                              {typeof row.f3 === 'boolean' ? (row.f3 ? <CheckCircle2 className="w-6 h-6 text-emerald-500/60" /> : <XCircle className="w-6 h-6 text-rose-500/60" />) : row.f3}
+                              {typeof row.f3 === "boolean" ? (
+                                row.f3 ? (
+                                  <CheckCircle2 className="w-6 h-6 text-emerald-500/60" />
+                                ) : (
+                                  <XCircle className="w-6 h-6 text-rose-500/60" />
+                                )
+                              ) : (
+                                row.f3
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -841,17 +1028,26 @@ export default function App() {
                 <div className="absolute top-0 left-0 w-full h-full bg-brand-accent/[0.05]" />
                 <div className="max-w-4xl mx-auto space-y-10 relative z-10">
                   <div className="inline-flex items-center gap-3 px-5 py-2 bg-white/5 rounded-full text-[10px] font-black uppercase tracking-[0.3em] border border-white/10">
-                    <Info className="w-4 h-4 text-brand-accent" /> Important Disclaimer
+                    <Info className="w-4 h-4 text-brand-accent" /> Important
+                    Disclaimer
                   </div>
                   <div className="text-slate-400 text-base md:text-lg leading-relaxed font-medium opacity-80 italic space-y-4 max-w-3xl mx-auto">
                     <p>
-                      Information contained in our reports is compiled from various independent sources and is provided "as is" without any warranty, expressed or implied. While we strive for accuracy, All VIN Report does not guarantee the completeness or accuracy of the information provided. We are not responsible for any errors or omissions.
+                      Information contained in our reports is compiled from
+                      various independent sources and is provided "as is"
+                      without any warranty, expressed or implied. While we
+                      strive for accuracy, All VIN REPORT does not guarantee the
+                      completeness or accuracy of the information provided. We
+                      are not responsible for any errors or omissions.
                     </p>
                     <p>
-                      Our reports are intended for informational purposes only and should not be used as the sole basis for purchasing or selling any vehicle, vessel, or equipment.
+                      Our reports are intended for informational purposes only
+                      and should not be used as the sole basis for purchasing or
+                      selling any vehicle, vessel, or equipment.
                     </p>
                     <p>
-                      Always verify critical information with official records or the relevant authorities.
+                      Always verify critical information with official records
+                      or the relevant authorities.
                     </p>
                   </div>
                 </div>
@@ -871,13 +1067,19 @@ export default function App() {
                 <div className="w-16 h-16 bg-brand-accent rounded-[1.5rem] flex items-center justify-center mx-auto shadow-xl shadow-brand-accent/20">
                   <Lock className="text-white w-8 h-8" />
                 </div>
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight">Admin Login</h1>
-                <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Secure Access Required</p>
+                <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+                  Admin Login
+                </h1>
+                <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">
+                  Secure Access Required
+                </p>
               </div>
 
               <form onSubmit={handleAdminLogin} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest pl-1">Email Address</label>
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest pl-1">
+                    Email Address
+                  </label>
                   <div className="relative">
                     <input
                       type="email"
@@ -892,7 +1094,9 @@ export default function App() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest pl-1">Password</label>
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest pl-1">
+                    Password
+                  </label>
                   <div className="relative">
                     <input
                       type="password"
@@ -954,7 +1158,9 @@ export default function App() {
               </h1>
               <div className="h-1 w-16 bg-emerald-500/20 rounded-full mx-auto mb-6" />
               <p className="text-lg md:text-xl text-slate-500 font-medium leading-relaxed mb-10">
-                Payment completed successfully. Your report will be sent to your E-mail within <strong className="text-slate-900">20 to 30 minutes</strong>.
+                Payment completed successfully. Your report will be sent to your
+                E-mail within{" "}
+                <strong className="text-slate-900">20 to 30 minutes</strong>.
               </p>
               <button
                 onClick={navigateToHome}
@@ -984,30 +1190,49 @@ export default function App() {
                 {/* Form Side */}
                 <div className="lg:col-span-3 space-y-8">
                   <div className="space-y-4">
-                    <h1 className="text-4xl font-black text-brand-blue tracking-tight">Complete Your Order</h1>
-                    <p className="text-slate-500">Please provide your details below to process your vehicle history report.</p>
+                    <h1 className="text-4xl font-black text-brand-blue tracking-tight">
+                      Complete Your Order
+                    </h1>
+                    <p className="text-slate-500">
+                      Please provide your details below to process your vehicle
+                      history report.
+                    </p>
                   </div>
 
                   <form onSubmit={handleCheckout} className="space-y-6">
                     <div className="grid md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">First Name</label>
+                        <label className="text-sm font-bold text-slate-700">
+                          First Name
+                        </label>
                         <input
                           type="text"
                           required
                           value={formData.firstName}
-                          onChange={(e: { target: { value: any; }; }) => setFormData({ ...formData, firstName: e.target.value })}
+                          onChange={(e: { target: { value: any } }) =>
+                            setFormData({
+                              ...formData,
+                              firstName: e.target.value,
+                            })
+                          }
                           placeholder="John"
                           className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-brand-blue/50 focus:bg-white transition-all text-slate-800"
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">Last Name</label>
+                        <label className="text-sm font-bold text-slate-700">
+                          Last Name
+                        </label>
                         <input
                           type="text"
                           required
                           value={formData.lastName}
-                          onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              lastName: e.target.value,
+                            })
+                          }
                           placeholder="Doe"
                           className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-brand-blue/50 focus:bg-white transition-all text-slate-800"
                         />
@@ -1015,19 +1240,25 @@ export default function App() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-bold text-slate-700">Email Address</label>
+                      <label className="text-sm font-bold text-slate-700">
+                        Email Address
+                      </label>
                       <input
                         type="email"
                         required
                         value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, email: e.target.value })
+                        }
                         placeholder="john@example.com"
                         className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-brand-blue/50 focus:bg-white transition-all text-slate-800"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-bold text-slate-700">VIN Number</label>
+                      <label className="text-sm font-bold text-slate-700">
+                        VIN Number
+                      </label>
                       <div className="relative">
                         <input
                           type="text"
@@ -1043,7 +1274,9 @@ export default function App() {
 
                     <div className="grid md:grid-cols-2 gap-6 lg:gap-10">
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">Phone Number (USA)</label>
+                        <label className="text-sm font-bold text-slate-700">
+                          Phone Number (USA)
+                        </label>
                         <div className="flex">
                           <span className="flex items-center justify-center px-4 bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl text-slate-600 font-bold">
                             +1
@@ -1052,18 +1285,30 @@ export default function App() {
                             type="tel"
                             required
                             value={formData.phone}
-                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                phone: e.target.value,
+                              })
+                            }
                             placeholder="(555) 000-0000"
                             className="flex-1 px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-r-xl outline-none focus:border-brand-blue/50 focus:bg-white transition-all text-slate-800"
                           />
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700">Country</label>
+                        <label className="text-sm font-bold text-slate-700">
+                          Country
+                        </label>
                         <div className="relative">
                           <select
                             value={formData.country}
-                            onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                country: e.target.value,
+                              })
+                            }
                             className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-brand-blue/50 focus:bg-white transition-all text-slate-800 appearance-none pl-12"
                           >
                             <option value="United States">United States</option>
@@ -1085,11 +1330,16 @@ export default function App() {
                         onChange={(e) => setPolicyAgreed(e.target.checked)}
                         className="mt-1 w-4 h-4 rounded border-slate-300 text-brand-accent focus:ring-brand-accent cursor-pointer"
                       />
-                      <label htmlFor="policyCheckbox" className="text-xs font-semibold text-slate-600 leading-relaxed select-none cursor-pointer">
+                      <label
+                        htmlFor="policyCheckbox"
+                        className="text-xs font-semibold text-slate-600 leading-relaxed select-none cursor-pointer"
+                      >
                         I agree to the{" "}
                         <button
                           type="button"
-                          onClick={() => { window.location.hash = "privacy"; }}
+                          onClick={() => {
+                            window.location.hash = "privacy";
+                          }}
                           className="text-brand-accent hover:underline font-bold inline cursor-pointer"
                         >
                           Privacy Policy
@@ -1097,7 +1347,9 @@ export default function App() {
                         ,{" "}
                         <button
                           type="button"
-                          onClick={() => { window.location.hash = "terms"; }}
+                          onClick={() => {
+                            window.location.hash = "terms";
+                          }}
                           className="text-brand-accent hover:underline font-bold inline cursor-pointer"
                         >
                           Terms & Conditions
@@ -1105,7 +1357,9 @@ export default function App() {
                         , and{" "}
                         <button
                           type="button"
-                          onClick={() => { window.location.hash = "refund"; }}
+                          onClick={() => {
+                            window.location.hash = "refund";
+                          }}
                           className="text-brand-accent hover:underline font-bold inline cursor-pointer"
                         >
                           Refund Policy
@@ -1131,7 +1385,8 @@ export default function App() {
                         )}
                       </button>
                       <p className="text-center text-xs text-slate-400 mt-4 leading-relaxed italic">
-                        All payments are processed securely. Due to digital delivery, all sales are final.
+                        All payments are processed securely. Due to digital
+                        delivery, all sales are final.
                       </p>
                     </div>
                   </form>
@@ -1140,12 +1395,16 @@ export default function App() {
                 {/* Summary Side */}
                 <div className="lg:col-span-2 space-y-6">
                   <div className="p-8 bg-brand-light-blue rounded-[2.5rem] space-y-6 sticky top-24 border border-brand-blue/5">
-                    <h3 className="text-xl font-bold text-brand-blue">Order Summary</h3>
+                    <h3 className="text-xl font-bold text-brand-blue">
+                      Order Summary
+                    </h3>
 
                     <div className="space-y-4">
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-slate-600">Selected Package</span>
-                        <span className="font-bold text-brand-blue">{selectedPackage || "Standard"} Report</span>
+                        <span className="font-bold text-brand-blue">
+                          {selectedPackage || "Standard"} Report
+                        </span>
                       </div>
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-slate-600">Report Status</span>
@@ -1160,18 +1419,29 @@ export default function App() {
                     <div className="space-y-2">
                       <div className="flex justify-between items-center text-2xl font-black text-brand-blue">
                         <span>Total</span>
-                        <span>{selectedPackage === "Gold" ? "$89.99" : selectedPackage === "Premium" ? "$99.99" : "$49.99"}</span>
+                        <span>
+                          {selectedPackage === "Gold"
+                            ? "$89.99"
+                            : selectedPackage === "Premium"
+                              ? "$99.99"
+                              : "$49.99"}
+                        </span>
                       </div>
-                      <p className="text-xs text-slate-500 italic">No hidden fees. One-time payment.</p>
+                      <p className="text-xs text-slate-500 italic">
+                        No hidden fees. One-time payment.
+                      </p>
                     </div>
 
                     <div className="space-y-4 pt-4">
                       {[
                         "Instant PDF Download",
                         "24/7 Priority Support",
-                        "Secured by SSL Encryption"
+                        "Secured by SSL Encryption",
                       ].map((item, idx) => (
-                        <div key={idx} className="flex items-center gap-3 text-xs font-bold text-slate-600 uppercase tracking-widest">
+                        <div
+                          key={idx}
+                          className="flex items-center gap-3 text-xs font-bold text-slate-600 uppercase tracking-widest"
+                        >
                           <CheckCircle2 className="text-brand-blue w-4 h-4" />
                           {item}
                         </div>
@@ -1189,15 +1459,24 @@ export default function App() {
       <footer className="bg-slate-900 text-slate-400 py-24 px-6 border-t border-white/5">
         <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-16 pb-20 border-b border-white/5">
           <div className="space-y-8">
-            <button onClick={navigateToHome} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <img src="/allvinreport.jpeg" alt="AllVinReport Logo" className="h-10 w-auto object-contain" />
-              <span className="text-2xl font-black text-white tracking-tighter">All VIN Report</span>
+            <button
+              onClick={navigateToHome}
+              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            >
+              <img
+                src="/allvinreport.jpeg"
+                alt="AllVinReport Logo"
+                className="h-10 w-auto object-contain"
+              />
+              <span className="text-2xl font-black text-white tracking-tighter">
+                All VIN REPORT
+              </span>
             </button>
             <p className="text-[15px] leading-relaxed font-medium">
-              Premium automotive data intelligence. Helping buyers make confident decisions since 2018 with real-time global data.
+              Premium automotive data intelligence. Helping buyers make
+              confident decisions since 2018 with real-time global data.
             </p>
             <div className="flex gap-4">
-
               <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-brand-accent transition-colors cursor-pointer group">
                 <Car className="w-5 h-5 text-slate-500 group-hover:text-white" />
               </div>
@@ -1213,25 +1492,74 @@ export default function App() {
             </ul>
           </div> */}
           <div className="space-y-6">
-            <h4 className="text-white font-black uppercase tracking-[0.2em] text-xs">Company</h4>
+            <h4 className="text-white font-black uppercase tracking-[0.2em] text-xs">
+              Company
+            </h4>
             <ul className="space-y-4 text-sm font-bold">
-              <li><a href="#about" className="hover:text-brand-accent transition-colors">About Us</a></li>
-              <li><a href="#" className="hover:text-brand-accent transition-colors">Contact</a></li>
-              <li><button onClick={() => { window.location.hash = "terms"; }} className="hover:text-brand-accent transition-colors">Terms & Conditions</button></li>
-              <li><button onClick={() => { window.location.hash = "privacy"; }} className="hover:text-brand-accent transition-colors">Privacy Policy</button></li>
-              <li><button onClick={() => { window.location.hash = "refund"; }} className="hover:text-brand-accent transition-colors">Refund Policy</button></li>
+              <li>
+                <a
+                  href="#about"
+                  className="hover:text-brand-accent transition-colors"
+                >
+                  About Us
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="hover:text-brand-accent transition-colors"
+                >
+                  Contact
+                </a>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    window.location.hash = "terms";
+                  }}
+                  className="hover:text-brand-accent transition-colors"
+                >
+                  Terms & Conditions
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    window.location.hash = "privacy";
+                  }}
+                  className="hover:text-brand-accent transition-colors"
+                >
+                  Privacy Policy
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    window.location.hash = "refund";
+                  }}
+                  className="hover:text-brand-accent transition-colors"
+                >
+                  Refund Policy
+                </button>
+              </li>
             </ul>
           </div>
           <div className="space-y-6">
-            <h4 className="text-white font-black uppercase tracking-[0.2em] text-xs">Direct Support</h4>
+            <h4 className="text-white font-black uppercase tracking-[0.2em] text-xs">
+              Direct Support
+            </h4>
             <div className="p-6 bg-white/5 rounded-3xl border border-white/10 space-y-4">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-brand-accent/20 rounded-2xl flex items-center justify-center shrink-0">
                   <Info className="text-brand-accent w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-white font-black text-sm uppercase tracking-wider">Need Help?</div>
-                  <div className="text-slate-500 text-xs font-bold mt-1">Response within 2h</div>
+                  <div className="text-white font-black text-sm uppercase tracking-wider">
+                    Need Help?
+                  </div>
+                  <div className="text-slate-500 text-xs font-bold mt-1">
+                    Response within 2h
+                  </div>
                 </div>
               </div>
               <div className="text-[13px] font-black text-white hover:text-brand-accent transition-colors cursor-pointer">
@@ -1242,18 +1570,42 @@ export default function App() {
         </div>
         <div className="max-w-7xl mx-auto pt-12 flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-slate-600 text-[11px] font-black uppercase tracking-[0.2em]">
-            © 2024 All VIN Report Data Systems. All rights reserved.
+            © 2024 All VIN REPORT Data Systems. All rights reserved.
           </p>
           <div className="flex items-center gap-4 flex-wrap justify-center">
             <span className="text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] mr-1">
               Accepted Payment Methods
             </span>
-            <img src="/visa.svg" alt="Visa" className="h-5 w-auto opacity-40 hover:opacity-80 transition-opacity object-contain" />
-            <img src="/mastercard.svg" alt="Mastercard" className="h-5 w-auto opacity-40 hover:opacity-80 transition-opacity object-contain" />
-            <img src="/paypal.svg" alt="PayPal" className="h-5 w-auto opacity-40 hover:opacity-80 transition-opacity object-contain" />
-            <img src="/apple-pay.svg" alt="Apple Pay" className="h-5 w-auto opacity-40 hover:opacity-80 transition-opacity object-contain" />
-            <img src="/american-express.svg" alt="American Express" className="h-5 w-auto opacity-40 hover:opacity-80 transition-opacity object-contain" />
-            <img src="/maestro.svg" alt="Maestro" className="h-5 w-auto opacity-40 hover:opacity-80 transition-opacity object-contain" />
+            <img
+              src="/visa.svg"
+              alt="Visa"
+              className="h-5 w-auto opacity-40 hover:opacity-80 transition-opacity object-contain"
+            />
+            <img
+              src="/mastercard.svg"
+              alt="Mastercard"
+              className="h-5 w-auto opacity-40 hover:opacity-80 transition-opacity object-contain"
+            />
+            <img
+              src="/paypal.svg"
+              alt="PayPal"
+              className="h-5 w-auto opacity-40 hover:opacity-80 transition-opacity object-contain"
+            />
+            <img
+              src="/apple-pay.svg"
+              alt="Apple Pay"
+              className="h-5 w-auto opacity-40 hover:opacity-80 transition-opacity object-contain"
+            />
+            <img
+              src="/american-express.svg"
+              alt="American Express"
+              className="h-5 w-auto opacity-40 hover:opacity-80 transition-opacity object-contain"
+            />
+            <img
+              src="/maestro.svg"
+              alt="Maestro"
+              className="h-5 w-auto opacity-40 hover:opacity-80 transition-opacity object-contain"
+            />
           </div>
         </div>
       </footer>

@@ -1,12 +1,14 @@
-import React from 'react';
-import { ShieldCheck, ArrowLeft } from 'lucide-react';
-import { motion } from 'motion/react';
+import React from "react";
+import { ShieldCheck, ArrowLeft } from "lucide-react";
+import { motion } from "motion/react";
 
 interface TermsAndConditionsProps {
   onBack: () => void;
 }
 
-export default function TermsAndConditions({ onBack }: TermsAndConditionsProps) {
+export default function TermsAndConditions({
+  onBack,
+}: TermsAndConditionsProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -16,7 +18,6 @@ export default function TermsAndConditions({ onBack }: TermsAndConditionsProps) 
       className="pt-32 pb-24 px-6 min-h-[80vh] bg-slate-50"
     >
       <div className="max-w-4xl mx-auto bg-white p-10 md:p-16 rounded-[3rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.05)] border border-slate-100">
-        
         <button
           onClick={onBack}
           className="flex items-center gap-2 text-sm font-black text-brand-accent hover:text-brand-accent-hover transition-colors uppercase tracking-widest mb-10"
@@ -26,7 +27,11 @@ export default function TermsAndConditions({ onBack }: TermsAndConditionsProps) 
         </button>
 
         <div className="flex items-center gap-4 mb-10">
-          <img src="/allvinreport.jpeg" alt="AllVinReport Logo" className="h-16 w-auto object-contain shadow-xl shadow-brand-accent/20" />
+          <img
+            src="/allvinreport.jpeg"
+            alt="AllVinReport Logo"
+            className="h-16 w-auto object-contain shadow-xl shadow-brand-accent/20"
+          />
           <div>
             <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter">
               Terms & Conditions
@@ -38,24 +43,40 @@ export default function TermsAndConditions({ onBack }: TermsAndConditionsProps) 
         </div>
 
         <div className="prose prose-slate prose-lg max-w-none text-slate-600 space-y-8">
-          
           <section>
-            <h2 className="text-2xl font-black text-slate-900 mb-4">1. Acceptance of Terms</h2>
+            <h2 className="text-2xl font-black text-slate-900 mb-4">
+              1. Acceptance of Terms
+            </h2>
             <p>
-              By accessing or using the services provided by All VIN Report, you confirm that you have read, understood, and agreed to be bound by these Terms & Conditions. If you do not agree with these Terms & Conditions, you must not use the service.
+              By accessing or using the services provided by All VIN REPORT, you
+              confirm that you have read, understood, and agreed to be bound by
+              these Terms & Conditions. If you do not agree with these Terms &
+              Conditions, you must not use the service.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-black text-slate-900 mb-4">2. Nature of Service</h2>
-            <p>All VIN Report provides digital vehicle history report services only.</p>
-            <p>All reports are generated and delivered electronically. No physical goods are shipped.</p>
+            <h2 className="text-2xl font-black text-slate-900 mb-4">
+              2. Nature of Service
+            </h2>
+            <p>
+              All VIN REPORT provides digital vehicle history report services
+              only.
+            </p>
+            <p>
+              All reports are generated and delivered electronically. No
+              physical goods are shipped.
+            </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-black text-slate-900 mb-4">3. Service Description</h2>
+            <h2 className="text-2xl font-black text-slate-900 mb-4">
+              3. Service Description
+            </h2>
             <p>
-              Vehicle history reports are compiled using data obtained from publicly available records and authorized third-party sources, which may include:
+              Vehicle history reports are compiled using data obtained from
+              publicly available records and authorized third-party sources,
+              which may include:
             </p>
             <ul className="list-disc pl-6 space-y-2 mt-4">
               <li>NMVTIS databases</li>
@@ -64,16 +85,26 @@ export default function TermsAndConditions({ onBack }: TermsAndConditionsProps) 
               <li>Manufacturers and other industry sources</li>
             </ul>
             <p className="mt-4">
-              Reports are provided for informational purposes only and are intended to assist customers in making vehicle-related decisions.
+              Reports are provided for informational purposes only and are
+              intended to assist customers in making vehicle-related decisions.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-black text-slate-900 mb-4">4. Digital Delivery & Completion of Service</h2>
-            <p>Delivery of the service is deemed complete when both of the following occur:</p>
+            <h2 className="text-2xl font-black text-slate-900 mb-4">
+              4. Digital Delivery & Completion of Service
+            </h2>
+            <p>
+              Delivery of the service is deemed complete when both of the
+              following occur:
+            </p>
             <ul className="list-disc pl-6 space-y-2 mt-4">
-              <li>The vehicle history report is generated by our system; and</li>
-              <li>Access to the report is provided to the customer through electronic means, including any of the following:
+              <li>
+                The vehicle history report is generated by our system; and
+              </li>
+              <li>
+                Access to the report is provided to the customer through
+                electronic means, including any of the following:
                 <ul className="list-circle pl-6 space-y-1 mt-2">
                   <li>Secure dashboard access</li>
                   <li>Secure access link</li>
@@ -82,16 +113,22 @@ export default function TermsAndConditions({ onBack }: TermsAndConditionsProps) 
               </li>
             </ul>
             <p className="mt-4">
-              Delivery is considered complete regardless of whether the customer opens, views, or downloads the report after access is provided.
+              Delivery is considered complete regardless of whether the customer
+              opens, views, or downloads the report after access is provided.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-black text-slate-900 mb-4">5. Access & Availability</h2>
+            <h2 className="text-2xl font-black text-slate-900 mb-4">
+              5. Access & Availability
+            </h2>
             <p>
-              Customers are responsible for providing accurate contact information and maintaining the ability to access digital content.
+              Customers are responsible for providing accurate contact
+              information and maintaining the ability to access digital content.
             </p>
-            <p>All VIN Report is not responsible for delivery issues caused by:</p>
+            <p>
+              All VIN REPORT is not responsible for delivery issues caused by:
+            </p>
             <ul className="list-disc pl-6 space-y-2 mt-4">
               <li>Incorrect email addresses</li>
               <li>Spam or junk-mail filtering</li>
@@ -100,21 +137,32 @@ export default function TermsAndConditions({ onBack }: TermsAndConditionsProps) 
           </section>
 
           <section>
-            <h2 className="text-2xl font-black text-slate-900 mb-4">6. Data Accuracy & Limitations</h2>
+            <h2 className="text-2xl font-black text-slate-900 mb-4">
+              6. Data Accuracy & Limitations
+            </h2>
             <p>
-              While reasonable efforts are made to ensure accuracy, All VIN Report does not guarantee the completeness, accuracy, or timeliness of report data.
+              While reasonable efforts are made to ensure accuracy, All VIN
+              REPORT does not guarantee the completeness, accuracy, or
+              timeliness of report data.
             </p>
             <p>
-              Vehicle history data may be incomplete, delayed, or unavailable due to limitations of third-party data sources.
+              Vehicle history data may be incomplete, delayed, or unavailable
+              due to limitations of third-party data sources.
             </p>
             <p>
-              Reports are provided "as is", without warranties of any kind, express or implied.
+              Reports are provided "as is", without warranties of any kind,
+              express or implied.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-black text-slate-900 mb-4">7. Permitted Use</h2>
-            <p>Reports may be used only for lawful and legitimate purposes, including:</p>
+            <h2 className="text-2xl font-black text-slate-900 mb-4">
+              7. Permitted Use
+            </h2>
+            <p>
+              Reports may be used only for lawful and legitimate purposes,
+              including:
+            </p>
             <ul className="list-disc pl-6 space-y-2 mt-4">
               <li>Vehicle purchase evaluation</li>
               <li>Insurance or underwriting review</li>
@@ -122,87 +170,129 @@ export default function TermsAndConditions({ onBack }: TermsAndConditionsProps) 
               <li>Legal reference where applicable</li>
             </ul>
             <p className="mt-4">
-              Reports may not be used for unlawful, deceptive, or harmful activities.
+              Reports may not be used for unlawful, deceptive, or harmful
+              activities.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-black text-slate-900 mb-4">8. Prohibited Use</h2>
+            <h2 className="text-2xl font-black text-slate-900 mb-4">
+              8. Prohibited Use
+            </h2>
             <p>You agree not to:</p>
             <ul className="list-disc pl-6 space-y-2 mt-4">
-              <li>Resell, redistribute, or reproduce reports without authorization;</li>
+              <li>
+                Resell, redistribute, or reproduce reports without
+                authorization;
+              </li>
               <li>Attempt to reverse engineer or manipulate our systems;</li>
-              <li>Access the service using automated tools without permission;</li>
-              <li>Misuse reports for harassment, fraud, or illegal activity.</li>
+              <li>
+                Access the service using automated tools without permission;
+              </li>
+              <li>
+                Misuse reports for harassment, fraud, or illegal activity.
+              </li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-2xl font-black text-slate-900 mb-4">9. Payment Terms</h2>
+            <h2 className="text-2xl font-black text-slate-900 mb-4">
+              9. Payment Terms
+            </h2>
             <p>All payments must be made in full at the time of purchase.</p>
-            <p>Prices are displayed prior to checkout and may change without notice.</p>
             <p>
-              Payments are processed via secure third-party payment processors. All VIN Report does not store full payment card details.
+              Prices are displayed prior to checkout and may change without
+              notice.
+            </p>
+            <p>
+              Payments are processed via secure third-party payment processors.
+              All VIN REPORT does not store full payment card details.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-black text-slate-900 mb-4">10. Refunds</h2>
+            <h2 className="text-2xl font-black text-slate-900 mb-4">
+              10. Refunds
+            </h2>
             <p>
-              Because the service is digital and delivered electronically, all sales are final and non-refundable once delivery is complete, except where required by applicable law.
+              Because the service is digital and delivered electronically, all
+              sales are final and non-refundable once delivery is complete,
+              except where required by applicable law.
             </p>
             <p>
-              Delivery completion is defined in Clauses 4.1–4.2 of these Terms & Conditions.
+              Delivery completion is defined in Clauses 4.1–4.2 of these Terms &
+              Conditions.
             </p>
             <p>
-              Refund eligibility and limitations are further detailed in the Refund Policy, which forms an integral part of these Terms.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-black text-slate-900 mb-4">11. Limitation of Liability</h2>
-            <p>
-              To the maximum extent permitted by law, All VIN Report's total liability shall be limited to the amount paid for the specific report giving rise to the claim.
-            </p>
-            <p>
-              All VIN Report shall not be liable for indirect, incidental, consequential, or special damages arising from use of the service.
+              Refund eligibility and limitations are further detailed in the
+              Refund Policy, which forms an integral part of these Terms.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-black text-slate-900 mb-4">12. Indemnification</h2>
+            <h2 className="text-2xl font-black text-slate-900 mb-4">
+              11. Limitation of Liability
+            </h2>
             <p>
-              You agree to indemnify and hold harmless All VIN Report from any claims, losses, liabilities, or expenses arising from misuse of the service or violation of these Terms.
+              To the maximum extent permitted by law, All VIN REPORT's total
+              liability shall be limited to the amount paid for the specific
+              report giving rise to the claim.
+            </p>
+            <p>
+              All VIN REPORT shall not be liable for indirect, incidental,
+              consequential, or special damages arising from use of the service.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-black text-slate-900 mb-4">13. Governing Law & Jurisdiction</h2>
+            <h2 className="text-2xl font-black text-slate-900 mb-4">
+              12. Indemnification
+            </h2>
             <p>
-              These Terms & Conditions are governed by the laws of the State of Texas, United States.
-            </p>
-            <p>
-              Any disputes shall be subject to the exclusive jurisdiction of the courts located in Travis County, Texas.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-black text-slate-900 mb-4">14. Modifications to Terms</h2>
-            <p>All VIN Report reserves the right to modify these Terms & Conditions at any time.</p>
-            <p>
-              Continued use of the service following updates constitutes acceptance of the revised Terms.
+              You agree to indemnify and hold harmless All VIN REPORT from any
+              claims, losses, liabilities, or expenses arising from misuse of
+              the service or violation of these Terms.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-black text-slate-900 mb-4">15. Contact Information</h2>
+            <h2 className="text-2xl font-black text-slate-900 mb-4">
+              13. Governing Law & Jurisdiction
+            </h2>
+            <p>
+              These Terms & Conditions are governed by the laws of the State of
+              Texas, United States.
+            </p>
+            <p>
+              Any disputes shall be subject to the exclusive jurisdiction of the
+              courts located in Travis County, Texas.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-black text-slate-900 mb-4">
+              14. Modifications to Terms
+            </h2>
+            <p>
+              All VIN REPORT reserves the right to modify these Terms &
+              Conditions at any time.
+            </p>
+            <p>
+              Continued use of the service following updates constitutes
+              acceptance of the revised Terms.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-black text-slate-900 mb-4">
+              15. Contact Information
+            </h2>
             <p>
               For questions regarding these Terms & Conditions, please contact:
               <br />
               <strong>Email:</strong> info@allvinreport.com
             </p>
           </section>
-
         </div>
       </div>
     </motion.div>
