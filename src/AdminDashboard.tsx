@@ -342,7 +342,7 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             <img src="/allvinreport.jpeg" alt="AllVinReport Logo" className="h-10 w-auto object-contain" />
             <div>
               <h1 className="text-lg font-black text-slate-900 tracking-tight">Admin Portal</h1>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">AllVinReport Control Center</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">All VIN Report Control Center</p>
             </div>
           </div>
 

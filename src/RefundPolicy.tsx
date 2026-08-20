@@ -43,7 +43,7 @@ export default function RefundPolicy({ onBack }: RefundPolicyProps) {
             </h2>
             <p>
               <strong>1.1</strong> This Refund Policy applies to all purchases
-              made through AllVinReport for digital vehicle history report
+              made through All VIN Report for digital vehicle history report
               services.
             </p>
             <p>
@@ -57,7 +57,7 @@ export default function RefundPolicy({ onBack }: RefundPolicyProps) {
               2. Nature of Service
             </h2>
             <p>
-              <strong>2.1</strong> AllVinReport provides digital services
+              <strong>2.1</strong> All VIN Report provides digital services
               delivered electronically.
             </p>
             <p>
@@ -106,7 +106,7 @@ export default function RefundPolicy({ onBack }: RefundPolicyProps) {
             <ul className="list-[lower-alpha] pl-6 space-y-2 mt-4">
               <li>
                 the report could not be generated due to a system error
-                attributable to AllVinReport;
+                attributable to All VIN Report;
               </li>
               <li>
                 a technical issue prevented access to the report and could not
@@ -119,7 +119,7 @@ export default function RefundPolicy({ onBack }: RefundPolicyProps) {
             </ul>
             <p className="mt-4">
               <strong>4.3</strong> Refund approval is at the sole discretion of
-              AllVinReport and subject to verification.
+              All VIN Report and subject to verification.
             </p>
           </section>
 
@@ -193,7 +193,7 @@ export default function RefundPolicy({ onBack }: RefundPolicyProps) {
               8. Abuse & Fraud Prevention
             </h2>
             <p>
-              <strong>8.1</strong> AllVinReport reserves the right to deny
+              <strong>8.1</strong> All VIN Report reserves the right to deny
               refund requests where abuse, misuse, or fraudulent activity is
               suspected.
             </p>
