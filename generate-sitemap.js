@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 // Load environment variables
 dotenv.config();
 
-const appUrl = process.env.APP_URL || "https://vintrustreport.com";
+const appUrl = process.env.APP_URL || "https://allvinreport.com";
 const today = new Date().toISOString().split("T")[0];
 
 const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>

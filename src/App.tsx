@@ -155,7 +155,7 @@ export default function App() {
 
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (adminEmail === "VinTrust@gmail.com" && adminPassword === "VinTrust@!") {
+    if (adminEmail === "AllVinReport@gmail.com" && adminPassword === "AllVinReport@!") {
       localStorage.setItem("adminAuth", "true");
       setIsAdminAuthenticated(true);
       setView("admin-dashboard");
@@ -257,10 +257,8 @@ export default function App() {
               onClick={navigateToHome}
               className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
             >
-              <div className="w-10 h-10 md:w-11 md:h-11 bg-brand-accent rounded-xl flex items-center justify-center shadow-lg shadow-brand-accent/20">
-                <ShieldCheck className="text-white w-6 h-6 md:w-7 md:h-7" />
-              </div>
-              <span className="text-2xl md:text-2xl font-black text-slate-900 tracking-tighter">VinTrust</span>
+              <img src="/allvinreport.jpeg" alt="AllVinReport Logo" className="w-10 h-10 md:w-11 md:h-11 rounded-xl object-cover shadow-lg shadow-brand-accent/20" />
+              <span className="text-2xl md:text-2xl font-black text-slate-900 tracking-tighter">AllVinReport</span>
             </motion.button>
 
             {view === "home" ? (
@@ -626,7 +624,7 @@ export default function App() {
                       <div className="w-24 h-2 bg-brand-accent rounded-full" />
                     </div>
                     <p className="text-slate-400 text-xl leading-relaxed font-medium">
-                      At VinTrust, we believe every car buyer deserves the full picture. Our mission is to provide accurate, real-time vehicle data that protects you from hidden damage, odometer fraud, and title scams.
+                      At AllVinReport, we believe every car buyer deserves the full picture. Our mission is to provide accurate, real-time vehicle data that protects you from hidden damage, odometer fraud, and title scams.
                     </p>
                     <div className="grid sm:grid-cols-2 gap-6">
                       {[
@@ -796,7 +794,7 @@ export default function App() {
                       <thead>
                         <tr className="text-slate-400 text-xs font-black uppercase tracking-[0.2em]">
                           <th className="px-10 py-4">Feature</th>
-                          <th className="px-10 py-4 text-brand-accent">VinTrust</th>
+                          <th className="px-10 py-4 text-brand-accent">AllVinReport</th>
                           <th className="px-10 py-4">CarFax</th>
                           <th className="px-10 py-4">AutoCheck</th>
                           <th className="px-10 py-4">InstaVIN</th>
@@ -847,7 +845,7 @@ export default function App() {
                   </div>
                   <div className="text-slate-400 text-base md:text-lg leading-relaxed font-medium opacity-80 italic space-y-4 max-w-3xl mx-auto">
                     <p>
-                      Information contained in our reports is compiled from various independent sources and is provided "as is" without any warranty, expressed or implied. While we strive for accuracy, VIN TRUST REPORT does not guarantee the completeness or accuracy of the information provided. We are not responsible for any errors or omissions.
+                      Information contained in our reports is compiled from various independent sources and is provided "as is" without any warranty, expressed or implied. While we strive for accuracy, AllVinReport does not guarantee the completeness or accuracy of the information provided. We are not responsible for any errors or omissions.
                     </p>
                     <p>
                       Our reports are intended for informational purposes only and should not be used as the sole basis for purchasing or selling any vehicle, vessel, or equipment.
@@ -886,7 +884,7 @@ export default function App() {
                       required
                       value={adminEmail}
                       onChange={(e) => setAdminEmail(e.target.value)}
-                      placeholder="admin@VinTrust.com"
+                      placeholder="admin@AllVinReport.com"
                       className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-brand-accent/50 focus:bg-white transition-all text-slate-900 font-bold"
                     />
                     <Mail className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5" />
@@ -1192,10 +1190,8 @@ export default function App() {
         <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-16 pb-20 border-b border-white/5">
           <div className="space-y-8">
             <button onClick={navigateToHome} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <div className="w-10 h-10 bg-brand-accent rounded-xl flex items-center justify-center">
-                <ShieldCheck className="text-white w-6 h-6" />
-              </div>
-              <span className="text-2xl font-black text-white tracking-tighter">VinTrust</span>
+              <img src="/allvinreport.jpeg" alt="AllVinReport Logo" className="w-10 h-10 rounded-xl object-cover" />
+              <span className="text-2xl font-black text-white tracking-tighter">AllVinReport</span>
             </button>
             <p className="text-[15px] leading-relaxed font-medium">
               Premium automotive data intelligence. Helping buyers make confident decisions since 2018 with real-time global data.
@@ -1239,14 +1235,14 @@ export default function App() {
                 </div>
               </div>
               <div className="text-[13px] font-black text-white hover:text-brand-accent transition-colors cursor-pointer">
-                support@VinTrust.com
+                support@allvinreport.com
               </div>
             </div>
           </div>
         </div>
         <div className="max-w-7xl mx-auto pt-12 flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-slate-600 text-[11px] font-black uppercase tracking-[0.2em]">
-            © 2024 VinTrust Data Systems. All rights reserved.
+            © 2024 AllVinReport Data Systems. All rights reserved.
           </p>
           <div className="flex items-center gap-4 flex-wrap justify-center">
             <span className="text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] mr-1">

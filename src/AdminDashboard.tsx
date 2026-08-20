@@ -318,7 +318,7 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `VinTrust_orders_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `AllVinReport_orders_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -339,19 +339,17 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       <header className="bg-white border-b border-slate-200 h-20 shrink-0 sticky top-0 z-30 shadow-sm">
         <div className="max-w-[1600px] mx-auto px-6 h-full flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-brand-accent rounded-xl flex items-center justify-center shadow-lg shadow-brand-accent/20">
-              <ShieldCheck className="text-white w-6 h-6" />
-            </div>
+            <img src="/allvinreport.jpeg" alt="AllVinReport Logo" className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-brand-accent/20" />
             <div>
               <h1 className="text-lg font-black text-slate-900 tracking-tight">Admin Portal</h1>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">VinTrust Control Center</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">AllVinReport Control Center</p>
             </div>
           </div>
 
           <div className="flex items-center gap-6">
             <div className="text-right hidden sm:block">
               <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Logged in as</div>
-              <div className="text-sm font-black text-slate-700">VinTrust@gmail.com</div>
+              <div className="text-sm font-black text-slate-700">AllVinReport@gmail.com</div>
             </div>
             <button
               onClick={onLogout}

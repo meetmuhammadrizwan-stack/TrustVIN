@@ -26,9 +26,7 @@ export default function TermsAndConditions({ onBack }: TermsAndConditionsProps) 
         </button>
 
         <div className="flex items-center gap-4 mb-10">
-          <div className="w-16 h-16 bg-brand-accent rounded-[1.5rem] flex items-center justify-center shadow-xl shadow-brand-accent/20">
-            <ShieldCheck className="text-white w-8 h-8" />
-          </div>
+          <img src="/allvinreport.jpeg" alt="AllVinReport Logo" className="w-16 h-16 rounded-[1.5rem] object-cover shadow-xl shadow-brand-accent/20" />
           <div>
             <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter">
               Terms & Conditions
@@ -44,13 +42,13 @@ export default function TermsAndConditions({ onBack }: TermsAndConditionsProps) 
           <section>
             <h2 className="text-2xl font-black text-slate-900 mb-4">1. Acceptance of Terms</h2>
             <p>
-              By accessing or using the services provided by VinTrustReport, you confirm that you have read, understood, and agreed to be bound by these Terms & Conditions. If you do not agree with these Terms & Conditions, you must not use the service.
+              By accessing or using the services provided by AllVinReport, you confirm that you have read, understood, and agreed to be bound by these Terms & Conditions. If you do not agree with these Terms & Conditions, you must not use the service.
             </p>
           </section>
 
           <section>
             <h2 className="text-2xl font-black text-slate-900 mb-4">2. Nature of Service</h2>
-            <p>VinTrustReport provides digital vehicle history report services only.</p>
+            <p>AllVinReport provides digital vehicle history report services only.</p>
             <p>All reports are generated and delivered electronically. No physical goods are shipped.</p>
           </section>
 
@@ -93,7 +91,7 @@ export default function TermsAndConditions({ onBack }: TermsAndConditionsProps) 
             <p>
               Customers are responsible for providing accurate contact information and maintaining the ability to access digital content.
             </p>
-            <p>VinTrustReport is not responsible for delivery issues caused by:</p>
+            <p>AllVinReport is not responsible for delivery issues caused by:</p>
             <ul className="list-disc pl-6 space-y-2 mt-4">
               <li>Incorrect email addresses</li>
               <li>Spam or junk-mail filtering</li>
@@ -104,7 +102,7 @@ export default function TermsAndConditions({ onBack }: TermsAndConditionsProps) 
           <section>
             <h2 className="text-2xl font-black text-slate-900 mb-4">6. Data Accuracy & Limitations</h2>
             <p>
-              While reasonable efforts are made to ensure accuracy, VinTrustReport does not guarantee the completeness, accuracy, or timeliness of report data.
+              While reasonable efforts are made to ensure accuracy, AllVinReport does not guarantee the completeness, accuracy, or timeliness of report data.
             </p>
             <p>
               Vehicle history data may be incomplete, delayed, or unavailable due to limitations of third-party data sources.
@@ -144,7 +142,7 @@ export default function TermsAndConditions({ onBack }: TermsAndConditionsProps) 
             <p>All payments must be made in full at the time of purchase.</p>
             <p>Prices are displayed prior to checkout and may change without notice.</p>
             <p>
-              Payments are processed via secure third-party payment processors. VinTrustReport does not store full payment card details.
+              Payments are processed via secure third-party payment processors. AllVinReport does not store full payment card details.
             </p>
           </section>
 
@@ -164,17 +162,17 @@ export default function TermsAndConditions({ onBack }: TermsAndConditionsProps) 
           <section>
             <h2 className="text-2xl font-black text-slate-900 mb-4">11. Limitation of Liability</h2>
             <p>
-              To the maximum extent permitted by law, VinTrustReport's total liability shall be limited to the amount paid for the specific report giving rise to the claim.
+              To the maximum extent permitted by law, AllVinReport's total liability shall be limited to the amount paid for the specific report giving rise to the claim.
             </p>
             <p>
-              VinTrustReport shall not be liable for indirect, incidental, consequential, or special damages arising from use of the service.
+              AllVinReport shall not be liable for indirect, incidental, consequential, or special damages arising from use of the service.
             </p>
           </section>
 
           <section>
             <h2 className="text-2xl font-black text-slate-900 mb-4">12. Indemnification</h2>
             <p>
-              You agree to indemnify and hold harmless VinTrustReport from any claims, losses, liabilities, or expenses arising from misuse of the service or violation of these Terms.
+              You agree to indemnify and hold harmless AllVinReport from any claims, losses, liabilities, or expenses arising from misuse of the service or violation of these Terms.
             </p>
           </section>
 
@@ -190,7 +188,7 @@ export default function TermsAndConditions({ onBack }: TermsAndConditionsProps) 
 
           <section>
             <h2 className="text-2xl font-black text-slate-900 mb-4">14. Modifications to Terms</h2>
-            <p>VinTrustReport reserves the right to modify these Terms & Conditions at any time.</p>
+            <p>AllVinReport reserves the right to modify these Terms & Conditions at any time.</p>
             <p>
               Continued use of the service following updates constitutes acceptance of the revised Terms.
             </p>
@@ -201,7 +199,7 @@ export default function TermsAndConditions({ onBack }: TermsAndConditionsProps) 
             <p>
               For questions regarding these Terms & Conditions, please contact:
               <br />
-              <strong>Email:</strong> info@vintrustreport.com
+              <strong>Email:</strong> info@allvinreport.com
             </p>
           </section>
 

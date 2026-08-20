@@ -26,9 +26,7 @@ export default function PrivacyPolicy({ onBack }: PrivacyPolicyProps) {
         </button>
 
         <div className="flex items-center gap-4 mb-10">
-          <div className="w-16 h-16 bg-brand-accent rounded-[1.5rem] flex items-center justify-center shadow-xl shadow-brand-accent/20">
-            <ShieldCheck className="text-white w-8 h-8" />
-          </div>
+          <img src="/allvinreport.jpeg" alt="AllVinReport Logo" className="w-16 h-16 rounded-[1.5rem] object-cover shadow-xl shadow-brand-accent/20" />
           <div>
             <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter">
               Privacy Policy
@@ -106,7 +104,7 @@ export default function PrivacyPolicy({ onBack }: PrivacyPolicyProps) {
           <section>
             <h2 className="text-2xl font-black text-slate-900 mb-4">Children's Online Privacy Protection Act Compliance; Minor's Right to Deletion</h2>
             <p>
-              In compliance with COPPA, we do not collect information from anyone under 13 years old. Minors may request information deletion by contacting us at <strong>VinTrust@gmail.com</strong>.
+              In compliance with COPPA, we do not collect information from anyone under 13 years old. Minors may request information deletion by contacting us at <strong>support@allvinreport.com</strong>.
             </p>
           </section>
 
@@ -136,7 +134,7 @@ export default function PrivacyPolicy({ onBack }: PrivacyPolicyProps) {
             <p>
               For questions about the privacy policy, contact us at:
               <br />
-              <strong>Email:</strong> VinTrust@gmail.com
+              <strong>Email:</strong> support@allvinreport.com
               <br />
               <strong>Phone:</strong> +13462966970
             </p>

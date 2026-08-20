@@ -25,9 +25,7 @@ export default function RefundPolicy({ onBack }: RefundPolicyProps) {
         </button>
 
         <div className="flex items-center gap-4 mb-10">
-          <div className="w-16 h-16 bg-brand-accent rounded-[1.5rem] flex items-center justify-center shadow-xl shadow-brand-accent/20">
-            <ShieldCheck className="text-white w-8 h-8" />
-          </div>
+          <img src="/allvinreport.jpeg" alt="AllVinReport Logo" className="w-16 h-16 rounded-[1.5rem] object-cover shadow-xl shadow-brand-accent/20" />
           <div>
             <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter">
               Refund Policy
@@ -45,7 +43,7 @@ export default function RefundPolicy({ onBack }: RefundPolicyProps) {
             </h2>
             <p>
               <strong>1.1</strong> This Refund Policy applies to all purchases
-              made through VinTrust Report for digital vehicle history report
+              made through AllVinReport for digital vehicle history report
               services.
             </p>
             <p>
@@ -59,7 +57,7 @@ export default function RefundPolicy({ onBack }: RefundPolicyProps) {
               2. Nature of Service
             </h2>
             <p>
-              <strong>2.1</strong> VinTrust Report provides digital services
+              <strong>2.1</strong> AllVinReport provides digital services
               delivered electronically.
             </p>
             <p>
@@ -108,7 +106,7 @@ export default function RefundPolicy({ onBack }: RefundPolicyProps) {
             <ul className="list-[lower-alpha] pl-6 space-y-2 mt-4">
               <li>
                 the report could not be generated due to a system error
-                attributable to VinTrust Report;
+                attributable to AllVinReport;
               </li>
               <li>
                 a technical issue prevented access to the report and could not
@@ -121,7 +119,7 @@ export default function RefundPolicy({ onBack }: RefundPolicyProps) {
             </ul>
             <p className="mt-4">
               <strong>4.3</strong> Refund approval is at the sole discretion of
-              VinTrust Report and subject to verification.
+              AllVinReport and subject to verification.
             </p>
           </section>
 
@@ -195,7 +193,7 @@ export default function RefundPolicy({ onBack }: RefundPolicyProps) {
               8. Abuse & Fraud Prevention
             </h2>
             <p>
-              <strong>8.1</strong> VinTrust Report reserves the right to deny
+              <strong>8.1</strong> AllVinReport reserves the right to deny
               refund requests where abuse, misuse, or fraudulent activity is
               suspected.
             </p>
@@ -209,7 +207,7 @@ export default function RefundPolicy({ onBack }: RefundPolicyProps) {
             <h2 className="text-2xl font-black text-slate-900 mb-4">9. Contact Information</h2>
             <p><strong>9.1</strong> Refund-related inquiries should be directed to:</p>
             <p className="mt-4">
-              <strong>Email:</strong> VinTrustreport@gmail.com
+              <strong>Email:</strong> support@allvinreport.com
               <br />
               <strong>Subject Line:</strong> Refund Request – Order #[Order Number]
             </p>
