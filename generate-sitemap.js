@@ -5,49 +5,49 @@ import dotenv from "dotenv";
 // Load environment variables
 dotenv.config();
 
-const appUrl = process.env.APP_URL || "https://www.allvinreport.com";
+const baseUrl = (process.env.APP_URL || "https://www.allvinreport.com").replace(/\/+$/, "");
 const today = new Date().toISOString().split("T")[0];
 
 const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>${appUrl}/</loc>
+    <loc>${baseUrl}/</loc>
     <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>${appUrl}/#about</loc>
+    <loc>${baseUrl}/#about</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>${appUrl}/#pricing</loc>
+    <loc>${baseUrl}/#pricing</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>${appUrl}/#comparison</loc>
+    <loc>${baseUrl}/#comparison</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>${appUrl}/#basic</loc>
+    <loc>${baseUrl}/#basic</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>${appUrl}/#gold</loc>
+    <loc>${baseUrl}/#gold</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>${appUrl}/#premium</loc>
+    <loc>${baseUrl}/#premium</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -60,4 +60,4 @@ if (!fs.existsSync(publicDir)) {
 }
 
 fs.writeFileSync(path.join(publicDir, "sitemap.xml"), sitemapContent, "utf8");
-console.log(`Generated sitemap.xml for domain: ${appUrl}`);
+console.log(`Generated sitemap.xml for domain: ${baseUrl}`);
