@@ -355,7 +355,7 @@ app.use(express.json({ limit: "50mb" }));
   // Dynamic sitemap endpoint
   app.get("/sitemap.xml", (req, res) => {
     res.header("Content-Type", "application/xml");
-    const appUrl = process.env.APP_URL || "https://allvinreport.com";
+    const appUrl = process.env.APP_URL || "https://www.allvinreport.com";
     const today = new Date().toISOString().split("T")[0];
     res.send(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -364,6 +364,42 @@ app.use(express.json({ limit: "50mb" }));
     <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${appUrl}/#about</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>${appUrl}/#pricing</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>${appUrl}/#comparison</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>${appUrl}/#basic</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>${appUrl}/#gold</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>${appUrl}/#premium</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>`);
   });
