@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 // Load environment variables
 dotenv.config();
 
-const appUrl = process.env.APP_URL || "https://allvinreport.com";
+const appUrl = process.env.APP_URL || "https://www.allvinreport.com";
 const today = new Date().toISOString().split("T")[0];
 
 const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>
@@ -15,6 +15,24 @@ const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>
     <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${appUrl}/#about</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>${appUrl}/#pricing</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>${appUrl}/#comparison</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>`;
 
