@@ -534,40 +534,6 @@ export default function App() {
                       ownership records in seconds. Don't risk your investment.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-4 p-2.5 bg-slate-900 rounded-[2rem] shadow-2xl shadow-slate-900/25 border border-slate-800 transition-all duration-300 hover:shadow-brand-accent/20 hover:border-slate-700">
-                      <div
-                        className={`flex-1 flex items-center gap-4 px-6 py-4 rounded-2xl transition-all ${
-                          vinError
-                            ? "bg-red-950/40 border border-red-500/80 ring-2 ring-red-500/50"
-                            : "bg-slate-800/90 border border-slate-700/80 focus-within:border-brand-accent focus-within:bg-slate-800 focus-within:ring-2 focus-within:ring-brand-accent/40"
-                        }`}
-                      >
-                        <Car
-                          className={`w-6 h-6 shrink-0 ${vinError ? "text-red-400" : "text-brand-accent"}`}
-                        />
-                        <input
-                          type="text"
-                          value={vinInput}
-                          onChange={(e: { target: { value: any } }) => {
-                            setVinInput(e.target.value);
-                            if (vinError) setVinError(false);
-                          }}
-                          placeholder={
-                            vinError
-                              ? "VIN IS REQUIRED"
-                              : "Enter 17-digit VIN number"
-                          }
-                          className="w-full bg-transparent outline-none text-white font-bold placeholder:text-slate-400 text-lg uppercase"
-                        />
-                      </div>
-                      <button
-                        onClick={() => navigateToOrder()}
-                        className={`${vinError ? "bg-red-500 hover:bg-red-600" : "bg-brand-accent hover:bg-brand-accent-hover"} text-white px-10 py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 group shadow-xl shadow-brand-accent/30 active:scale-95`}
-                      >
-                        Get Report
-                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
-                      </button>
-                    </div>
 
                     <div className="flex flex-wrap items-center gap-8 text-[13px] text-slate-400 font-bold uppercase tracking-widest pt-4">
                       <div className="flex items-center gap-2">
