@@ -488,7 +488,7 @@ export default function App() {
                       ownership records in seconds. Don't risk your investment.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-4 p-2.5 bg-white rounded-[2rem] shadow-2xl shadow-slate-200/60 border border-slate-100 transition-all duration-500 hover:shadow-brand-accent/5">
+                    <div className="flex flex-col sm:flex-row gap-4 p-2.5 bg-gray-300 rounded-[2rem] shadow-2xl shadow-slate-200/60 border border-slate-100 transition-all duration-500 hover:shadow-brand-accent/5">
                       <div
                         className={`flex-1 flex items-center gap-4 px-6 py-4 rounded-2xl transition-all ${vinError ? "bg-red-50 border border-red-200" : "bg-slate-50"}`}
                       >
@@ -738,53 +738,66 @@ export default function App() {
                       {
                         name: "Basic",
                         type: "Basic" as PackageType,
-                        price: "$49.99",
+                        price: "$44.95",
                         features: [
-                          { text: "Vehicle Overview", enabled: true },
-                          { text: "Title Status", enabled: true },
-                          { text: "Accident Records", enabled: true },
-                          { text: "Ownership History", enabled: true },
+                          { text: "1 Vehicle Report", enabled: true },
+                          { text: "Ownership Costs", enabled: true },
+                          { text: "Accident Information", enabled: true },
+                          { text: "Market Value Range", enabled: true },
                           {
-                            text: "Basic Vehicle Specifications",
+                            text: "Owner's History",
                             enabled: true,
                           },
-                          { text: "Mileage Verification", enabled: false },
-                          { text: "Theft Records", enabled: false },
-                          { text: "Salvage History", enabled: false },
+                          { text: "Vehicle Specification", enabled: false },
+                          { text: "Safety Recall Status", enabled: false },
+                          { text: "Online Listing History", enabled: false },
+                          { text: "Warranties", enabled: false },
+                          { text: "Salvage Informaton", enabled: false },
+                          { text: "Installed Equipment", enabled: false },
                         ],
                         popular: false,
                       },
                       {
                         name: "Gold",
                         type: "Gold" as PackageType,
-                        price: "$89.99",
+                        price: "$89.95",
                         features: [
-                          { text: "Vehicle Overview", enabled: true },
-                          { text: "Title Status", enabled: true },
-                          { text: "Accident Records", enabled: true },
-                          { text: "Ownership Timeline", enabled: true },
-                          { text: "Mileage Verification", enabled: true },
-                          { text: "Open Recall Information", enabled: true },
-                          { text: "Service History", enabled: true },
-                          { text: "Theft & Salvage Check", enabled: false },
+                          { text: "3 Vehicle Report", enabled: true },
+                          { text: "Ownership Costs", enabled: true },
+                          { text: "Accident Information", enabled: true },
+                          { text: "Market Value Range", enabled: true },
+                          {
+                            text: "Owner's History",
+                            enabled: true,
+                          },
+                          { text: "Vehicle Specification", enabled: true },
+                          { text: "Safety Recall Status", enabled: true },
+                          { text: "Online Listing History", enabled: false },
+                          { text: "Warranties", enabled: false },
+                          { text: "Salvage Informaton", enabled: false },
+                          { text: "Installed Equipment", enabled: false },
                         ],
                         popular: false,
                       },
                       {
                         name: "Premium",
                         type: "Premium" as PackageType,
-                        price: "$99.99",
+                        price: "$129.95",
                         features: [
-                          { text: "Complete Vehicle History", enabled: true },
-                          { text: "Title & Ownership Records", enabled: true },
-                          { text: "Accident & Damage History", enabled: true },
-                          { text: "Mileage Verification", enabled: true },
-                          { text: "Theft Check", enabled: true },
-                          { text: "Salvage & Flood Records", enabled: true },
-                          { text: "Market Value Analysis", enabled: true },
-                          { text: "Open Recalls", enabled: true },
-                          { text: "Auction History", enabled: true },
-                          { text: "Service Records", enabled: true },
+                          { text: "5 Vehicle Report", enabled: true },
+                          { text: "Ownership Costs", enabled: true },
+                          { text: "Accident Information", enabled: true },
+                          { text: "Market Value Range", enabled: true },
+                          {
+                            text: "Owner's History",
+                            enabled: true,
+                          },
+                          { text: "Vehicle Specification", enabled: true },
+                          { text: "Safety Recall Status", enabled: true },
+                          { text: "Online Listing History", enabled: true },
+                          { text: "Warranties", enabled: true },
+                          { text: "Salvage Informaton", enabled: true },
+                          { text: "Installed Equipment", enabled: true },
                         ],
                         popular: true,
                       },
@@ -922,7 +935,7 @@ export default function App() {
                         {[
                           {
                             feature: "Price per Report",
-                            us: "$49.99",
+                            us: "$44.95",
                             f1: "$54.99",
                             f2: "$58.99",
                             f3: "$62.00",
@@ -1421,10 +1434,10 @@ export default function App() {
                         <span>Total</span>
                         <span>
                           {selectedPackage === "Gold"
-                            ? "$89.99"
+                            ? "$89.95"
                             : selectedPackage === "Premium"
-                              ? "$99.99"
-                              : "$49.99"}
+                              ? "$129.95"
+                              : "$44.95"}
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 italic">

@@ -52,12 +52,12 @@ app.use(express.json({ limit: "50mb" }));
     try {
       // Map display price to cents for Stripe
       const priceMap: Record<string, number> = {
-        "Basic": 4999,
-        "Gold": 8999,
-        "Premium": 9999
+        "Basic": 4495,
+        "Gold": 8995,
+        "Premium": 12995
       };
       
-      const amount = priceMap[packageName] || 4999;
+      const amount = priceMap[packageName] || 4495;
 
       const session = await client.checkout.sessions.create({
         payment_method_types: ["card"],
@@ -116,12 +116,12 @@ app.use(express.json({ limit: "50mb" }));
 
     try {
       const priceMap: Record<string, number> = {
-        "Basic": 4999,
-        "Gold": 8999,
-        "Premium": 9999
+        "Basic": 4495,
+        "Gold": 8995,
+        "Premium": 12995
       };
       
-      const amount = priceMap[packageName] || 4999;
+      const amount = priceMap[packageName] || 4495;
 
       const paymentIntent = await client.paymentIntents.create({
         amount,
