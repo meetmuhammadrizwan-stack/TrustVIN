@@ -457,6 +457,52 @@ export default function App() {
             transition={{ duration: 0.3 }}
           >
             <main className="pt-20">
+              {/* Top Quick VIN Lookup Bar under Header */}
+              <div className="bg-slate-950/95 backdrop-blur-md border-b border-slate-800/80 py-3 px-4 sm:px-6 relative z-30 shadow-lg shadow-black/20">
+                <div className="max-w-4xl mx-auto">
+                  <div className="relative p-[1.5px] rounded-2xl bg-gradient-to-r from-blue-500/30 via-indigo-500/40 to-blue-500/30 shadow-xl shadow-blue-950/30 hover:from-blue-500/50 hover:via-indigo-500/60 hover:to-blue-500/50 transition-all duration-300">
+                    <div className="flex flex-col sm:flex-row gap-3 p-1.5 sm:p-2 bg-slate-900/95 backdrop-blur-xl rounded-2xl">
+                      <div
+                        className={`flex-1 flex items-center gap-3.5 px-4 py-2.5 sm:py-3 rounded-xl transition-all ${
+                          vinError
+                            ? "bg-red-950/50 border border-red-500/80 ring-2 ring-red-500/40"
+                            : "bg-slate-800/80 border border-slate-700/70 hover:border-slate-600 focus-within:border-blue-500 focus-within:bg-slate-800 focus-within:ring-2 focus-within:ring-blue-500/30"
+                        }`}
+                      >
+                        <Car
+                          className={`w-5 h-5 shrink-0 ${vinError ? "text-red-400" : "text-blue-400"}`}
+                        />
+                        <input
+                          type="text"
+                          value={vinInput}
+                          onChange={(e: { target: { value: any } }) => {
+                            setVinInput(e.target.value);
+                            if (vinError) setVinError(false);
+                          }}
+                          placeholder={
+                            vinError
+                              ? "VIN IS REQUIRED"
+                              : "Enter 17-digit VIN number"
+                          }
+                          className="w-full bg-transparent outline-none text-white font-bold placeholder:text-slate-400 text-sm sm:text-base tracking-wide uppercase"
+                        />
+                      </div>
+                      <button
+                        onClick={() => navigateToOrder()}
+                        className={`${
+                          vinError
+                            ? "bg-red-600 hover:bg-red-500"
+                            : "bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-md shadow-blue-500/25"
+                        } text-white px-7 py-2.5 sm:py-3 rounded-xl font-black text-sm sm:text-base transition-all duration-200 flex items-center justify-center gap-2 group active:scale-95 whitespace-nowrap`}
+                      >
+                        Get Report
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Hero Section */}
               <section className="relative overflow-hidden section-padding bg-mesh lg:min-h-[90vh] flex items-center">
                 <div className="absolute top-0 right-0 w-1/2 h-full bg-brand-accent/[0.03] -skew-x-12 translate-x-1/4" />
@@ -488,12 +534,16 @@ export default function App() {
                       ownership records in seconds. Don't risk your investment.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-4 p-2.5 bg-gray-300 rounded-[2rem] shadow-2xl shadow-slate-200/60 border border-slate-100 transition-all duration-500 hover:shadow-brand-accent/5">
+                    <div className="flex flex-col sm:flex-row gap-4 p-2.5 bg-slate-900 rounded-[2rem] shadow-2xl shadow-slate-900/25 border border-slate-800 transition-all duration-300 hover:shadow-brand-accent/20 hover:border-slate-700">
                       <div
-                        className={`flex-1 flex items-center gap-4 px-6 py-4 rounded-2xl transition-all ${vinError ? "bg-red-50 border border-red-200" : "bg-slate-50"}`}
+                        className={`flex-1 flex items-center gap-4 px-6 py-4 rounded-2xl transition-all ${
+                          vinError
+                            ? "bg-red-950/40 border border-red-500/80 ring-2 ring-red-500/50"
+                            : "bg-slate-800/90 border border-slate-700/80 focus-within:border-brand-accent focus-within:bg-slate-800 focus-within:ring-2 focus-within:ring-brand-accent/40"
+                        }`}
                       >
                         <Car
-                          className={`w-6 h-6 shrink-0 ${vinError ? "text-red-500" : "text-slate-400"}`}
+                          className={`w-6 h-6 shrink-0 ${vinError ? "text-red-400" : "text-brand-accent"}`}
                         />
                         <input
                           type="text"
@@ -507,12 +557,12 @@ export default function App() {
                               ? "VIN IS REQUIRED"
                               : "Enter 17-digit VIN number"
                           }
-                          className="w-full bg-transparent outline-none text-slate-900 font-bold placeholder:text-slate-400 text-lg"
+                          className="w-full bg-transparent outline-none text-white font-bold placeholder:text-slate-400 text-lg uppercase"
                         />
                       </div>
                       <button
                         onClick={() => navigateToOrder()}
-                        className={`${vinError ? "bg-red-500" : "bg-slate-900"} text-white px-10 py-5 rounded-2xl font-black text-lg hover:bg-brand-accent transition-all flex items-center justify-center gap-3 group shadow-xl shadow-brand-accent/10 active:scale-95`}
+                        className={`${vinError ? "bg-red-500 hover:bg-red-600" : "bg-brand-accent hover:bg-brand-accent-hover"} text-white px-10 py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 group shadow-xl shadow-brand-accent/30 active:scale-95`}
                       >
                         Get Report
                         <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
