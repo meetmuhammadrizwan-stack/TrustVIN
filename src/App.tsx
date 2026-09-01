@@ -49,6 +49,9 @@ type PackageType =
   | "Basic"
   | "Premium"
   | "Gold"
+  | "Window Sticker"
+  | "Salvage Information"
+  | "Service & Maintenance Records"
   | null;
 
 export default function App() {
@@ -80,7 +83,8 @@ export default function App() {
   // Centralized hash-based routing
   useEffect(() => {
     const parseHashAndSetState = (hash: string) => {
-      const normalized = hash.replace("#", "").toLowerCase();
+      const raw = decodeURIComponent(hash.replace("#", "")).trim().toLowerCase();
+      const normalized = raw.replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
 
       switch (normalized) {
         case "platinum":
@@ -116,6 +120,29 @@ export default function App() {
           break;
         case "premium":
           setSelectedPackage("Premium");
+          setView("order");
+          window.scrollTo(0, 0);
+          break;
+        case "window-sticker":
+        case "windowsticker":
+        case "window":
+        case "sticker":
+          setSelectedPackage("Window Sticker");
+          setView("order");
+          window.scrollTo(0, 0);
+          break;
+        case "salvage-information":
+        case "salvageinformation":
+        case "salvage":
+          setSelectedPackage("Salvage Information");
+          setView("order");
+          window.scrollTo(0, 0);
+          break;
+        case "service-maintenance-records":
+        case "service-maintenance":
+        case "servicemaintenance":
+        case "service":
+          setSelectedPackage("Service & Maintenance Records");
           setView("order");
           window.scrollTo(0, 0);
           break;
@@ -267,7 +294,13 @@ export default function App() {
       return;
     }
     setPolicyAgreed(false);
-    const targetHash = pkg ? pkg.toLowerCase() : "basic";
+    const targetHash = pkg
+      ? pkg
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "-")
+          .replace(/-+/g, "-")
+          .replace(/^-|-$/g, "")
+      : "basic";
     window.location.hash = targetHash;
   };
 
@@ -978,6 +1011,152 @@ export default function App() {
                 </div>
               </section>
 
+              {/* Window Sticker, Service & Maintenance Records and Salvage Information Section */}
+              <section id="specialized-reports" className="section-padding bg-white border-t border-slate-100">
+                <div className="max-w-7xl mx-auto">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="text-center space-y-5 mb-20 md:mb-24"
+                  >
+                    <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tighter max-w-4xl mx-auto leading-tight">
+                      Window Sticker, Service & Maintenance Records and <span className="text-brand-accent">Salvage Information</span>
+                    </h2>
+                    <p className="text-slate-500 max-w-2xl mx-auto text-lg font-medium">
+                      Specialized automotive verification reports and original OEM documentation.
+                    </p>
+                  </motion.div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch max-w-6xl mx-auto">
+                    {[
+                      {
+                        name: "Window Sticker",
+                        type: "Window Sticker" as PackageType,
+                        price: "$29.99",
+                        features: [
+                          { text: "Vehicle Window Label Verification", enabled: true },
+                          { text: "Includes Window Label", enabled: true },
+                          { text: "Digital Delivery", enabled: true },
+                          { text: "Fast Turnaround", enabled: true },
+                          { text: "Covers Most Vehicles", enabled: true },
+                          { text: "Accurate OEM Information", enabled: true },
+                          { text: "Easy to Access", enabled: true },
+                        ],
+                        popular: false,
+                      },
+                      {
+                        name: "Salvage Information",
+                        type: "Salvage Information" as PackageType,
+                        price: "$149",
+                        features: [
+                          { text: "Repair Cost Value", enabled: true },
+                          { text: "Road Legal", enabled: true },
+                          { text: "Rebuilt Status", enabled: true },
+                          { text: "Low Resale Value", enabled: true },
+                          { text: "Financing Hurdles", enabled: true },
+                        ],
+                        popular: false,
+                      },
+                      {
+                        name: "Service & Maintenance Records",
+                        type: "Service & Maintenance Records" as PackageType,
+                        price: "$399.99",
+                        features: [
+                          { text: "Service History Timeline", enabled: true },
+                          { text: "Total Maintenance Cost", enabled: true },
+                          { text: "Service Frequency", enabled: true },
+                          { text: "Vehicle Health Report", enabled: true },
+                          { text: "Cost Tracking & Documentation", enabled: true },
+                        ],
+                        popular: true,
+                      },
+                    ].map((item, idx) => (
+                      <motion.div
+                        key={idx}
+                        id={item.name.toLowerCase().replace(/[^a-z0-9]/g, "-")}
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: idx * 0.15 }}
+                        whileHover={{ y: -10 }}
+                        className={`relative p-6 sm:p-8 lg:p-10 rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[2.5rem] border-2 transition-all flex flex-col justify-between ${
+                          item.popular
+                            ? "bg-slate-900 text-white border-transparent shadow-[0_40px_80px_-15px_rgba(15,23,42,0.3)] py-8 sm:py-10 lg:py-12 z-10"
+                            : "bg-white text-slate-900 border-slate-100 hover:border-brand-accent/20"
+                        }`}
+                      >
+                        {item.popular && (
+                          <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-brand-accent text-white px-6 py-2 rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-brand-accent/20">
+                            Most Popular
+                          </div>
+                        )}
+                        <div className="space-y-5 sm:space-y-6 flex flex-col h-full justify-between">
+                          <div className="space-y-5 sm:space-y-6">
+                            <div className="space-y-2 sm:space-y-3">
+                              <h3
+                                className={`text-lg sm:text-xl font-black uppercase tracking-widest ${item.popular ? "text-brand-accent" : "text-slate-400"}`}
+                              >
+                                {item.name}
+                              </h3>
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-3xl sm:text-4xl lg:text-4xl 2xl:text-5xl font-black tracking-tighter">
+                                  {item.price}
+                                </span>
+                                <span
+                                  className={`text-xs sm:text-sm font-bold uppercase tracking-widest ${item.popular ? "text-slate-400" : "text-slate-400"}`}
+                                >
+                                  /report
+                                </span>
+                              </div>
+                            </div>
+
+                            <div
+                              className={`h-px w-full ${item.popular ? "bg-slate-800" : "bg-slate-100"}`}
+                            />
+
+                            <ul className="space-y-2.5 sm:space-y-3 min-h-0 lg:min-h-[220px]">
+                              {item.features.map((feature, fIdx) => (
+                                <li
+                                  key={fIdx}
+                                  className="flex items-start gap-2.5 sm:gap-3 text-[13px] xl:text-[14px] font-bold"
+                                >
+                                  <CheckCircle2
+                                    className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5 ${item.popular ? "text-brand-accent" : "text-slate-900"}`}
+                                  />
+                                  <span
+                                    className={
+                                      item.popular
+                                        ? "text-slate-300"
+                                        : "text-slate-600"
+                                    }
+                                  >
+                                    {feature.text}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          <button
+                            onClick={() => {
+                              navigateToOrder(item.type, true);
+                            }}
+                            className={`w-full py-3 sm:py-3.5 lg:py-4 rounded-xl sm:rounded-2xl font-black text-sm lg:text-base transition-all active:scale-95 mt-6 ${
+                              item.popular
+                                ? "bg-brand-accent text-white hover:bg-brand-accent-hover shadow-xl shadow-brand-accent/20"
+                                : "bg-slate-900 text-white hover:bg-brand-accent shadow-xl shadow-slate-900/10"
+                            }`}
+                          >
+                            Get {item.name}
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
               {/* Comparison Section */}
               <section
                 id="comparison"
@@ -1503,7 +1682,14 @@ export default function App() {
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-slate-600">Selected Package</span>
                         <span className="font-bold text-brand-blue">
-                          {selectedPackage || "Standard"} Report
+                          {selectedPackage
+                            ? selectedPackage.includes("Report") ||
+                              selectedPackage.includes("Records") ||
+                              selectedPackage.includes("Information") ||
+                              selectedPackage.includes("Sticker")
+                              ? selectedPackage
+                              : `${selectedPackage} Report`
+                            : "Standard Report"}
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-sm">
@@ -1522,17 +1708,23 @@ export default function App() {
                         <span>
                           {selectedPackage === "Sapphire"
                             ? "$499.95"
-                            : selectedPackage === "Ruby"
-                              ? "$239.95"
-                              : selectedPackage === "Diamond"
-                                ? "$129.95"
-                                : selectedPackage === "Platinum"
-                                  ? "$99.95"
-                                  : selectedPackage === "Premium"
-                                    ? "$99.95"
-                                    : selectedPackage === "Gold"
-                                      ? "$89.95"
-                                      : "$44.95"}
+                            : selectedPackage === "Service & Maintenance Records"
+                              ? "$399.99"
+                              : selectedPackage === "Ruby"
+                                ? "$239.95"
+                                : selectedPackage === "Salvage Information"
+                                  ? "$149.00"
+                                  : selectedPackage === "Diamond"
+                                    ? "$129.95"
+                                    : selectedPackage === "Platinum"
+                                      ? "$99.95"
+                                      : selectedPackage === "Premium"
+                                        ? "$99.95"
+                                        : selectedPackage === "Gold"
+                                          ? "$89.95"
+                                          : selectedPackage === "Window Sticker"
+                                            ? "$29.99"
+                                            : "$44.95"}
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 italic">

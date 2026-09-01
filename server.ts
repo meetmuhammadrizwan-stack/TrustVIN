@@ -59,9 +59,21 @@ app.use(express.json({ limit: "50mb" }));
         "Basic": 4495,
         "Gold": 8995,
         "Premium": 9995,
+        "Window Sticker": 2999,
+        "Salvage Information": 14900,
+        "Service & Maintenance Records": 39999,
       };
       
       const amount = priceMap[packageName] || 9995;
+
+      const productName =
+        packageName === "Window Sticker"
+          ? "Official Vehicle Window Sticker"
+          : packageName === "Salvage Information"
+            ? "Salvage & Total Loss Information Report"
+            : packageName === "Service & Maintenance Records"
+              ? "Vehicle Service & Maintenance Records"
+              : `${packageName} Vehicle History Report`;
 
       const session = await client.checkout.sessions.create({
         payment_method_types: ["card"],
@@ -70,7 +82,7 @@ app.use(express.json({ limit: "50mb" }));
             price_data: {
               currency: "usd",
               product_data: {
-                name: `${packageName} Vehicle History Report`,
+                name: productName,
                 description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
               },
               unit_amount: amount,
@@ -127,15 +139,27 @@ app.use(express.json({ limit: "50mb" }));
         "Basic": 4495,
         "Gold": 8995,
         "Premium": 9995,
+        "Window Sticker": 2999,
+        "Salvage Information": 14900,
+        "Service & Maintenance Records": 39999,
       };
       
       const amount = priceMap[packageName] || 9995;
+
+      const productName =
+        packageName === "Window Sticker"
+          ? "Official Vehicle Window Sticker"
+          : packageName === "Salvage Information"
+            ? "Salvage & Total Loss Information Report"
+            : packageName === "Service & Maintenance Records"
+              ? "Vehicle Service & Maintenance Records"
+              : `${packageName} Vehicle History Report`;
 
       const paymentIntent = await client.paymentIntents.create({
         amount,
         currency: "usd",
         receipt_email: email,
-        description: `${packageName} Vehicle History Report for VIN: ${vin || "Pending"}`,
+        description: `${productName} for VIN: ${vin || "Pending"}`,
         metadata: {
           packageName,
           vin: vin || "Pending",
