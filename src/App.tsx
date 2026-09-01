@@ -41,7 +41,15 @@ type View =
   | "privacy"
   | "terms"
   | "refund";
-type PackageType = "Basic" | "Premium" | "Gold" | null;
+type PackageType =
+  | "Platinum"
+  | "Diamond"
+  | "Ruby"
+  | "Sapphire"
+  | "Basic"
+  | "Premium"
+  | "Gold"
+  | null;
 
 export default function App() {
   const [view, setView] = useState<View>("home");
@@ -75,6 +83,27 @@ export default function App() {
       const normalized = hash.replace("#", "").toLowerCase();
 
       switch (normalized) {
+        case "platinum":
+          setSelectedPackage("Platinum");
+          setView("order");
+          window.scrollTo(0, 0);
+          break;
+        case "diamond":
+          setSelectedPackage("Diamond");
+          setView("order");
+          window.scrollTo(0, 0);
+          break;
+        case "ruby":
+          setSelectedPackage("Ruby");
+          setView("order");
+          window.scrollTo(0, 0);
+          break;
+        case "sapphire":
+        case "saphire":
+          setSelectedPackage("Sapphire");
+          setView("order");
+          window.scrollTo(0, 0);
+          break;
         case "basic":
           setSelectedPackage("Basic");
           setView("order");
@@ -534,7 +563,6 @@ export default function App() {
                       ownership records in seconds. Don't risk your investment.
                     </p>
 
-
                     <div className="flex flex-wrap items-center gap-8 text-[13px] text-slate-400 font-bold uppercase tracking-widest pt-4">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
@@ -619,7 +647,7 @@ export default function App() {
                       {
                         step: "02",
                         title: "Choose Package",
-                        text: "Select the report package that fits your needs. We offer Basic, Premium, and Gold options.",
+                        text: "Select the report package that fits your needs. We offer Platinum, Diamond, Ruby, and Sapphire options.",
                         icon: Zap,
                       },
                       {
@@ -749,7 +777,7 @@ export default function App() {
                     </p>
                   </motion.div>
 
-                  <div className="grid lg:grid-cols-3 gap-5 lg:gap-10 items-center">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch">
                     {[
                       {
                         name: "Basic",
@@ -760,15 +788,12 @@ export default function App() {
                           { text: "Ownership Costs", enabled: true },
                           { text: "Accident Information", enabled: true },
                           { text: "Market Value Range", enabled: true },
-                          {
-                            text: "Owner's History",
-                            enabled: true,
-                          },
+                          { text: "Owner's History", enabled: true },
                           { text: "Vehicle Specification", enabled: false },
                           { text: "Safety Recall Status", enabled: false },
                           { text: "Online Listing History", enabled: false },
                           { text: "Warranties", enabled: false },
-                          { text: "Salvage Informaton", enabled: false },
+                          { text: "Salvage Information", enabled: false },
                           { text: "Installed Equipment", enabled: false },
                         ],
                         popular: false,
@@ -778,44 +803,88 @@ export default function App() {
                         type: "Gold" as PackageType,
                         price: "$89.95",
                         features: [
-                          { text: "3 Vehicle Report", enabled: true },
                           { text: "Ownership Costs", enabled: true },
                           { text: "Accident Information", enabled: true },
                           { text: "Market Value Range", enabled: true },
-                          {
-                            text: "Owner's History",
-                            enabled: true,
-                          },
+                          { text: "Owner's History", enabled: true },
                           { text: "Vehicle Specification", enabled: true },
                           { text: "Safety Recall Status", enabled: true },
                           { text: "Online Listing History", enabled: false },
                           { text: "Warranties", enabled: false },
-                          { text: "Salvage Informaton", enabled: false },
+                          { text: "Salvage Information", enabled: false },
                           { text: "Installed Equipment", enabled: false },
                         ],
                         popular: false,
                       },
                       {
-                        name: "Premium",
-                        type: "Premium" as PackageType,
-                        price: "$129.95",
+                        name: "Platinum",
+                        type: "Platinum" as PackageType,
+                        price: "$99.95",
                         features: [
-                          { text: "5 Vehicle Report", enabled: true },
+                          { text: "3 Vehicle Report", enabled: true },
                           { text: "Ownership Costs", enabled: true },
                           { text: "Accident Information", enabled: true },
                           { text: "Market Value Range", enabled: true },
-                          {
-                            text: "Owner's History",
-                            enabled: true,
-                          },
-                          { text: "Vehicle Specification", enabled: true },
+                          { text: "Owner's History", enabled: true },
+                          { text: "Vehicle Specifications", enabled: true },
+                          { text: "Safety Recall Status", enabled: true },
+                          { text: "Online Listing History", enabled: false },
+                          { text: "Warranties", enabled: false },
+                          { text: "Theft & Recovery Records", enabled: false },
+                        ],
+                        popular: false,
+                      },
+                      {
+                        name: "Diamond",
+                        type: "Diamond" as PackageType,
+                        price: "$129.95",
+                        features: [
+                          { text: "Ownership Costs", enabled: true },
+                          { text: "Accident Information", enabled: true },
+                          { text: "Market Value Range", enabled: true },
+                          { text: "Owner's History", enabled: true },
+                          { text: "Vehicle Specifications", enabled: true },
+                          { text: "Safety Recall Status", enabled: true },
+                          { text: "Online Listing History", enabled: true },
+                          { text: "Warranties", enabled: false },
+                          { text: "Theft & Recovery Records", enabled: false },
+                        ],
+                        popular: false,
+                      },
+                      {
+                        name: "Ruby",
+                        type: "Ruby" as PackageType,
+                        price: "$239.95",
+                        features: [
+                          { text: "Ownership Costs", enabled: true },
+                          { text: "Accident Information", enabled: true },
+                          { text: "Market Value Range", enabled: true },
+                          { text: "Owner's History", enabled: true },
+                          { text: "Vehicle Specifications", enabled: true },
                           { text: "Safety Recall Status", enabled: true },
                           { text: "Online Listing History", enabled: true },
                           { text: "Warranties", enabled: true },
-                          { text: "Salvage Informaton", enabled: true },
-                          { text: "Installed Equipment", enabled: true },
+                          { text: "Theft & Recovery Records", enabled: false },
                         ],
                         popular: true,
+                      },
+                      {
+                        name: "Sapphire",
+                        type: "Sapphire" as PackageType,
+                        price: "$499.95",
+                        features: [
+                          { text: "Get Two Buyer Numbers", enabled: true },
+                          { text: "Ownership Costs", enabled: true },
+                          { text: "Accident Information", enabled: true },
+                          { text: "Market Value Range", enabled: true },
+                          { text: "Owner's History", enabled: true },
+                          { text: "Vehicle Specifications", enabled: true },
+                          { text: "Safety Recall Status", enabled: true },
+                          { text: "Online Listing History", enabled: true },
+                          { text: "Warranties", enabled: true },
+                          { text: "Theft & Recovery Records", enabled: true },
+                        ],
+                        popular: false,
                       },
                     ].map((item, idx) => (
                       <motion.div
@@ -824,11 +893,11 @@ export default function App() {
                         initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        transition={{ delay: idx * 0.15 }}
+                        transition={{ delay: (idx % 3) * 0.12 }}
                         whileHover={{ y: -10 }}
-                        className={`relative p-6 sm:p-8 lg:p-12 rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[3rem] border-2 transition-all ${
+                        className={`relative p-6 sm:p-8 lg:p-10 rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[2.5rem] border-2 transition-all flex flex-col justify-between ${
                           item.popular
-                            ? "bg-slate-900 text-white border-transparent shadow-[0_40px_80px_-15px_rgba(15,23,42,0.3)] py-8 sm:py-12 lg:py-16 z-10"
+                            ? "bg-slate-900 text-white border-transparent shadow-[0_40px_80px_-15px_rgba(15,23,42,0.3)] py-8 sm:py-10 lg:py-12 z-10"
                             : "bg-white text-slate-900 border-slate-100 hover:border-brand-accent/20"
                         }`}
                       >
@@ -837,62 +906,64 @@ export default function App() {
                             Most Popular
                           </div>
                         )}
-                        <div className="space-y-5 sm:space-y-7 lg:space-y-10">
-                          <div className="space-y-3">
-                            <h3
-                              className={`text-xl font-black uppercase tracking-widest ${item.popular ? "text-brand-accent" : "text-slate-400"}`}
-                            >
-                              {item.name}
-                            </h3>
-                            <div className="flex items-baseline gap-1">
-                              <span className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter">
-                                {item.price}
-                              </span>
-                              <span
-                                className={`text-sm font-bold uppercase tracking-widest ${item.popular ? "text-slate-400" : "text-slate-400"}`}
+                        <div className="space-y-5 sm:space-y-6 flex flex-col h-full justify-between">
+                          <div className="space-y-5 sm:space-y-6">
+                            <div className="space-y-2 sm:space-y-3">
+                              <h3
+                                className={`text-lg sm:text-xl font-black uppercase tracking-widest ${item.popular ? "text-brand-accent" : "text-slate-400"}`}
                               >
-                                /report
-                              </span>
-                            </div>
-                          </div>
-
-                          <div
-                            className={`h-px w-full ${item.popular ? "bg-slate-800" : "bg-slate-100"}`}
-                          />
-
-                          <ul className="space-y-3 sm:space-y-4 lg:space-y-5 min-h-0 lg:min-h-[260px]">
-                            {item.features.map((feature, fIdx) => (
-                              <li
-                                key={fIdx}
-                                className={`flex items-start gap-3 lg:gap-4 text-[13px] sm:text-[14px] lg:text-[15px] font-bold ${!feature.enabled ? "opacity-45" : ""}`}
-                              >
-                                {feature.enabled ? (
-                                  <CheckCircle2
-                                    className={`w-5 h-5 lg:w-6 lg:h-6 flex-shrink-0 ${item.popular ? "text-brand-accent" : "text-slate-900"}`}
-                                  />
-                                ) : (
-                                  <XCircle
-                                    className={`w-5 h-5 lg:w-6 lg:h-6 flex-shrink-0 ${item.popular ? "text-slate-500" : "text-slate-300"}`}
-                                  />
-                                )}
-                                <span
-                                  className={
-                                    item.popular
-                                      ? "text-slate-300"
-                                      : "text-slate-600"
-                                  }
-                                >
-                                  {feature.text}
+                                {item.name}
+                              </h3>
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-3xl sm:text-4xl lg:text-4xl 2xl:text-5xl font-black tracking-tighter">
+                                  {item.price}
                                 </span>
-                              </li>
-                            ))}
-                          </ul>
+                                <span
+                                  className={`text-xs sm:text-sm font-bold uppercase tracking-widest ${item.popular ? "text-slate-400" : "text-slate-400"}`}
+                                >
+                                  /report
+                                </span>
+                              </div>
+                            </div>
+
+                            <div
+                              className={`h-px w-full ${item.popular ? "bg-slate-800" : "bg-slate-100"}`}
+                            />
+
+                            <ul className="space-y-2.5 sm:space-y-3 min-h-0 lg:min-h-[280px]">
+                              {item.features.map((feature, fIdx) => (
+                                <li
+                                  key={fIdx}
+                                  className={`flex items-start gap-2.5 sm:gap-3 text-[13px] xl:text-[14px] font-bold ${!feature.enabled ? "opacity-45" : ""}`}
+                                >
+                                  {feature.enabled ? (
+                                    <CheckCircle2
+                                      className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5 ${item.popular ? "text-brand-accent" : "text-slate-900"}`}
+                                    />
+                                  ) : (
+                                    <XCircle
+                                      className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5 ${item.popular ? "text-slate-500" : "text-slate-300"}`}
+                                    />
+                                  )}
+                                  <span
+                                    className={
+                                      item.popular
+                                        ? "text-slate-300"
+                                        : "text-slate-600"
+                                    }
+                                  >
+                                    {feature.text}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
 
                           <button
                             onClick={() => {
                               navigateToOrder(item.type, true);
                             }}
-                            className={`w-full py-3 sm:py-4 lg:py-5 rounded-xl sm:rounded-2xl lg:rounded-[1.5rem] font-black text-base lg:text-lg transition-all active:scale-95 ${
+                            className={`w-full py-3 sm:py-3.5 lg:py-4 rounded-xl sm:rounded-2xl font-black text-sm lg:text-base transition-all active:scale-95 mt-6 ${
                               item.popular
                                 ? "bg-brand-accent text-white hover:bg-brand-accent-hover shadow-xl shadow-brand-accent/20"
                                 : "bg-slate-900 text-white hover:bg-brand-accent shadow-xl shadow-slate-900/10"
@@ -951,10 +1022,10 @@ export default function App() {
                         {[
                           {
                             feature: "Price per Report",
-                            us: "$44.95",
-                            f1: "$54.99",
-                            f2: "$58.99",
-                            f3: "$62.00",
+                            us: "$99.95",
+                            f1: "$129.99",
+                            f2: "$149.99",
+                            f3: "$189.99",
                           },
                           {
                             feature: "NMVTIS Data",
@@ -1449,11 +1520,19 @@ export default function App() {
                       <div className="flex justify-between items-center text-2xl font-black text-brand-blue">
                         <span>Total</span>
                         <span>
-                          {selectedPackage === "Gold"
-                            ? "$89.95"
-                            : selectedPackage === "Premium"
-                              ? "$129.95"
-                              : "$44.95"}
+                          {selectedPackage === "Sapphire"
+                            ? "$499.95"
+                            : selectedPackage === "Ruby"
+                              ? "$239.95"
+                              : selectedPackage === "Diamond"
+                                ? "$129.95"
+                                : selectedPackage === "Platinum"
+                                  ? "$99.95"
+                                  : selectedPackage === "Premium"
+                                    ? "$99.95"
+                                    : selectedPackage === "Gold"
+                                      ? "$89.95"
+                                      : "$44.95"}
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 italic">

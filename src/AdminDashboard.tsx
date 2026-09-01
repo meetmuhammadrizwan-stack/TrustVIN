@@ -664,17 +664,21 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                           {/* Package Label */}
                           <span
                             className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
-                              order.packageName === "Gold"
+                              order.packageName === "Sapphire"
                                 ? isSelected
-                                  ? "bg-amber-500/20 text-amber-300"
-                                  : "bg-amber-50 text-amber-700"
-                                : order.packageName === "Premium"
+                                  ? "bg-purple-500/20 text-purple-300"
+                                  : "bg-purple-50 text-purple-700"
+                                : order.packageName === "Ruby"
                                   ? isSelected
-                                    ? "bg-blue-500/20 text-blue-300"
-                                    : "bg-blue-50 text-blue-700"
-                                  : isSelected
-                                    ? "bg-slate-500/20 text-slate-300"
-                                    : "bg-slate-100 text-slate-600"
+                                    ? "bg-rose-500/20 text-rose-300"
+                                    : "bg-rose-50 text-rose-700"
+                                  : order.packageName === "Diamond"
+                                    ? isSelected
+                                      ? "bg-sky-500/20 text-sky-300"
+                                      : "bg-sky-50 text-sky-700"
+                                    : isSelected
+                                      ? "bg-slate-500/20 text-slate-300"
+                                      : "bg-slate-100 text-slate-600"
                             }`}
                           >
                             {order.packageName}

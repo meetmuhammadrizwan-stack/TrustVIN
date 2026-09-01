@@ -52,12 +52,16 @@ app.use(express.json({ limit: "50mb" }));
     try {
       // Map display price to cents for Stripe
       const priceMap: Record<string, number> = {
+        "Platinum": 9995,
+        "Diamond": 12995,
+        "Ruby": 23995,
+        "Sapphire": 49995,
         "Basic": 4495,
         "Gold": 8995,
-        "Premium": 12995
+        "Premium": 9995,
       };
       
-      const amount = priceMap[packageName] || 4495;
+      const amount = priceMap[packageName] || 9995;
 
       const session = await client.checkout.sessions.create({
         payment_method_types: ["card"],
@@ -116,12 +120,16 @@ app.use(express.json({ limit: "50mb" }));
 
     try {
       const priceMap: Record<string, number> = {
+        "Platinum": 9995,
+        "Diamond": 12995,
+        "Ruby": 23995,
+        "Sapphire": 49995,
         "Basic": 4495,
         "Gold": 8995,
-        "Premium": 12995
+        "Premium": 9995,
       };
       
-      const amount = priceMap[packageName] || 4495;
+      const amount = priceMap[packageName] || 9995;
 
       const paymentIntent = await client.paymentIntents.create({
         amount,
@@ -379,6 +387,30 @@ app.use(express.json({ limit: "50mb" }));
   </url>
   <url>
     <loc>${baseUrl}/#comparison</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/#platinum</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/#diamond</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/#ruby</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/#sapphire</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
