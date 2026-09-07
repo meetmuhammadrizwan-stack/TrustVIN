@@ -209,7 +209,7 @@ app.use(express.json({ limit: "50mb" }));
   // API: Update Order Status (Admin Only)
   app.put("/api/orders/:id", async (req, res) => {
     const { id } = req.params;
-    const { status, reportStatus } = req.body;
+    const { status, reportStatus, completedAt, reportUploadedAt } = req.body;
 
     // Update in Firebase Firestore
     try {
@@ -220,12 +220,25 @@ app.use(express.json({ limit: "50mb" }));
       
       const fbDoc = querySnapshot.docs[0];
       const docRef = db.collection("orders").doc(fbDoc.id);
+      const currentData = fbDoc.data() || {};
       const updates: any = {};
-      if (status !== undefined) updates.status = status;
-      if (reportStatus !== undefined) updates.reportStatus = reportStatus;
+      if (status !== undefined) {
+        updates.status = status;
+        if (status.toLowerCase() === "completed") {
+          updates.completedAt = completedAt || currentData.completedAt || new Date().toISOString();
+        }
+      }
+      if (reportStatus !== undefined) {
+        updates.reportStatus = reportStatus;
+        if (reportStatus === "sent" && !currentData.reportUploadedAt) {
+          updates.reportUploadedAt = reportUploadedAt || new Date().toISOString();
+        }
+      }
+      if (completedAt !== undefined) updates.completedAt = completedAt;
+      if (reportUploadedAt !== undefined) updates.reportUploadedAt = reportUploadedAt;
       
       await docRef.update(updates);
-      res.json({ success: true });
+      res.json({ success: true, ...updates });
     } catch (fbError: any) {
       console.error("Failed to update in Firebase:", fbError);
       res.status(500).json({ error: "Failed to update in Firebase: " + fbError.message });
@@ -250,13 +263,15 @@ app.use(express.json({ limit: "50mb" }));
 
       const fbDoc = querySnapshot.docs[0];
       const docRef = db.collection("orders").doc(fbDoc.id);
+      const reportUploadedAt = new Date().toISOString();
       await docRef.update({
         reportFileName: fileName,
         reportFilePath: secureUrl,
-        reportStatus: "sent"
+        reportStatus: "sent",
+        reportUploadedAt: reportUploadedAt
       });
 
-      res.json({ success: true, reportFileName: fileName, reportFilePath: secureUrl });
+      res.json({ success: true, reportFileName: fileName, reportFilePath: secureUrl, reportUploadedAt });
     } catch (error: any) {
       console.error("Error updating report status:", error);
       res.status(500).json({ error: error.message });
@@ -288,6 +303,7 @@ app.use(express.json({ limit: "50mb" }));
         reportFileName: "",
         reportFilePath: "",
         reportStatus: "not sent",
+        reportUploadedAt: null,
         downloads: []
       });
 

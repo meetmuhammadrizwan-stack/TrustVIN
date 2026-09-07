@@ -39,6 +39,8 @@ interface Order {
   phone?: string;
   amount: number;
   createdAt: string;
+  completedAt?: string;
+  reportUploadedAt?: string;
   status: string;
   country?: string;
   serialNumber?: number;
@@ -51,6 +53,20 @@ interface Order {
     ip: string;
   }>;
 }
+
+const formatDateTime = (dateStr?: string | null) => {
+  if (!dateStr) return "N/A";
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return "N/A";
+  return date.toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
 
 export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -142,7 +158,12 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 
   const updateOrderOnServer = async (
     orderId: string,
-    updates: { status?: string; reportStatus?: "not sent" | "sent" },
+    updates: {
+      status?: string;
+      reportStatus?: "not sent" | "sent";
+      completedAt?: string;
+      reportUploadedAt?: string;
+    },
   ) => {
     setIsUpdating(orderId);
     try {
@@ -152,8 +173,22 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         body: JSON.stringify(updates),
       });
       if (response.ok) {
+        const responseData = await response.json().catch(() => ({}));
         setOrders((prev) =>
-          prev.map((o) => (o.id === orderId ? { ...o, ...updates } : o)),
+          prev.map((o) =>
+            o.id === orderId
+              ? {
+                  ...o,
+                  ...updates,
+                  ...(responseData.completedAt
+                    ? { completedAt: responseData.completedAt }
+                    : {}),
+                  ...(responseData.reportUploadedAt
+                    ? { reportUploadedAt: responseData.reportUploadedAt }
+                    : {}),
+                }
+              : o,
+          ),
         );
         setUpdateSuccess(orderId);
         setTimeout(() => setUpdateSuccess(null), 1500);
@@ -229,6 +264,7 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 
       if (serverResponse.ok) {
         const result = await serverResponse.json();
+        const uploadedAt = result.reportUploadedAt || new Date().toISOString();
         setOrders((prev) =>
           prev.map((o) =>
             o.id === selectedOrder.id
@@ -237,6 +273,7 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                   reportFileName: file.name,
                   reportFilePath: result.reportFilePath || secureUrl,
                   reportStatus: "sent",
+                  reportUploadedAt: uploadedAt,
                 }
               : o,
           ),
@@ -286,6 +323,7 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                   reportFileName: "",
                   reportFilePath: "",
                   reportStatus: "not sent",
+                  reportUploadedAt: undefined,
                   downloads: [],
                 }
               : o,
@@ -354,7 +392,9 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       "VIN",
       "Package",
       "Amount",
-      "Date",
+      "Order Created",
+      "Order Completed",
+      "Report Uploaded",
       "Policy Agreed",
       "Report Status",
       "Payment Status",
@@ -368,7 +408,11 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       order.vin,
       order.packageName,
       order.amount,
-      new Date(order.createdAt).toLocaleDateString(),
+      formatDateTime(order.createdAt),
+      order.status.toLowerCase() === "completed"
+        ? formatDateTime(order.completedAt || order.createdAt)
+        : "",
+      order.reportUploadedAt ? formatDateTime(order.reportUploadedAt) : "",
       order.policyAgreed ? "Yes" : "No",
       order.reportStatus || "not sent",
       order.status,
@@ -818,13 +862,13 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 
                       <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-100">
                         <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                          Order Date
+                          Order Created
                         </div>
-                        <div className="text-sm font-black text-slate-700 mt-2 flex items-center gap-1.5">
-                          <Calendar className="w-4.5 h-4.5 text-slate-400 shrink-0" />
-                          {new Date(
-                            selectedOrder.createdAt,
-                          ).toLocaleDateString()}
+                        <div className="text-xs sm:text-sm font-black text-slate-700 mt-2 flex items-center gap-1.5">
+                          <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
+                          <span className="truncate">
+                            {formatDateTime(selectedOrder.createdAt)}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -1017,9 +1061,20 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                       <div className="grid sm:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-3xl border border-slate-200/50">
                         {/* Report Delivery Status */}
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-0.5">
-                            Report Status
-                          </label>
+                          <div className="flex items-center justify-between">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-0.5">
+                              Report Status
+                            </label>
+                            {selectedOrder.reportStatus === "sent" &&
+                              selectedOrder.reportUploadedAt && (
+                                <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                                  <Clock className="w-3 h-3 text-emerald-500" />
+                                  {formatDateTime(
+                                    selectedOrder.reportUploadedAt,
+                                  )}
+                                </span>
+                              )}
+                          </div>
                           <div className="relative">
                             <select
                               value={selectedOrder.reportStatus || "not sent"}
@@ -1027,9 +1082,17 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                                 const newReportVal = e.target.value as
                                   | "not sent"
                                   | "sent";
-                                updateOrderOnServer(selectedOrder.id, {
+                                const updates: any = {
                                   reportStatus: newReportVal,
-                                });
+                                };
+                                if (
+                                  newReportVal === "sent" &&
+                                  !selectedOrder.reportUploadedAt
+                                ) {
+                                  updates.reportUploadedAt =
+                                    new Date().toISOString();
+                                }
+                                updateOrderOnServer(selectedOrder.id, updates);
                               }}
                               disabled={isUpdating === selectedOrder.id}
                               className={`w-full px-4 py-3 bg-white border rounded-xl outline-none text-sm font-black uppercase tracking-wider transition-all appearance-none cursor-pointer ${
@@ -1062,17 +1125,37 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 
                         {/* Payment Invoice Status */}
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-0.5">
-                            Payment Invoice Status
-                          </label>
+                          <div className="flex items-center justify-between">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-0.5">
+                              Payment Invoice Status
+                            </label>
+                            {selectedOrder.status.toLowerCase() ===
+                              "completed" && (
+                              <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                                <Clock className="w-3 h-3 text-emerald-500" />
+                                Completed:{" "}
+                                {formatDateTime(
+                                  selectedOrder.completedAt ||
+                                    selectedOrder.createdAt,
+                                )}
+                              </span>
+                            )}
+                          </div>
                           <div className="relative">
                             <select
                               value={selectedOrder.status.toLowerCase()}
                               onChange={(e) => {
                                 const newPaymentVal = e.target.value;
-                                updateOrderOnServer(selectedOrder.id, {
-                                  status: newPaymentVal,
-                                });
+                                const updates: any = { status: newPaymentVal };
+                                if (
+                                  newPaymentVal.toLowerCase() ===
+                                    "completed" &&
+                                  !selectedOrder.completedAt
+                                ) {
+                                  updates.completedAt =
+                                    new Date().toISOString();
+                                }
+                                updateOrderOnServer(selectedOrder.id, updates);
                               }}
                               disabled={isUpdating === selectedOrder.id}
                               className={`w-full px-4 py-3 bg-white border rounded-xl outline-none text-sm font-black uppercase tracking-wider transition-all appearance-none cursor-pointer ${
@@ -1111,6 +1194,19 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                               )}
                             </div>
                           </div>
+                          {selectedOrder.status.toLowerCase() ===
+                            "completed" && (
+                            <p className="text-[11px] font-semibold text-emerald-600/90 flex items-center gap-1.5 pl-0.5">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                              <span>
+                                Order Completed:{" "}
+                                {formatDateTime(
+                                  selectedOrder.completedAt ||
+                                    selectedOrder.createdAt,
+                                )}
+                              </span>
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1132,11 +1228,22 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                                 </div>
                                 <div className="min-w-0">
                                   <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                    Uploaded Report
+                                    Report Uploaded
                                   </div>
                                   <div className="text-sm font-bold text-slate-800 truncate pr-2">
                                     {selectedOrder.reportFileName}
                                   </div>
+                                  {selectedOrder.reportUploadedAt && (
+                                    <div className="text-[11px] text-slate-400 font-semibold flex items-center gap-1 mt-0.5">
+                                      <Clock className="w-3 h-3 text-slate-400" />
+                                      <span>
+                                        Report Uploaded:{" "}
+                                        {formatDateTime(
+                                          selectedOrder.reportUploadedAt,
+                                        )}
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                               <button
