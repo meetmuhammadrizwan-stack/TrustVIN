@@ -207,15 +207,19 @@ export default function RefundPolicy({ onBack }: RefundPolicyProps) {
             </p>
           </section>
 
-          {/* <section>
+          <section>
             <h2 className="text-2xl font-black text-slate-900 mb-4">9. Contact Information</h2>
             <p><strong>9.1</strong> Refund-related inquiries should be directed to:</p>
             <p className="mt-4">
-              <strong>Email:</strong> support@allvinreport.com
+              <strong>Address:</strong> 14402 W Bellfort Street Sugar Land, Texas 77498, USA
+              <br />
+              <strong>Phone:</strong> +1 346 296697
+              <br />
+              <strong>Email:</strong> allvinreport@gmail.com
               <br />
               <strong>Subject Line:</strong> Refund Request – Order #[Order Number]
             </p>
-          </section> */}
+          </section>
         </div>
       </div>
     </motion.div>

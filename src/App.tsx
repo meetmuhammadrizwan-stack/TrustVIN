@@ -24,6 +24,8 @@ import {
   Mail,
   Menu,
   X,
+  MapPin,
+  Phone,
 } from "lucide-react";
 
 import AdminDashboard from "./AdminDashboard";
@@ -54,9 +56,23 @@ type PackageType =
   | "Service & Maintenance Records"
   | null;
 
+const PACKAGE_PRICES: Record<string, number> = {
+  Sapphire: 499.95,
+  "Service & Maintenance Records": 399.99,
+  Ruby: 239.95,
+  "Salvage Information": 149.0,
+  Diamond: 129.95,
+  Platinum: 99.95,
+  Premium: 99.95,
+  Gold: 89.95,
+  Basic: 44.95,
+  "Window Sticker": 29.99,
+};
+
 export default function App() {
   const [view, setView] = useState<View>("home");
   const [selectedPackage, setSelectedPackage] = useState<PackageType>(null);
+  const [includeWindowSticker, setIncludeWindowSticker] = useState(true);
   const [vinInput, setVinInput] = useState("");
   const [vinError, setVinError] = useState(false);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
@@ -89,37 +105,44 @@ export default function App() {
       switch (normalized) {
         case "platinum":
           setSelectedPackage("Platinum");
+          setIncludeWindowSticker(true);
           setView("order");
           window.scrollTo(0, 0);
           break;
         case "diamond":
           setSelectedPackage("Diamond");
+          setIncludeWindowSticker(true);
           setView("order");
           window.scrollTo(0, 0);
           break;
         case "ruby":
           setSelectedPackage("Ruby");
+          setIncludeWindowSticker(true);
           setView("order");
           window.scrollTo(0, 0);
           break;
         case "sapphire":
         case "saphire":
           setSelectedPackage("Sapphire");
+          setIncludeWindowSticker(true);
           setView("order");
           window.scrollTo(0, 0);
           break;
         case "basic":
           setSelectedPackage("Basic");
+          setIncludeWindowSticker(true);
           setView("order");
           window.scrollTo(0, 0);
           break;
         case "gold":
           setSelectedPackage("Gold");
+          setIncludeWindowSticker(true);
           setView("order");
           window.scrollTo(0, 0);
           break;
         case "premium":
           setSelectedPackage("Premium");
+          setIncludeWindowSticker(true);
           setView("order");
           window.scrollTo(0, 0);
           break;
@@ -135,6 +158,7 @@ export default function App() {
         case "salvageinformation":
         case "salvage":
           setSelectedPackage("Salvage Information");
+          setIncludeWindowSticker(true);
           setView("order");
           window.scrollTo(0, 0);
           break;
@@ -143,6 +167,7 @@ export default function App() {
         case "servicemaintenance":
         case "service":
           setSelectedPackage("Service & Maintenance Records");
+          setIncludeWindowSticker(true);
           setView("order");
           window.scrollTo(0, 0);
           break;
@@ -266,6 +291,8 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           packageName: selectedPackage || "Basic",
+          includeWindowSticker:
+            selectedPackage !== "Window Sticker" ? includeWindowSticker : false,
           vin: vinInput,
           policyAgreed,
           ...formData,
@@ -294,6 +321,7 @@ export default function App() {
       return;
     }
     setPolicyAgreed(false);
+    setIncludeWindowSticker(true);
     const targetHash = pkg
       ? pkg
           .toLowerCase()
@@ -331,6 +359,12 @@ export default function App() {
       window.location.hash = id;
     }
   };
+
+  const currentPackageName = selectedPackage || "Basic";
+  const mainPackagePrice = PACKAGE_PRICES[currentPackageName] || 44.95;
+  const isWindowStickerAddon =
+    selectedPackage !== "Window Sticker" && includeWindowSticker;
+  const finalTotal = mainPackagePrice + (isWindowStickerAddon ? 28.49 : 0);
 
   return (
     <div className="min-h-screen font-sans selection:bg-brand-accent selection:text-white bg-white">
@@ -1600,6 +1634,111 @@ export default function App() {
                       </div>
                     </div>
 
+                    {/* Window Sticker Add-on Section */}
+                    {selectedPackage !== "Window Sticker" && (
+                      <div
+                        className={`p-5 sm:p-6 rounded-2xl border-2 transition-all ${
+                          includeWindowSticker
+                            ? "bg-slate-50/90 border-brand-accent/40 shadow-sm"
+                            : "bg-slate-50/40 border-slate-200 opacity-75"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start gap-3.5">
+                            <input
+                              type="checkbox"
+                              id="windowStickerAddonCheckbox"
+                              checked={includeWindowSticker}
+                              onChange={(e) =>
+                                setIncludeWindowSticker(e.target.checked)
+                              }
+                              className="mt-1 w-5 h-5 rounded border-slate-300 text-brand-accent focus:ring-brand-accent cursor-pointer accent-brand-accent"
+                            />
+                            <label
+                              htmlFor="windowStickerAddonCheckbox"
+                              className="cursor-pointer select-none"
+                            >
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-black text-slate-900 text-base">
+                                  Window Sticker
+                                </span>
+                                <span className="bg-emerald-100 text-emerald-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                  5% Off Applied
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-500 mt-1 font-medium">
+                                Official vehicle window label verification & original OEM window sticker.
+                              </p>
+                            </label>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <div className="flex items-baseline gap-1.5 justify-end">
+                              <span className="text-xs text-slate-400 line-through font-bold">
+                                $29.99
+                              </span>
+                              <span className="text-xl font-black text-brand-blue">
+                                $28.49
+                              </span>
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                              /report
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Features list */}
+                        <div className="mt-4 pt-3.5 border-t border-slate-200/70">
+                          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">
+                            Features:
+                          </div>
+                          <div className="grid sm:grid-cols-2 gap-2">
+                            {[
+                              "Vehicle Window Label Verification",
+                              "Includes Window Label",
+                              "Digital Delivery",
+                              "Fast Turnaround",
+                              "Covers Most Vehicles",
+                              "Accurate OEM Information",
+                              "Easy to Access",
+                            ].map((feature, fIdx) => (
+                              <div
+                                key={fIdx}
+                                className="flex items-center gap-2 text-xs font-semibold text-slate-700"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                                <span>{feature}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Quick Toggle / State notice */}
+                        <div className="mt-3.5 pt-3 border-t border-slate-200/50 flex justify-between items-center text-xs">
+                          <span className="text-slate-500 font-medium">
+                            {includeWindowSticker
+                              ? "Window Sticker is added to your order"
+                              : "Window Sticker removed"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setIncludeWindowSticker(!includeWindowSticker)
+                            }
+                            className={`font-bold transition-colors cursor-pointer ${
+                              includeWindowSticker
+                                ? "text-rose-500 hover:text-rose-600 hover:underline"
+                                : "text-brand-accent hover:text-brand-accent-hover hover:underline"
+                            }`}
+                          >
+                            {includeWindowSticker
+                              ? "Remove Add-on"
+                              : "+ Add Window Sticker ($28.49)"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex items-start gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
                       <input
                         type="checkbox"
@@ -1681,17 +1820,82 @@ export default function App() {
                     <div className="space-y-4">
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-slate-600">Selected Package</span>
-                        <span className="font-bold text-brand-blue">
-                          {selectedPackage
-                            ? selectedPackage.includes("Report") ||
-                              selectedPackage.includes("Records") ||
-                              selectedPackage.includes("Information") ||
-                              selectedPackage.includes("Sticker")
-                              ? selectedPackage
-                              : `${selectedPackage} Report`
-                            : "Standard Report"}
-                        </span>
+                        <div className="text-right">
+                          <span className="font-bold text-brand-blue block">
+                            {selectedPackage
+                              ? selectedPackage.includes("Report") ||
+                                selectedPackage.includes("Records") ||
+                                selectedPackage.includes("Information") ||
+                                selectedPackage.includes("Sticker")
+                                ? selectedPackage
+                                : `${selectedPackage} Report`
+                              : "Basic Report"}
+                          </span>
+                          <span className="text-xs text-slate-500 font-bold">
+                            ${mainPackagePrice.toFixed(2)}
+                          </span>
+                        </div>
                       </div>
+
+                      {/* Window Sticker Add-on Row */}
+                      {selectedPackage !== "Window Sticker" && (
+                        <div className="pt-3 border-t border-slate-200/60">
+                          <div className="flex justify-between items-start text-sm">
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-bold text-slate-800">
+                                  Window Sticker
+                                </span>
+                                {includeWindowSticker && (
+                                  <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-1.5 py-0.5 rounded">
+                                    -5%
+                                  </span>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setIncludeWindowSticker(!includeWindowSticker)
+                                }
+                                className={`text-[11px] font-bold mt-0.5 block hover:underline cursor-pointer ${
+                                  includeWindowSticker
+                                    ? "text-rose-500"
+                                    : "text-brand-accent"
+                                }`}
+                              >
+                                {includeWindowSticker
+                                  ? "Remove"
+                                  : "+ Add ($28.49)"}
+                              </button>
+                            </div>
+                            <div className="text-right">
+                              {includeWindowSticker ? (
+                                <>
+                                  <span className="font-bold text-brand-blue block">
+                                    $28.49
+                                  </span>
+                                  <span className="text-xs text-slate-400 line-through font-semibold">
+                                    $29.99
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="text-xs text-slate-400 font-bold italic">
+                                  Removed
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Window Sticker 5% Discount Row */}
+                      {isWindowStickerAddon && (
+                        <div className="flex justify-between items-center text-xs bg-emerald-50 text-emerald-700 px-3 py-2 rounded-xl font-bold border border-emerald-100/80">
+                          <span>Window Sticker Discount (5%)</span>
+                          <span>-$1.50</span>
+                        </div>
+                      )}
+
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-slate-600">Report Status</span>
                         <span className="text-green-600 font-bold flex items-center gap-1">
@@ -1705,27 +1909,7 @@ export default function App() {
                     <div className="space-y-2">
                       <div className="flex justify-between items-center text-2xl font-black text-brand-blue">
                         <span>Total</span>
-                        <span>
-                          {selectedPackage === "Sapphire"
-                            ? "$499.95"
-                            : selectedPackage === "Service & Maintenance Records"
-                              ? "$399.99"
-                              : selectedPackage === "Ruby"
-                                ? "$239.95"
-                                : selectedPackage === "Salvage Information"
-                                  ? "$149.00"
-                                  : selectedPackage === "Diamond"
-                                    ? "$129.95"
-                                    : selectedPackage === "Platinum"
-                                      ? "$99.95"
-                                      : selectedPackage === "Premium"
-                                        ? "$99.95"
-                                        : selectedPackage === "Gold"
-                                          ? "$89.95"
-                                          : selectedPackage === "Window Sticker"
-                                            ? "$29.99"
-                                            : "$44.95"}
-                        </span>
+                        <span>${finalTotal.toFixed(2)}</span>
                       </div>
                       <p className="text-xs text-slate-500 italic">
                         No hidden fees. One-time payment.
@@ -1756,49 +1940,48 @@ export default function App() {
       </AnimatePresence>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-slate-400 py-24 px-6 border-t border-white/5">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-16 pb-20 border-b border-white/5">
-          <div className="space-y-8">
+      <footer className="bg-slate-900 text-slate-400 py-20 px-6 border-t border-white/5">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16 pb-16 border-b border-white/5">
+          <div className="space-y-6">
             <button
               onClick={navigateToHome}
-              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              className="flex items-center gap-3 hover:opacity-80 transition-opacity text-left"
             >
               <img
                 src="/allvinreport.jpeg"
                 alt="AllVinReport Logo"
-                className="h-10 w-auto object-contain"
+                className="h-10 w-auto object-contain rounded-lg"
               />
               <span className="text-2xl font-black text-white tracking-tighter">
                 All VIN REPORT
               </span>
             </button>
-            <p className="text-[15px] leading-relaxed font-medium">
+            <p className="text-[14px] leading-relaxed font-medium text-slate-400">
               Premium automotive data intelligence. Helping buyers make
-              confident decisions since 2018 with real-time global data.
+              confident decisions since 2018 with real-time global vehicle data.
             </p>
-            <div className="flex gap-4">
-              <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-brand-accent transition-colors cursor-pointer group">
-                <Car className="w-5 h-5 text-slate-500 group-hover:text-white" />
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-brand-accent transition-colors cursor-pointer group">
+                <Car className="w-4 h-4 text-slate-400 group-hover:text-white" />
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-brand-accent transition-colors cursor-pointer group">
+                <ShieldCheck className="w-4 h-4 text-slate-400 group-hover:text-white" />
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-brand-accent transition-colors cursor-pointer group">
+                <BadgeCheck className="w-4 h-4 text-slate-400 group-hover:text-white" />
               </div>
             </div>
           </div>
-          {/* <div className="space-y-6">
-            <h4 className="text-white font-black uppercase tracking-[0.2em] text-xs">Services</h4>
-            <ul className="space-y-4 text-sm font-bold">
-              <li><button onClick={() => navigateToOrder()} className="hover:text-brand-accent transition-colors">VIN Lookup</button></li>
-              <li><a href="#" className="hover:text-brand-accent transition-colors">License Plate Search</a></li>
-              <li><a href="#" className="hover:text-brand-accent transition-colors">Recall Check</a></li>
-              <li><button onClick={(e) => scrollToSection(e as any, "pricing")} className="hover:text-brand-accent transition-colors">Market Value</button></li>
-            </ul>
-          </div> */}
+
           <div className="space-y-6">
             <h4 className="text-white font-black uppercase tracking-[0.2em] text-xs">
               Company
             </h4>
-            <ul className="space-y-4 text-sm font-bold">
+            <ul className="space-y-3.5 text-sm font-bold">
               <li>
                 <a
                   href="#about"
+                  onClick={(e) => scrollToSection(e, "about")}
                   className="hover:text-brand-accent transition-colors"
                 >
                   About Us
@@ -1806,10 +1989,11 @@ export default function App() {
               </li>
               <li>
                 <a
-                  href="#"
+                  href="#pricing"
+                  onClick={(e) => scrollToSection(e, "pricing")}
                   className="hover:text-brand-accent transition-colors"
                 >
-                  Contact
+                  Pricing
                 </a>
               </li>
               <li>
@@ -1817,7 +2001,7 @@ export default function App() {
                   onClick={() => {
                     window.location.hash = "terms";
                   }}
-                  className="hover:text-brand-accent transition-colors"
+                  className="hover:text-brand-accent transition-colors text-left"
                 >
                   Terms & Conditions
                 </button>
@@ -1827,7 +2011,7 @@ export default function App() {
                   onClick={() => {
                     window.location.hash = "privacy";
                   }}
-                  className="hover:text-brand-accent transition-colors"
+                  className="hover:text-brand-accent transition-colors text-left"
                 >
                   Privacy Policy
                 </button>
@@ -1837,33 +2021,87 @@ export default function App() {
                   onClick={() => {
                     window.location.hash = "refund";
                   }}
-                  className="hover:text-brand-accent transition-colors"
+                  className="hover:text-brand-accent transition-colors text-left"
                 >
                   Refund Policy
                 </button>
               </li>
             </ul>
           </div>
+
           <div className="space-y-6">
             <h4 className="text-white font-black uppercase tracking-[0.2em] text-xs">
-              Direct Support
+              Contact Info
             </h4>
-            <div className="p-6 bg-white/5 rounded-3xl border border-white/10 space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-brand-accent/20 rounded-2xl flex items-center justify-center shrink-0">
-                  <Info className="text-brand-accent w-6 h-6" />
-                </div>
-                <div>
-                  <div className="text-white font-black text-sm uppercase tracking-wider">
-                    Need Help?
-                  </div>
-                  <div className="text-slate-500 text-xs font-bold mt-1">
-                    Response within 2h
-                  </div>
-                </div>
+            <ul className="space-y-4 text-sm font-medium">
+              <li className="flex items-start gap-3 text-slate-300">
+                <MapPin className="w-5 h-5 text-brand-accent shrink-0 mt-0.5" />
+                <span className="leading-relaxed text-[14px]">
+                  14402 W Bellfort Street Sugar Land<br />
+                  Texas 77498, USA
+                </span>
+              </li>
+              <li>
+                <a
+                  href="tel:+1346296697"
+                  className="flex items-center gap-3 text-slate-300 hover:text-brand-accent transition-colors"
+                >
+                  <Phone className="w-5 h-5 text-brand-accent shrink-0" />
+                  <span className="font-bold text-[14px]">+1 346 296697</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="mailto:allvinreport@gmail.com"
+                  className="flex items-center gap-3 text-slate-300 hover:text-brand-accent transition-colors"
+                >
+                  <Mail className="w-5 h-5 text-brand-accent shrink-0" />
+                  <span className="font-bold text-[14px] break-all">allvinreport@gmail.com</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Accreditations & Trust Partners Section - Fully Responsive on Mobile & Desktop */}
+        <div className="max-w-7xl mx-auto py-10 sm:py-12 border-b border-white/5">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8">
+            <div className="text-center lg:text-left space-y-1.5">
+              <span className="text-xs font-black uppercase tracking-[0.25em] text-brand-accent flex items-center justify-center lg:justify-start gap-2">
+                <ShieldCheck className="w-4 h-4" /> Official Data Partners & Accreditations
+              </span>
+              <p className="text-xs sm:text-sm text-slate-400 font-medium">
+                Verified registry records, certified inspection stations & consumer trust approved
+              </p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-5 items-center w-full lg:w-auto">
+              <div className="bg-white p-2.5 sm:p-3 rounded-2xl shadow-md hover:scale-105 transition-transform flex items-center justify-center h-16 sm:h-20 w-full max-w-[170px] mx-auto">
+                <img
+                  src="/footerimg/trustpilot.jpeg"
+                  alt="Trustpilot 5-Star Rating"
+                  className="max-h-full max-w-full object-contain"
+                />
               </div>
-              <div className="text-[13px] font-black text-white hover:text-brand-accent transition-colors cursor-pointer">
-                support@allvinreport.com
+              <div className="bg-white p-2.5 sm:p-3 rounded-2xl shadow-md hover:scale-105 transition-transform flex items-center justify-center h-16 sm:h-20 w-full max-w-[170px] mx-auto">
+                <img
+                  src="/footerimg/nmvtis.jpeg"
+                  alt="NMVTIS National Motor Vehicle Title Information System"
+                  className="max-h-full max-w-full object-contain"
+                />
+              </div>
+              <div className="bg-white p-2.5 sm:p-3 rounded-2xl shadow-md hover:scale-105 transition-transform flex items-center justify-center h-16 sm:h-20 w-full max-w-[170px] mx-auto">
+                <img
+                  src="/footerimg/ppsr.jpeg"
+                  alt="PPSR Personal Property Securities Register"
+                  className="max-h-full max-w-full object-contain"
+                />
+              </div>
+              <div className="bg-white p-2.5 sm:p-3 rounded-2xl shadow-md hover:scale-105 transition-transform flex items-center justify-center h-16 sm:h-20 w-full max-w-[170px] mx-auto">
+                <img
+                  src="/footerimg/vehicle-inspection.jpeg"
+                  alt="Vehicle Testing Station Approved by Vehicle Inspectorate"
+                  className="max-h-full max-w-full object-contain"
+                />
               </div>
             </div>
           </div>

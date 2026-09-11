@@ -52,6 +52,12 @@ interface Order {
     timestamp: string;
     ip: string;
   }>;
+  packagePrice?: number;
+  windowStickerIncluded?: boolean;
+  windowStickerOriginalPrice?: number;
+  windowStickerDiscount?: number;
+  windowStickerFinalPrice?: number;
+  totalDiscount?: number;
 }
 
 const formatDateTime = (dateStr?: string | null) => {
@@ -66,6 +72,64 @@ const formatDateTime = (dateStr?: string | null) => {
     minute: "2-digit",
     hour12: true,
   });
+};
+
+const getOrderBreakdown = (order: Order) => {
+  const packagePriceMap: Record<string, number> = {
+    Platinum: 99.95,
+    Diamond: 129.95,
+    Ruby: 239.95,
+    Sapphire: 499.95,
+    Basic: 44.95,
+    Gold: 89.95,
+    Premium: 99.95,
+    "Window Sticker": 29.99,
+    "Salvage Information": 149.0,
+    "Service & Maintenance Records": 399.99,
+  };
+
+  const isIncluded =
+    order.windowStickerIncluded !== undefined
+      ? order.windowStickerIncluded
+      : order.packageName === "Window Sticker" ||
+        Math.abs(
+          order.amount - ((packagePriceMap[order.packageName] || 0) + 28.49),
+        ) < 0.05;
+
+  const mainPackagePrice =
+    order.packagePrice !== undefined
+      ? order.packagePrice
+      : packagePriceMap[order.packageName] ??
+        (isIncluded ? Math.max(0, order.amount - 28.49) : order.amount);
+
+  const windowStickerOriginalPrice = isIncluded
+    ? order.windowStickerOriginalPrice ?? 29.99
+    : 0;
+  const windowStickerDiscount = isIncluded
+    ? order.windowStickerDiscount ?? 1.5
+    : 0;
+  const windowStickerFinalPrice = isIncluded
+    ? order.windowStickerFinalPrice ?? 28.49
+    : 0;
+  const totalDiscount =
+    order.totalDiscount !== undefined
+      ? order.totalDiscount
+      : isIncluded
+        ? 1.5
+        : 0;
+  const finalAmountPaid = order.amount;
+
+  return {
+    packageName: order.packageName,
+    mainPackagePrice,
+    windowStickerIncluded: isIncluded,
+    windowStickerOriginalPrice,
+    windowStickerDiscount,
+    windowStickerFinalPrice,
+    totalDiscount,
+    finalAmountPaid,
+    createdAt: order.createdAt,
+  };
 };
 
 export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
@@ -390,33 +454,48 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       "Phone",
       "Country",
       "VIN",
-      "Package",
-      "Amount",
-      "Order Created",
+      "Main Package",
+      "Main Package Original Price",
+      "Window Sticker Status",
+      "Window Sticker Original Price",
+      "Window Sticker Discount (5%)",
+      "Window Sticker Final Price",
+      "Total Discount",
+      "Final Amount Paid",
+      "Order Date/Time",
       "Order Completed",
       "Report Uploaded",
       "Policy Agreed",
       "Report Status",
       "Payment Status",
     ];
-    const rows = filteredOrders.map((order) => [
-      order.id,
-      `${order.firstName} ${order.lastName}`,
-      order.email,
-      order.phone || "",
-      order.country || "United States",
-      order.vin,
-      order.packageName,
-      order.amount,
-      formatDateTime(order.createdAt),
-      order.status.toLowerCase() === "completed"
-        ? formatDateTime(order.completedAt || order.createdAt)
-        : "",
-      order.reportUploadedAt ? formatDateTime(order.reportUploadedAt) : "",
-      order.policyAgreed ? "Yes" : "No",
-      order.reportStatus || "not sent",
-      order.status,
-    ]);
+    const rows = filteredOrders.map((order) => {
+      const b = getOrderBreakdown(order);
+      return [
+        order.id,
+        `${order.firstName} ${order.lastName}`,
+        order.email,
+        order.phone || "",
+        order.country || "United States",
+        order.vin,
+        b.packageName,
+        `$${b.mainPackagePrice.toFixed(2)}`,
+        b.windowStickerIncluded ? "Included" : "Not Included",
+        `$${b.windowStickerOriginalPrice.toFixed(2)}`,
+        `$${b.windowStickerDiscount.toFixed(2)}`,
+        `$${b.windowStickerFinalPrice.toFixed(2)}`,
+        `$${b.totalDiscount.toFixed(2)}`,
+        `$${b.finalAmountPaid.toFixed(2)}`,
+        formatDateTime(order.createdAt),
+        order.status.toLowerCase() === "completed"
+          ? formatDateTime(order.completedAt || order.createdAt)
+          : "",
+        order.reportUploadedAt ? formatDateTime(order.reportUploadedAt) : "",
+        order.policyAgreed ? "Yes" : "No",
+        order.reportStatus || "not sent",
+        order.status,
+      ];
+    });
 
     const csvContent =
       "data:text/csv;charset=utf-8," +
@@ -727,6 +806,17 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                           >
                             {order.packageName}
                           </span>
+                          {getOrderBreakdown(order).windowStickerIncluded && (
+                            <span
+                              className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md ${
+                                isSelected
+                                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                                  : "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
+                              }`}
+                            >
+                              + Sticker
+                            </span>
+                          )}
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -872,6 +962,127 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                         </div>
                       </div>
                     </div>
+
+                    {/* Purchased Items & Pricing Breakdown Section */}
+                    {(() => {
+                      const breakdown = getOrderBreakdown(selectedOrder);
+                      return (
+                        <div className="space-y-4">
+                          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 flex items-center justify-between">
+                            <span>Purchased Items & Pricing Breakdown</span>
+                            <span className="text-[10px] font-bold text-slate-400">
+                              Date: {formatDateTime(breakdown.createdAt)}
+                            </span>
+                          </h4>
+
+                          <div className="bg-slate-50/80 p-5 rounded-3xl border border-slate-200/70 space-y-4">
+                            {/* Grid of purchased items */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Main Package Card */}
+                              <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
+                                <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                  Main Vehicle Report Package
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-base font-black text-slate-900">
+                                    {breakdown.packageName}
+                                  </span>
+                                  <span className="text-sm font-black text-slate-800">
+                                    ${breakdown.mainPackagePrice.toFixed(2)}
+                                  </span>
+                                </div>
+                                <div className="text-[11px] text-slate-500 font-medium">
+                                  Original Package Base Price
+                                </div>
+                              </div>
+
+                              {/* Window Sticker Add-on Card */}
+                              <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                    Window Sticker Add-on
+                                  </span>
+                                  <span
+                                    className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
+                                      breakdown.windowStickerIncluded
+                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                        : "bg-slate-100 text-slate-500 border-slate-200"
+                                    }`}
+                                  >
+                                    {breakdown.windowStickerIncluded
+                                      ? "Included"
+                                      : "Not Included"}
+                                  </span>
+                                </div>
+
+                                {breakdown.windowStickerIncluded ? (
+                                  <div className="space-y-1 pt-1">
+                                    <div className="flex justify-between items-center text-xs">
+                                      <span className="text-slate-500">
+                                        Original Price:
+                                      </span>
+                                      <span className="font-bold text-slate-700">
+                                        ${breakdown.windowStickerOriginalPrice.toFixed(2)}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs text-emerald-600 font-bold">
+                                      <span>Window Sticker Discount (5%):</span>
+                                      <span>
+                                        -${breakdown.windowStickerDiscount.toFixed(2)}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-sm font-black text-brand-blue pt-1.5 border-t border-slate-100">
+                                      <span>Final Window Sticker Price:</span>
+                                      <span>
+                                        ${breakdown.windowStickerFinalPrice.toFixed(2)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-xs text-slate-400 font-medium italic pt-2">
+                                    Not purchased with this order ($0.00)
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Summary bar */}
+                            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 flex flex-wrap items-center justify-between gap-4">
+                              <div className="flex flex-wrap items-center gap-6">
+                                <div>
+                                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                    Total Discount
+                                  </div>
+                                  <div className="text-sm font-black text-emerald-600">
+                                    {breakdown.totalDiscount > 0
+                                      ? `-$${breakdown.totalDiscount.toFixed(2)}`
+                                      : "$0.00"}
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                    Order Date & Time
+                                  </div>
+                                  <div className="text-xs font-bold text-slate-700">
+                                    {formatDateTime(breakdown.createdAt)}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="text-right">
+                                <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                  Final Amount Actually Paid
+                                </div>
+                                <div className="text-2xl font-black text-slate-900">
+                                  ${breakdown.finalAmountPaid.toFixed(2)}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     {/* Customer & Car Metadata Section */}
                     <div className="space-y-4">

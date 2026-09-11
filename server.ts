@@ -42,29 +42,51 @@ app.use(express.json({ limit: "50mb" }));
 
   // API: Create Checkout Session
   app.post("/api/create-checkout-session", async (req, res) => {
-    const { packageName, priceLabel, vin, email, firstName, lastName, country, policyAgreed, phone } = req.body;
+    const {
+      packageName,
+      includeWindowSticker,
+      priceLabel,
+      vin,
+      email,
+      firstName,
+      lastName,
+      country,
+      policyAgreed,
+      phone,
+    } = req.body;
     const client = getStripe();
 
     if (!client) {
-      return res.status(500).json({ error: "Stripe is not configured on the server." });
+      return res
+        .status(500)
+        .json({ error: "Stripe is not configured on the server." });
     }
 
     try {
       // Map display price to cents for Stripe
       const priceMap: Record<string, number> = {
-        "Platinum": 9995,
-        "Diamond": 12995,
-        "Ruby": 23995,
-        "Sapphire": 49995,
-        "Basic": 4495,
-        "Gold": 8995,
-        "Premium": 9995,
+        Platinum: 9995,
+        Diamond: 12995,
+        Ruby: 23995,
+        Sapphire: 49995,
+        Basic: 4495,
+        Gold: 8995,
+        Premium: 9995,
         "Window Sticker": 2999,
         "Salvage Information": 14900,
         "Service & Maintenance Records": 39999,
       };
-      
-      const amount = priceMap[packageName] || 9995;
+
+      const packagePriceCents = priceMap[packageName] || 4495;
+      const isWindowStickerAddon = Boolean(
+        includeWindowSticker && packageName !== "Window Sticker",
+      );
+      const windowStickerOriginalPriceCents = 2999;
+      const windowStickerDiscountCents = 150; // 5% discount ($1.50)
+      const windowStickerFinalPriceCents = 2849; // $28.49
+      const totalAmountCents =
+        packagePriceCents +
+        (isWindowStickerAddon ? windowStickerFinalPriceCents : 0);
 
       const productName =
         packageName === "Window Sticker"
@@ -75,21 +97,37 @@ app.use(express.json({ limit: "50mb" }));
               ? "Vehicle Service & Maintenance Records"
               : `${packageName} Vehicle History Report`;
 
+      const line_items: any[] = [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: productName,
+              description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
+            },
+            unit_amount: packagePriceCents,
+          },
+          quantity: 1,
+        },
+      ];
+
+      if (isWindowStickerAddon) {
+        line_items.push({
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "Window Sticker Add-on (5% Discount Applied)",
+              description: `Official Vehicle Window Label Verification & OEM Window Sticker for VIN: ${vin || "Pending"}`,
+            },
+            unit_amount: windowStickerFinalPriceCents,
+          },
+          quantity: 1,
+        });
+      }
+
       const session = await client.checkout.sessions.create({
         payment_method_types: ["card"],
-        line_items: [
-          {
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: productName,
-                description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
-              },
-              unit_amount: amount,
-            },
-            quantity: 1,
-          },
-        ],
+        line_items,
         mode: "payment",
         success_url: `${process.env.APP_URL || "http://localhost:3000"}/?success=true`,
         cancel_url: `${process.env.APP_URL || "http://localhost:3000"}/?canceled=true`,
@@ -100,16 +138,22 @@ app.use(express.json({ limit: "50mb" }));
       const newOrder = {
         id: session.id,
         packageName,
+        packagePrice: packagePriceCents / 100,
+        windowStickerIncluded: isWindowStickerAddon,
+        windowStickerOriginalPrice: isWindowStickerAddon ? 29.99 : 0,
+        windowStickerDiscount: isWindowStickerAddon ? 1.50 : 0,
+        windowStickerFinalPrice: isWindowStickerAddon ? 28.49 : 0,
+        totalDiscount: isWindowStickerAddon ? 1.50 : 0,
+        amount: totalAmountCents / 100,
         vin,
         email,
         firstName,
         lastName,
         phone: phone || "",
         country: country || "United States",
-        amount: amount / 100,
         createdAt: new Date().toISOString(),
         status: "pending",
-        policyAgreed: !!policyAgreed
+        policyAgreed: !!policyAgreed,
       };
 
       await db.collection("orders").add(newOrder);
@@ -123,28 +167,49 @@ app.use(express.json({ limit: "50mb" }));
 
   // API: Create Payment Intent
   app.post("/api/create-payment-intent", async (req, res) => {
-    const { packageName, vin, email, firstName, lastName, country, policyAgreed, phone } = req.body;
+    const {
+      packageName,
+      includeWindowSticker,
+      vin,
+      email,
+      firstName,
+      lastName,
+      country,
+      policyAgreed,
+      phone,
+    } = req.body;
     const client = getStripe();
 
     if (!client) {
-      return res.status(500).json({ error: "Stripe is not configured on the server." });
+      return res
+        .status(500)
+        .json({ error: "Stripe is not configured on the server." });
     }
 
     try {
       const priceMap: Record<string, number> = {
-        "Platinum": 9995,
-        "Diamond": 12995,
-        "Ruby": 23995,
-        "Sapphire": 49995,
-        "Basic": 4495,
-        "Gold": 8995,
-        "Premium": 9995,
+        Platinum: 9995,
+        Diamond: 12995,
+        Ruby: 23995,
+        Sapphire: 49995,
+        Basic: 4495,
+        Gold: 8995,
+        Premium: 9995,
         "Window Sticker": 2999,
         "Salvage Information": 14900,
         "Service & Maintenance Records": 39999,
       };
-      
-      const amount = priceMap[packageName] || 9995;
+
+      const packagePriceCents = priceMap[packageName] || 4495;
+      const isWindowStickerAddon = Boolean(
+        includeWindowSticker && packageName !== "Window Sticker",
+      );
+      const windowStickerOriginalPriceCents = 2999;
+      const windowStickerDiscountCents = 150; // 5% discount ($1.50)
+      const windowStickerFinalPriceCents = 2849; // $28.49
+      const totalAmountCents =
+        packagePriceCents +
+        (isWindowStickerAddon ? windowStickerFinalPriceCents : 0);
 
       const productName =
         packageName === "Window Sticker"
@@ -156,33 +221,46 @@ app.use(express.json({ limit: "50mb" }));
               : `${packageName} Vehicle History Report`;
 
       const paymentIntent = await client.paymentIntents.create({
-        amount,
+        amount: totalAmountCents,
         currency: "usd",
         receipt_email: email,
-        description: `${productName} for VIN: ${vin || "Pending"}`,
+        description: `${productName}${isWindowStickerAddon ? " + Window Sticker Add-on" : ""} for VIN: ${vin || "Pending"}`,
         metadata: {
           packageName,
+          packagePrice: (packagePriceCents / 100).toFixed(2),
+          windowStickerIncluded: isWindowStickerAddon ? "true" : "false",
+          windowStickerOriginalPrice: isWindowStickerAddon ? "29.99" : "0",
+          windowStickerDiscount: isWindowStickerAddon ? "1.50" : "0",
+          windowStickerFinalPrice: isWindowStickerAddon ? "28.49" : "0",
+          totalDiscount: isWindowStickerAddon ? "1.50" : "0",
+          finalAmountPaid: (totalAmountCents / 100).toFixed(2),
           vin: vin || "Pending",
           firstName,
           lastName,
-          country: country || "United States"
-        }
+          country: country || "United States",
+        },
       });
 
       // Save order data directly to Firebase Firestore
       const newOrder = {
         id: paymentIntent.id,
         packageName,
+        packagePrice: packagePriceCents / 100,
+        windowStickerIncluded: isWindowStickerAddon,
+        windowStickerOriginalPrice: isWindowStickerAddon ? 29.99 : 0,
+        windowStickerDiscount: isWindowStickerAddon ? 1.50 : 0,
+        windowStickerFinalPrice: isWindowStickerAddon ? 28.49 : 0,
+        totalDiscount: isWindowStickerAddon ? 1.50 : 0,
+        amount: totalAmountCents / 100,
         vin,
         email,
         firstName,
         lastName,
         phone: phone || "",
         country: country || "United States",
-        amount: amount / 100,
         createdAt: new Date().toISOString(),
         status: "pending",
-        policyAgreed: !!policyAgreed
+        policyAgreed: !!policyAgreed,
       };
 
       await db.collection("orders").add(newOrder);

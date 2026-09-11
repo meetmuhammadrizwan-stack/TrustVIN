@@ -290,7 +290,11 @@ export default function TermsAndConditions({
             <p>
               For questions regarding these Terms & Conditions, please contact:
               <br />
-              <strong>Email:</strong> info@allvinreport.com
+              <strong>Address:</strong> 14402 W Bellfort Street Sugar Land, Texas 77498, USA
+              <br />
+              <strong>Phone:</strong> +1 346 296697
+              <br />
+              <strong>Email:</strong> allvinreport@gmail.com
             </p>
           </section>
         </div>
