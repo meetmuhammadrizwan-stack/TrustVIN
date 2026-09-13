@@ -77,59 +77,99 @@ app.use(express.json({ limit: "50mb" }));
         "Service & Maintenance Records": 39999,
       };
 
-      const packagePriceCents = priceMap[packageName] || 4495;
+      const resolvedPackageName = packageName || "Basic";
+      const packagePriceCents = priceMap[resolvedPackageName] || 4495;
       const isWindowStickerAddon = Boolean(
-        includeWindowSticker && packageName !== "Window Sticker",
+        includeWindowSticker && resolvedPackageName !== "Window Sticker",
       );
-      const windowStickerOriginalPriceCents = 2999;
-      const windowStickerDiscountCents = 150; // 5% discount ($1.50)
-      const windowStickerFinalPriceCents = 2849; // $28.49
-      const totalAmountCents =
-        packagePriceCents +
-        (isWindowStickerAddon ? windowStickerFinalPriceCents : 0);
+      const isBasicPackage = resolvedPackageName === "Basic";
+      const windowStickerPriceCents = isWindowStickerAddon ? 2999 : 0;
+      const combinedSubtotalCents = packagePriceCents + windowStickerPriceCents;
+
+      // 5% discount ONLY applies to Basic Report when Window Sticker is included
+      // Calculated from the FULL COMBINED PAYMENT: Basic Report + Window Sticker
+      const discountCents =
+        isBasicPackage && isWindowStickerAddon
+          ? Math.round(combinedSubtotalCents * 0.05) // 375 cents ($3.75)
+          : 0;
+
+      const totalAmountCents = combinedSubtotalCents - discountCents; // 7119 cents ($71.19) for Basic + Sticker
 
       const productName =
-        packageName === "Window Sticker"
+        resolvedPackageName === "Window Sticker"
           ? "Official Vehicle Window Sticker"
-          : packageName === "Salvage Information"
+          : resolvedPackageName === "Salvage Information"
             ? "Salvage & Total Loss Information Report"
-            : packageName === "Service & Maintenance Records"
+            : resolvedPackageName === "Service & Maintenance Records"
               ? "Vehicle Service & Maintenance Records"
-              : `${packageName} Vehicle History Report`;
+              : `${resolvedPackageName} Vehicle History Report`;
 
-      const line_items: any[] = [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: productName,
-              description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
-            },
-            unit_amount: packagePriceCents,
-          },
-          quantity: 1,
-        },
-      ];
+      let line_items: any[] = [];
 
-      if (isWindowStickerAddon) {
-        line_items.push({
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: "Window Sticker Add-on (5% Discount Applied)",
-              description: `Official Vehicle Window Label Verification & OEM Window Sticker for VIN: ${vin || "Pending"}`,
+      if (isBasicPackage && isWindowStickerAddon) {
+        // Basic + Window Sticker bundle with 5% discount applied across the order
+        // 4495 * 0.95 = 4270, 2999 * 0.95 = 2849, 4270 + 2849 = 7119 ($71.19)
+        const discountedBasicCents = 4270;
+        const discountedStickerCents = 2849;
+        line_items = [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: "Basic Vehicle History Report (5% Combo Discount Applied)",
+                description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
+              },
+              unit_amount: discountedBasicCents,
             },
-            unit_amount: windowStickerFinalPriceCents,
+            quantity: 1,
           },
-          quantity: 1,
-        });
+          {
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: "Window Sticker Add-on (5% Combo Discount Applied)",
+                description: `Official Vehicle Window Label Verification & OEM Window Sticker for VIN: ${vin || "Pending"}`,
+              },
+              unit_amount: discountedStickerCents,
+            },
+            quantity: 1,
+          },
+        ];
+      } else {
+        line_items = [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: productName,
+                description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
+              },
+              unit_amount: packagePriceCents,
+            },
+            quantity: 1,
+          },
+        ];
+
+        if (isWindowStickerAddon) {
+          line_items.push({
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: "Official Vehicle Window Sticker Add-on",
+                description: `Official Vehicle Window Label Verification & OEM Window Sticker for VIN: ${vin || "Pending"}`,
+              },
+              unit_amount: 2999,
+            },
+            quantity: 1,
+          });
+        }
       }
 
       const session = await client.checkout.sessions.create({
         payment_method_types: ["card"],
         line_items,
         mode: "payment",
-        success_url: `${process.env.APP_URL || "http://localhost:3000"}/?success=true`,
+        success_url: `${process.env.APP_URL || "http://localhost:3000"}/?success=true&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.APP_URL || "http://localhost:3000"}/?canceled=true`,
         customer_email: email,
       });
@@ -137,14 +177,16 @@ app.use(express.json({ limit: "50mb" }));
       // Save order data directly to Firebase Firestore
       const newOrder = {
         id: session.id,
-        packageName,
+        packageName: resolvedPackageName,
         packagePrice: packagePriceCents / 100,
         windowStickerIncluded: isWindowStickerAddon,
+        windowStickerPrice: isWindowStickerAddon ? 29.99 : 0,
         windowStickerOriginalPrice: isWindowStickerAddon ? 29.99 : 0,
-        windowStickerDiscount: isWindowStickerAddon ? 1.50 : 0,
-        windowStickerFinalPrice: isWindowStickerAddon ? 28.49 : 0,
-        totalDiscount: isWindowStickerAddon ? 1.50 : 0,
+        combinedSubtotal: combinedSubtotalCents / 100,
+        discountAmount: discountCents / 100,
+        totalDiscount: discountCents / 100,
         amount: totalAmountCents / 100,
+        finalAmountPaid: totalAmountCents / 100,
         vin,
         email,
         firstName,
@@ -200,25 +242,32 @@ app.use(express.json({ limit: "50mb" }));
         "Service & Maintenance Records": 39999,
       };
 
-      const packagePriceCents = priceMap[packageName] || 4495;
+      const resolvedPackageName = packageName || "Basic";
+      const packagePriceCents = priceMap[resolvedPackageName] || 4495;
       const isWindowStickerAddon = Boolean(
-        includeWindowSticker && packageName !== "Window Sticker",
+        includeWindowSticker && resolvedPackageName !== "Window Sticker",
       );
-      const windowStickerOriginalPriceCents = 2999;
-      const windowStickerDiscountCents = 150; // 5% discount ($1.50)
-      const windowStickerFinalPriceCents = 2849; // $28.49
-      const totalAmountCents =
-        packagePriceCents +
-        (isWindowStickerAddon ? windowStickerFinalPriceCents : 0);
+      const isBasicPackage = resolvedPackageName === "Basic";
+      const windowStickerPriceCents = isWindowStickerAddon ? 2999 : 0;
+      const combinedSubtotalCents = packagePriceCents + windowStickerPriceCents;
+
+      // 5% discount ONLY applies to Basic Report when Window Sticker is included
+      // Calculated from the FULL COMBINED PAYMENT: Basic Report + Window Sticker
+      const discountCents =
+        isBasicPackage && isWindowStickerAddon
+          ? Math.round(combinedSubtotalCents * 0.05) // 375 cents ($3.75)
+          : 0;
+
+      const totalAmountCents = combinedSubtotalCents - discountCents;
 
       const productName =
-        packageName === "Window Sticker"
+        resolvedPackageName === "Window Sticker"
           ? "Official Vehicle Window Sticker"
-          : packageName === "Salvage Information"
+          : resolvedPackageName === "Salvage Information"
             ? "Salvage & Total Loss Information Report"
-            : packageName === "Service & Maintenance Records"
+            : resolvedPackageName === "Service & Maintenance Records"
               ? "Vehicle Service & Maintenance Records"
-              : `${packageName} Vehicle History Report`;
+              : `${resolvedPackageName} Vehicle History Report`;
 
       const paymentIntent = await client.paymentIntents.create({
         amount: totalAmountCents,
@@ -226,13 +275,12 @@ app.use(express.json({ limit: "50mb" }));
         receipt_email: email,
         description: `${productName}${isWindowStickerAddon ? " + Window Sticker Add-on" : ""} for VIN: ${vin || "Pending"}`,
         metadata: {
-          packageName,
+          packageName: resolvedPackageName,
           packagePrice: (packagePriceCents / 100).toFixed(2),
           windowStickerIncluded: isWindowStickerAddon ? "true" : "false",
-          windowStickerOriginalPrice: isWindowStickerAddon ? "29.99" : "0",
-          windowStickerDiscount: isWindowStickerAddon ? "1.50" : "0",
-          windowStickerFinalPrice: isWindowStickerAddon ? "28.49" : "0",
-          totalDiscount: isWindowStickerAddon ? "1.50" : "0",
+          windowStickerPrice: isWindowStickerAddon ? "29.99" : "0",
+          combinedSubtotal: (combinedSubtotalCents / 100).toFixed(2),
+          discountAmount: (discountCents / 100).toFixed(2),
           finalAmountPaid: (totalAmountCents / 100).toFixed(2),
           vin: vin || "Pending",
           firstName,
@@ -244,14 +292,16 @@ app.use(express.json({ limit: "50mb" }));
       // Save order data directly to Firebase Firestore
       const newOrder = {
         id: paymentIntent.id,
-        packageName,
+        packageName: resolvedPackageName,
         packagePrice: packagePriceCents / 100,
         windowStickerIncluded: isWindowStickerAddon,
+        windowStickerPrice: isWindowStickerAddon ? 29.99 : 0,
         windowStickerOriginalPrice: isWindowStickerAddon ? 29.99 : 0,
-        windowStickerDiscount: isWindowStickerAddon ? 1.50 : 0,
-        windowStickerFinalPrice: isWindowStickerAddon ? 28.49 : 0,
-        totalDiscount: isWindowStickerAddon ? 1.50 : 0,
+        combinedSubtotal: combinedSubtotalCents / 100,
+        discountAmount: discountCents / 100,
+        totalDiscount: discountCents / 100,
         amount: totalAmountCents / 100,
+        finalAmountPaid: totalAmountCents / 100,
         vin,
         email,
         firstName,
@@ -268,6 +318,53 @@ app.use(express.json({ limit: "50mb" }));
       res.json({ clientSecret: paymentIntent.client_secret });
     } catch (error: any) {
       console.error("Stripe Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // API: Confirm Order Payment (Stripe Checkout return / Intent confirmation)
+  app.post("/api/orders/:id/confirm-payment", async (req, res) => {
+    const { id } = req.params;
+    try {
+      const querySnapshot = await db.collection("orders").where("id", "==", id).get();
+      if (querySnapshot.empty) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      const client = getStripe();
+      let isPaid = true;
+
+      if (client && id.startsWith("cs_")) {
+        try {
+          const session = await client.checkout.sessions.retrieve(id);
+          isPaid = session.payment_status === "paid";
+        } catch (stripeErr) {
+          console.warn("Could not verify session with Stripe:", stripeErr);
+        }
+      } else if (client && id.startsWith("pi_")) {
+        try {
+          const intent = await client.paymentIntents.retrieve(id);
+          isPaid = intent.status === "succeeded";
+        } catch (stripeErr) {
+          console.warn("Could not verify intent with Stripe:", stripeErr);
+        }
+      }
+
+      if (isPaid) {
+        const fbDoc = querySnapshot.docs[0];
+        const docRef = db.collection("orders").doc(fbDoc.id);
+        const currentData = fbDoc.data() || {};
+        const completedAt = currentData.completedAt || new Date().toISOString();
+        await docRef.update({
+          status: "completed",
+          completedAt,
+        });
+        return res.json({ success: true, status: "completed", completedAt });
+      }
+
+      res.json({ success: false, message: "Payment not completed yet" });
+    } catch (error: any) {
+      console.error("Error confirming payment:", error);
       res.status(500).json({ error: error.message });
     }
   });

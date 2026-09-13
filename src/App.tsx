@@ -105,26 +105,26 @@ export default function App() {
       switch (normalized) {
         case "platinum":
           setSelectedPackage("Platinum");
-          setIncludeWindowSticker(true);
+          setIncludeWindowSticker(false);
           setView("order");
           window.scrollTo(0, 0);
           break;
         case "diamond":
           setSelectedPackage("Diamond");
-          setIncludeWindowSticker(true);
+          setIncludeWindowSticker(false);
           setView("order");
           window.scrollTo(0, 0);
           break;
         case "ruby":
           setSelectedPackage("Ruby");
-          setIncludeWindowSticker(true);
+          setIncludeWindowSticker(false);
           setView("order");
           window.scrollTo(0, 0);
           break;
         case "sapphire":
         case "saphire":
           setSelectedPackage("Sapphire");
-          setIncludeWindowSticker(true);
+          setIncludeWindowSticker(false);
           setView("order");
           window.scrollTo(0, 0);
           break;
@@ -136,13 +136,13 @@ export default function App() {
           break;
         case "gold":
           setSelectedPackage("Gold");
-          setIncludeWindowSticker(true);
+          setIncludeWindowSticker(false);
           setView("order");
           window.scrollTo(0, 0);
           break;
         case "premium":
           setSelectedPackage("Premium");
-          setIncludeWindowSticker(true);
+          setIncludeWindowSticker(false);
           setView("order");
           window.scrollTo(0, 0);
           break;
@@ -151,6 +151,7 @@ export default function App() {
         case "window":
         case "sticker":
           setSelectedPackage("Window Sticker");
+          setIncludeWindowSticker(false);
           setView("order");
           window.scrollTo(0, 0);
           break;
@@ -158,7 +159,7 @@ export default function App() {
         case "salvageinformation":
         case "salvage":
           setSelectedPackage("Salvage Information");
-          setIncludeWindowSticker(true);
+          setIncludeWindowSticker(false);
           setView("order");
           window.scrollTo(0, 0);
           break;
@@ -167,7 +168,7 @@ export default function App() {
         case "servicemaintenance":
         case "service":
           setSelectedPackage("Service & Maintenance Records");
-          setIncludeWindowSticker(true);
+          setIncludeWindowSticker(false);
           setView("order");
           window.scrollTo(0, 0);
           break;
@@ -236,6 +237,12 @@ export default function App() {
     // Check for Stripe Checkout redirect parameters
     const query = new URLSearchParams(window.location.search);
     if (query.get("success")) {
+      const sessionId = query.get("session_id");
+      if (sessionId) {
+        fetch(`/api/orders/${sessionId}/confirm-payment`, {
+          method: "POST",
+        }).catch((e) => console.warn("Failed to confirm payment status:", e));
+      }
       window.location.hash = "thanks";
       window.history.replaceState(
         {},
@@ -321,14 +328,13 @@ export default function App() {
       return;
     }
     setPolicyAgreed(false);
-    setIncludeWindowSticker(true);
-    const targetHash = pkg
-      ? pkg
-          .toLowerCase()
-          .replace(/[^a-z0-9]/g, "-")
-          .replace(/-+/g, "-")
-          .replace(/^-|-$/g, "")
-      : "basic";
+    const targetPkg = pkg || "Basic";
+    setIncludeWindowSticker(targetPkg === "Basic");
+    const targetHash = targetPkg
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
     window.location.hash = targetHash;
   };
 
@@ -361,10 +367,17 @@ export default function App() {
   };
 
   const currentPackageName = selectedPackage || "Basic";
+  const isBasicPackage = currentPackageName === "Basic";
   const mainPackagePrice = PACKAGE_PRICES[currentPackageName] || 44.95;
   const isWindowStickerAddon =
     selectedPackage !== "Window Sticker" && includeWindowSticker;
-  const finalTotal = mainPackagePrice + (isWindowStickerAddon ? 28.49 : 0);
+  const windowStickerPrice = isWindowStickerAddon ? 29.99 : 0;
+  const combinedSubtotal = mainPackagePrice + windowStickerPrice;
+  // 5% discount ONLY applies to Basic Report when Window Sticker is included
+  // Calculated from the FULL COMBINED PAYMENT (Basic Report + Window Sticker)
+  const discountAmount =
+    isBasicPackage && isWindowStickerAddon ? 3.75 : 0;
+  const finalTotal = combinedSubtotal - discountAmount;
 
   return (
     <div className="min-h-screen font-sans selection:bg-brand-accent selection:text-white bg-white">
@@ -1662,9 +1675,11 @@ export default function App() {
                                 <span className="font-black text-slate-900 text-base">
                                   Window Sticker
                                 </span>
-                                <span className="bg-emerald-100 text-emerald-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                                  5% Off Applied
-                                </span>
+                                {isBasicPackage && (
+                                  <span className="bg-emerald-100 text-emerald-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                    5% Off Applied
+                                  </span>
+                                )}
                               </div>
                               <p className="text-xs text-slate-500 mt-1 font-medium">
                                 Official vehicle window label verification & original OEM window sticker.
@@ -1674,11 +1689,8 @@ export default function App() {
 
                           <div className="text-right shrink-0">
                             <div className="flex items-baseline gap-1.5 justify-end">
-                              <span className="text-xs text-slate-400 line-through font-bold">
-                                $29.99
-                              </span>
                               <span className="text-xl font-black text-brand-blue">
-                                $28.49
+                                $29.99
                               </span>
                             </div>
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
@@ -1733,7 +1745,9 @@ export default function App() {
                           >
                             {includeWindowSticker
                               ? "Remove Add-on"
-                              : "+ Add Window Sticker ($28.49)"}
+                              : isBasicPackage
+                                ? "+ Add Window Sticker"
+                                : "+ Add Window Sticker ($29.99)"}
                           </button>
                         </div>
                       </div>
@@ -1846,7 +1860,7 @@ export default function App() {
                                 <span className="font-bold text-slate-800">
                                   Window Sticker
                                 </span>
-                                {includeWindowSticker && (
+                                {isWindowStickerAddon && isBasicPackage && (
                                   <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-1.5 py-0.5 rounded">
                                     -5%
                                   </span>
@@ -1865,19 +1879,16 @@ export default function App() {
                               >
                                 {includeWindowSticker
                                   ? "Remove"
-                                  : "+ Add ($28.49)"}
+                                  : isBasicPackage
+                                    ? "+ Add"
+                                    : "+ Add ($29.99)"}
                               </button>
                             </div>
                             <div className="text-right">
                               {includeWindowSticker ? (
-                                <>
-                                  <span className="font-bold text-brand-blue block">
-                                    $28.49
-                                  </span>
-                                  <span className="text-xs text-slate-400 line-through font-semibold">
-                                    $29.99
-                                  </span>
-                                </>
+                                <span className="font-bold text-brand-blue block">
+                                  $29.99
+                                </span>
                               ) : (
                                 <span className="text-xs text-slate-400 font-bold italic">
                                   Removed
@@ -1888,11 +1899,21 @@ export default function App() {
                         </div>
                       )}
 
-                      {/* Window Sticker 5% Discount Row */}
+                      {/* Combined Subtotal Row */}
                       {isWindowStickerAddon && (
+                        <div className="flex justify-between items-center text-sm pt-2 border-t border-slate-200/60">
+                          <span className="text-slate-600">Combined Subtotal</span>
+                          <span className="font-bold text-slate-800">
+                            ${combinedSubtotal.toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* 5% Combined Discount Row - ONLY for Basic with Window Sticker */}
+                      {discountAmount > 0 && (
                         <div className="flex justify-between items-center text-xs bg-emerald-50 text-emerald-700 px-3 py-2 rounded-xl font-bold border border-emerald-100/80">
-                          <span>Window Sticker Discount (5%)</span>
-                          <span>-$1.50</span>
+                          <span>5% Combined Discount</span>
+                          <span>-${discountAmount.toFixed(2)}</span>
                         </div>
                       )}
 

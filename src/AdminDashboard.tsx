@@ -54,10 +54,14 @@ interface Order {
   }>;
   packagePrice?: number;
   windowStickerIncluded?: boolean;
+  windowStickerPrice?: number;
   windowStickerOriginalPrice?: number;
   windowStickerDiscount?: number;
   windowStickerFinalPrice?: number;
+  combinedSubtotal?: number;
+  discountAmount?: number;
   totalDiscount?: number;
+  finalAmountPaid?: number;
 }
 
 const formatDateTime = (dateStr?: string | null) => {
@@ -92,43 +96,47 @@ const getOrderBreakdown = (order: Order) => {
     order.windowStickerIncluded !== undefined
       ? order.windowStickerIncluded
       : order.packageName === "Window Sticker" ||
-        Math.abs(
-          order.amount - ((packagePriceMap[order.packageName] || 0) + 28.49),
-        ) < 0.05;
+        Math.abs(order.amount - ((packagePriceMap[order.packageName] || 0) + 29.99)) < 0.05 ||
+        Math.abs(order.amount - 71.19) < 0.05 ||
+        Math.abs(order.amount - ((packagePriceMap[order.packageName] || 0) + 28.49)) < 0.05;
 
   const mainPackagePrice =
     order.packagePrice !== undefined
       ? order.packagePrice
-      : packagePriceMap[order.packageName] ??
-        (isIncluded ? Math.max(0, order.amount - 28.49) : order.amount);
+      : (packagePriceMap[order.packageName] ?? 44.95);
 
-  const windowStickerOriginalPrice = isIncluded
-    ? order.windowStickerOriginalPrice ?? 29.99
+  const windowStickerPrice = isIncluded
+    ? (order.windowStickerPrice ?? order.windowStickerOriginalPrice ?? 29.99)
     : 0;
-  const windowStickerDiscount = isIncluded
-    ? order.windowStickerDiscount ?? 1.5
-    : 0;
-  const windowStickerFinalPrice = isIncluded
-    ? order.windowStickerFinalPrice ?? 28.49
-    : 0;
-  const totalDiscount =
-    order.totalDiscount !== undefined
-      ? order.totalDiscount
-      : isIncluded
-        ? 1.5
-        : 0;
-  const finalAmountPaid = order.amount;
+
+  const combinedSubtotal =
+    order.combinedSubtotal !== undefined
+      ? order.combinedSubtotal
+      : (mainPackagePrice + windowStickerPrice);
+
+  const discountAmount =
+    order.discountAmount !== undefined
+      ? order.discountAmount
+      : (order.totalDiscount !== undefined
+          ? order.totalDiscount
+          : (order.packageName === "Basic" && isIncluded ? 3.75 : 0));
+
+  const finalAmountPaid =
+    order.finalAmountPaid !== undefined
+      ? order.finalAmountPaid
+      : (order.amount !== undefined ? order.amount : (combinedSubtotal - discountAmount));
 
   return {
     packageName: order.packageName,
     mainPackagePrice,
     windowStickerIncluded: isIncluded,
-    windowStickerOriginalPrice,
-    windowStickerDiscount,
-    windowStickerFinalPrice,
-    totalDiscount,
+    windowStickerPrice,
+    combinedSubtotal,
+    discountAmount,
     finalAmountPaid,
     createdAt: order.createdAt,
+    completedAt: order.completedAt,
+    reportUploadedAt: order.reportUploadedAt,
   };
 };
 
@@ -454,17 +462,16 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       "Phone",
       "Country",
       "VIN",
-      "Main Package",
-      "Main Package Original Price",
+      "Selected Report Package",
+      "Report Package Price",
       "Window Sticker Status",
-      "Window Sticker Original Price",
-      "Window Sticker Discount (5%)",
-      "Window Sticker Final Price",
-      "Total Discount",
-      "Final Amount Paid",
-      "Order Date/Time",
-      "Order Completed",
-      "Report Uploaded",
+      "Window Sticker Price",
+      "Combined Subtotal",
+      "5% Discount Amount",
+      "Final Amount Actually Paid",
+      "Order Created Date/Time",
+      "Order Completed Date/Time",
+      "Report Uploaded Date/Time",
       "Policy Agreed",
       "Report Status",
       "Payment Status",
@@ -481,16 +488,15 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         b.packageName,
         `$${b.mainPackagePrice.toFixed(2)}`,
         b.windowStickerIncluded ? "Included" : "Not Included",
-        `$${b.windowStickerOriginalPrice.toFixed(2)}`,
-        `$${b.windowStickerDiscount.toFixed(2)}`,
-        `$${b.windowStickerFinalPrice.toFixed(2)}`,
-        `$${b.totalDiscount.toFixed(2)}`,
+        `$${b.windowStickerPrice.toFixed(2)}`,
+        `$${b.combinedSubtotal.toFixed(2)}`,
+        `$${b.discountAmount.toFixed(2)}`,
         `$${b.finalAmountPaid.toFixed(2)}`,
         formatDateTime(order.createdAt),
         order.status.toLowerCase() === "completed"
           ? formatDateTime(order.completedAt || order.createdAt)
-          : "",
-        order.reportUploadedAt ? formatDateTime(order.reportUploadedAt) : "",
+          : "Pending",
+        order.reportUploadedAt ? formatDateTime(order.reportUploadedAt) : "Not Uploaded",
         order.policyAgreed ? "Yes" : "No",
         order.reportStatus || "not sent",
         order.status,
@@ -1019,23 +1025,14 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                                   <div className="space-y-1 pt-1">
                                     <div className="flex justify-between items-center text-xs">
                                       <span className="text-slate-500">
-                                        Original Price:
+                                        Window Sticker Price:
                                       </span>
                                       <span className="font-bold text-slate-700">
-                                        ${breakdown.windowStickerOriginalPrice.toFixed(2)}
+                                        ${breakdown.windowStickerPrice.toFixed(2)}
                                       </span>
                                     </div>
-                                    <div className="flex justify-between items-center text-xs text-emerald-600 font-bold">
-                                      <span>Window Sticker Discount (5%):</span>
-                                      <span>
-                                        -${breakdown.windowStickerDiscount.toFixed(2)}
-                                      </span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-sm font-black text-brand-blue pt-1.5 border-t border-slate-100">
-                                      <span>Final Window Sticker Price:</span>
-                                      <span>
-                                        ${breakdown.windowStickerFinalPrice.toFixed(2)}
-                                      </span>
+                                    <div className="text-[11px] text-slate-500 font-medium">
+                                      Official OEM Window Sticker
                                     </div>
                                   </div>
                                 ) : (
@@ -1047,35 +1044,56 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                             </div>
 
                             {/* Summary bar */}
-                            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 flex flex-wrap items-center justify-between gap-4">
-                              <div className="flex flex-wrap items-center gap-6">
-                                <div>
-                                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                    Total Discount
-                                  </div>
-                                  <div className="text-sm font-black text-emerald-600">
-                                    {breakdown.totalDiscount > 0
-                                      ? `-$${breakdown.totalDiscount.toFixed(2)}`
-                                      : "$0.00"}
-                                  </div>
+                            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 space-y-3">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-3 border-b border-slate-100">
+                                <div className="flex justify-between items-center text-xs text-slate-600 font-semibold bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                                  <span>Combined Subtotal:</span>
+                                  <span className="font-bold text-slate-900 text-sm">
+                                    ${breakdown.combinedSubtotal.toFixed(2)}
+                                  </span>
                                 </div>
 
-                                <div>
-                                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                    Order Date & Time
-                                  </div>
-                                  <div className="text-xs font-bold text-slate-700">
-                                    {formatDateTime(breakdown.createdAt)}
-                                  </div>
+                                <div className="flex justify-between items-center text-xs text-emerald-600 font-bold bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-100/70">
+                                  <span>5% Discount Amount:</span>
+                                  <span className="text-sm">
+                                    {breakdown.discountAmount > 0
+                                      ? `-$${breakdown.discountAmount.toFixed(2)}`
+                                      : "$0.00"}
+                                  </span>
                                 </div>
                               </div>
 
-                              <div className="text-right">
-                                <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                  Final Amount Actually Paid
+                              <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
+                                <div>
+                                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                    Final Amount Actually Paid
+                                  </div>
+                                  <div className="text-2xl font-black text-slate-900">
+                                    ${breakdown.finalAmountPaid.toFixed(2)}
+                                  </div>
                                 </div>
-                                <div className="text-2xl font-black text-slate-900">
-                                  ${breakdown.finalAmountPaid.toFixed(2)}
+
+                                <div className="text-right space-y-1 text-xs">
+                                  <div className="text-slate-500">
+                                    <span className="font-bold text-slate-400 mr-1">Created:</span>
+                                    <span className="font-semibold text-slate-700">{formatDateTime(breakdown.createdAt)}</span>
+                                  </div>
+                                  <div className="text-slate-500">
+                                    <span className="font-bold text-slate-400 mr-1">Completed:</span>
+                                    <span className="font-semibold text-slate-700">
+                                      {selectedOrder.status.toLowerCase() === "completed"
+                                        ? formatDateTime(selectedOrder.completedAt || selectedOrder.createdAt)
+                                        : "Pending"}
+                                    </span>
+                                  </div>
+                                  <div className="text-slate-500">
+                                    <span className="font-bold text-slate-400 mr-1">Report Uploaded:</span>
+                                    <span className="font-semibold text-slate-700">
+                                      {selectedOrder.reportUploadedAt
+                                        ? formatDateTime(selectedOrder.reportUploadedAt)
+                                        : "Not Uploaded"}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
