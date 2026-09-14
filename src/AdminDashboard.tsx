@@ -26,12 +26,15 @@ import {
   Trash2,
   UploadCloud,
   RefreshCw,
+  BadgeCheck,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { calculateOrderPricing } from "./promotions";
 
 interface Order {
   id: string;
   packageName: string;
+  packageTier?: string;
   vin: string;
   email: string;
   firstName: string;
@@ -53,11 +56,19 @@ interface Order {
     ip: string;
   }>;
   packagePrice?: number;
+  packageOriginalPrice?: number;
   windowStickerIncluded?: boolean;
   windowStickerPrice?: number;
   windowStickerOriginalPrice?: number;
   windowStickerDiscount?: number;
+  windowStickerDiscountPercentage?: number;
+  windowStickerDiscountAmount?: number;
   windowStickerFinalPrice?: number;
+  salvageInformationIncluded?: boolean;
+  salvageInformationOriginalPrice?: number;
+  salvageInformationDiscountAmount?: number;
+  salvageInformationFinalPrice?: number;
+  appliedOfferName?: string;
   combinedSubtotal?: number;
   discountAmount?: number;
   totalDiscount?: number;
@@ -79,64 +90,109 @@ const formatDateTime = (dateStr?: string | null) => {
 };
 
 const getOrderBreakdown = (order: Order) => {
-  const packagePriceMap: Record<string, number> = {
-    Platinum: 99.95,
-    Diamond: 129.95,
-    Ruby: 239.95,
-    Sapphire: 499.95,
-    Basic: 44.95,
-    Gold: 89.95,
-    Premium: 99.95,
-    "Window Sticker": 29.99,
-    "Salvage Information": 149.0,
-    "Service & Maintenance Records": 399.99,
-  };
+  const isDiamond = (order.packageName || "").toLowerCase().includes("diamond");
+  const isPlatinum = (order.packageName || "").toLowerCase().includes("platinum");
 
-  const isIncluded =
+  // Fallback calculation using calculateOrderPricing
+  const calculated = calculateOrderPricing(
+    order.packageName,
+    order.windowStickerIncluded ?? (isPlatinum || isDiamond)
+  );
+
+  const packageName = order.packageName || calculated.packageName;
+  const packageOriginalPrice =
+    order.packageOriginalPrice ?? order.packagePrice ?? calculated.packageOriginalPrice;
+
+  const windowStickerIncluded =
     order.windowStickerIncluded !== undefined
       ? order.windowStickerIncluded
-      : order.packageName === "Window Sticker" ||
-        Math.abs(order.amount - ((packagePriceMap[order.packageName] || 0) + 29.99)) < 0.05 ||
-        Math.abs(order.amount - 71.19) < 0.05 ||
-        Math.abs(order.amount - ((packagePriceMap[order.packageName] || 0) + 28.49)) < 0.05;
+      : (isDiamond || isPlatinum || order.packageName === "Window Sticker");
 
-  const mainPackagePrice =
-    order.packagePrice !== undefined
-      ? order.packagePrice
-      : (packagePriceMap[order.packageName] ?? 44.95);
+  const windowStickerOriginalPrice =
+    order.windowStickerOriginalPrice !== undefined
+      ? order.windowStickerOriginalPrice
+      : (windowStickerIncluded ? 29.99 : 0);
 
-  const windowStickerPrice = isIncluded
-    ? (order.windowStickerPrice ?? order.windowStickerOriginalPrice ?? 29.99)
-    : 0;
+  const windowStickerDiscountPercentage =
+    order.windowStickerDiscountPercentage !== undefined
+      ? order.windowStickerDiscountPercentage
+      : (windowStickerIncluded ? calculated.windowStickerDiscountPercentage : 0);
 
-  const combinedSubtotal =
-    order.combinedSubtotal !== undefined
-      ? order.combinedSubtotal
-      : (mainPackagePrice + windowStickerPrice);
+  const windowStickerDiscountAmount =
+    order.windowStickerDiscountAmount !== undefined
+      ? order.windowStickerDiscountAmount
+      : (windowStickerIncluded ? calculated.windowStickerDiscountAmount : 0);
 
-  const discountAmount =
-    order.discountAmount !== undefined
-      ? order.discountAmount
-      : (order.totalDiscount !== undefined
-          ? order.totalDiscount
-          : (order.packageName === "Basic" && isIncluded ? 3.75 : 0));
+  const windowStickerFinalPrice =
+    order.windowStickerFinalPrice !== undefined
+      ? order.windowStickerFinalPrice
+      : (order.windowStickerPrice !== undefined
+          ? order.windowStickerPrice
+          : (windowStickerIncluded ? calculated.windowStickerFinalPrice : 0));
+
+  const salvageInformationIncluded =
+    order.salvageInformationIncluded !== undefined
+      ? order.salvageInformationIncluded
+      : isDiamond;
+
+  const salvageInformationOriginalPrice =
+    order.salvageInformationOriginalPrice !== undefined
+      ? order.salvageInformationOriginalPrice
+      : (salvageInformationIncluded ? 149.00 : 0);
+
+  const salvageInformationFinalPrice =
+    order.salvageInformationFinalPrice !== undefined
+      ? order.salvageInformationFinalPrice
+      : 0;
+
+  const salvageInformationDiscountAmount =
+    order.salvageInformationDiscountAmount !== undefined
+      ? order.salvageInformationDiscountAmount
+      : (salvageInformationIncluded ? 149.00 : 0);
+
+  const appliedOfferName =
+    order.appliedOfferName || calculated.appliedOfferName;
+
+  const totalDiscount =
+    order.totalDiscount !== undefined
+      ? order.totalDiscount
+      : (order.discountAmount !== undefined
+          ? order.discountAmount
+          : Number((windowStickerDiscountAmount + salvageInformationDiscountAmount).toFixed(2)));
 
   const finalAmountPaid =
     order.finalAmountPaid !== undefined
       ? order.finalAmountPaid
-      : (order.amount !== undefined ? order.amount : (combinedSubtotal - discountAmount));
+      : (order.amount !== undefined
+          ? order.amount
+          : calculated.finalAmountPaid);
+
+  const combinedSubtotal =
+    order.combinedSubtotal !== undefined
+      ? order.combinedSubtotal
+      : Number((packageOriginalPrice + windowStickerOriginalPrice + salvageInformationOriginalPrice).toFixed(2));
 
   return {
-    packageName: order.packageName,
-    mainPackagePrice,
-    windowStickerIncluded: isIncluded,
-    windowStickerPrice,
+    packageName,
+    packageOriginalPrice,
+    windowStickerIncluded,
+    windowStickerOriginalPrice,
+    windowStickerDiscountPercentage,
+    windowStickerDiscountAmount,
+    windowStickerFinalPrice,
+    salvageInformationIncluded,
+    salvageInformationOriginalPrice,
+    salvageInformationDiscountAmount,
+    salvageInformationFinalPrice,
+    appliedOfferName,
+    totalDiscount,
     combinedSubtotal,
-    discountAmount,
     finalAmountPaid,
     createdAt: order.createdAt,
     completedAt: order.completedAt,
     reportUploadedAt: order.reportUploadedAt,
+    isDiamond,
+    isPlatinum,
   };
 };
 
@@ -462,12 +518,19 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       "Phone",
       "Country",
       "VIN",
-      "Selected Report Package",
-      "Report Package Price",
-      "Window Sticker Status",
-      "Window Sticker Price",
+      "Package Name",
+      "Original Package Price",
+      "Window Sticker Included",
+      "Window Sticker Original Price",
+      "Window Sticker Discount %",
+      "Window Sticker Discount Amount",
+      "Window Sticker Final Price",
+      "Salvage Information Included",
+      "Salvage Information Original Price",
+      "Salvage Information Final Price",
+      "Applied Offer Name",
       "Combined Subtotal",
-      "5% Discount Amount",
+      "Total Discount Applied",
       "Final Amount Actually Paid",
       "Order Created Date/Time",
       "Order Completed Date/Time",
@@ -486,11 +549,22 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         order.country || "United States",
         order.vin,
         b.packageName,
-        `$${b.mainPackagePrice.toFixed(2)}`,
-        b.windowStickerIncluded ? "Included" : "Not Included",
-        `$${b.windowStickerPrice.toFixed(2)}`,
+        `$${b.packageOriginalPrice.toFixed(2)}`,
+        b.windowStickerIncluded ? "Yes" : "No",
+        `$${b.windowStickerOriginalPrice.toFixed(2)}`,
+        `${b.windowStickerDiscountPercentage}%`,
+        `$${b.windowStickerDiscountAmount.toFixed(2)}`,
+        b.windowStickerIncluded && b.windowStickerFinalPrice === 0
+          ? "FREE ($0.00)"
+          : `$${b.windowStickerFinalPrice.toFixed(2)}`,
+        b.salvageInformationIncluded ? "Yes" : "No",
+        `$${b.salvageInformationOriginalPrice.toFixed(2)}`,
+        b.salvageInformationIncluded && b.salvageInformationFinalPrice === 0
+          ? "FREE ($0.00)"
+          : `$${b.salvageInformationFinalPrice.toFixed(2)}`,
+        b.appliedOfferName,
         `$${b.combinedSubtotal.toFixed(2)}`,
-        `$${b.discountAmount.toFixed(2)}`,
+        `$${b.totalDiscount.toFixed(2)}`,
         `$${b.finalAmountPaid.toFixed(2)}`,
         formatDateTime(order.createdAt),
         order.status.toLowerCase() === "completed"
@@ -975,69 +1049,159 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                       return (
                         <div className="space-y-4">
                           <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 flex items-center justify-between">
-                            <span>Purchased Items & Pricing Breakdown</span>
+                            <span>Purchased Items &amp; Pricing Breakdown</span>
                             <span className="text-[10px] font-bold text-slate-400">
                               Date: {formatDateTime(breakdown.createdAt)}
                             </span>
                           </h4>
 
+                          {/* Applied Offer Banner */}
+                          <div className="p-3.5 bg-blue-50/70 border border-blue-200/70 rounded-2xl flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <Zap className="w-4 h-4 text-blue-600 shrink-0" />
+                              <span className="text-xs font-bold text-blue-900">
+                                Applied Promotional Offer:
+                              </span>
+                              <span className="text-xs font-black text-blue-700">
+                                {breakdown.appliedOfferName}
+                              </span>
+                            </div>
+                            {breakdown.totalDiscount > 0 && (
+                              <span className="bg-emerald-100 text-emerald-800 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                Saved ${breakdown.totalDiscount.toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Diamond Exclusive Benefit Notice */}
+                          {breakdown.isDiamond && (
+                            <div className="p-4 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-300 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-xs">
+                              <div className="flex items-center gap-2">
+                                <BadgeCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                                <span className="text-xs font-black uppercase tracking-wider text-emerald-950">
+                                  Diamond Package Exclusive Inclusions
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="bg-emerald-600 text-white text-xs font-black px-3 py-1 rounded-xl shadow-xs">
+                                  Window Sticker: FREE
+                                </span>
+                                <span className="bg-emerald-700 text-white text-xs font-black px-3 py-1 rounded-xl shadow-xs">
+                                  Salvage Information: FREE
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
                           <div className="bg-slate-50/80 p-5 rounded-3xl border border-slate-200/70 space-y-4">
                             {/* Grid of purchased items */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {/* Main Package Card */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              {/* 1. Main Package Card */}
                               <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
                                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                  Main Vehicle Report Package
+                                  1. Main Report Package
                                 </div>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-base font-black text-slate-900">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-sm font-black text-slate-900 truncate">
                                     {breakdown.packageName}
                                   </span>
-                                  <span className="text-sm font-black text-slate-800">
-                                    ${breakdown.mainPackagePrice.toFixed(2)}
+                                  <span className="text-sm font-black text-slate-800 shrink-0">
+                                    ${breakdown.packageOriginalPrice.toFixed(2)}
                                   </span>
                                 </div>
                                 <div className="text-[11px] text-slate-500 font-medium">
-                                  Original Package Base Price
+                                  Base Package Price
                                 </div>
                               </div>
 
-                              {/* Window Sticker Add-on Card */}
+                              {/* 2. Window Sticker Card */}
                               <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center justify-between gap-2">
                                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                    Window Sticker Add-on
+                                    2. Window Sticker
                                   </span>
                                   <span
-                                    className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
+                                    className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
                                       breakdown.windowStickerIncluded
                                         ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                         : "bg-slate-100 text-slate-500 border-slate-200"
                                     }`}
                                   >
                                     {breakdown.windowStickerIncluded
-                                      ? "Included"
-                                      : "Not Included"}
+                                      ? "Included: Yes"
+                                      : "Included: No"}
                                   </span>
                                 </div>
 
                                 {breakdown.windowStickerIncluded ? (
-                                  <div className="space-y-1 pt-1">
-                                    <div className="flex justify-between items-center text-xs">
-                                      <span className="text-slate-500">
-                                        Window Sticker Price:
-                                      </span>
-                                      <span className="font-bold text-slate-700">
-                                        ${breakdown.windowStickerPrice.toFixed(2)}
+                                  <div className="space-y-1 text-xs">
+                                    <div className="flex justify-between items-center text-slate-500">
+                                      <span>Original Price:</span>
+                                      <span className="font-semibold text-slate-700">
+                                        ${breakdown.windowStickerOriginalPrice.toFixed(2)}
                                       </span>
                                     </div>
-                                    <div className="text-[11px] text-slate-500 font-medium">
-                                      Official OEM Window Sticker
+                                    <div className="flex justify-between items-center text-slate-500">
+                                      <span>Discount:</span>
+                                      <span className="font-bold text-emerald-600">
+                                        {breakdown.windowStickerDiscountPercentage}% (-${breakdown.windowStickerDiscountAmount.toFixed(2)})
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center pt-1 border-t border-slate-100">
+                                      <span className="font-bold text-slate-700">Final Price:</span>
+                                      <span className="font-black text-emerald-700">
+                                        {breakdown.windowStickerFinalPrice === 0
+                                          ? "Window Sticker: FREE"
+                                          : `$${breakdown.windowStickerFinalPrice.toFixed(2)}`}
+                                      </span>
                                     </div>
                                   </div>
                                 ) : (
                                   <div className="text-xs text-slate-400 font-medium italic pt-2">
-                                    Not purchased with this order ($0.00)
+                                    Not included ($0.00)
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* 3. Salvage Information Card */}
+                              <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                                    3. Salvage Information
+                                  </span>
+                                  <span
+                                    className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                                      breakdown.salvageInformationIncluded
+                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                        : "bg-slate-100 text-slate-500 border-slate-200"
+                                    }`}
+                                  >
+                                    {breakdown.salvageInformationIncluded
+                                      ? "Included: Yes"
+                                      : "Included: No"}
+                                  </span>
+                                </div>
+
+                                {breakdown.salvageInformationIncluded ? (
+                                  <div className="space-y-1 text-xs">
+                                    <div className="flex justify-between items-center text-slate-500">
+                                      <span>Original Price:</span>
+                                      <span className="font-semibold text-slate-700">
+                                        ${breakdown.salvageInformationOriginalPrice.toFixed(2)}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between items-center pt-1 border-t border-slate-100">
+                                      <span className="font-bold text-slate-700">Final Price:</span>
+                                      <span className="font-black text-emerald-700">
+                                        {breakdown.salvageInformationFinalPrice === 0
+                                          ? "Salvage Information: FREE"
+                                          : `$${breakdown.salvageInformationFinalPrice.toFixed(2)}`}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-xs text-slate-400 font-medium italic pt-2">
+                                    Not included ($0.00)
                                   </div>
                                 )}
                               </div>
@@ -1054,10 +1218,10 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                                 </div>
 
                                 <div className="flex justify-between items-center text-xs text-emerald-600 font-bold bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-100/70">
-                                  <span>5% Discount Amount:</span>
-                                  <span className="text-sm">
-                                    {breakdown.discountAmount > 0
-                                      ? `-$${breakdown.discountAmount.toFixed(2)}`
+                                  <span>Total Discount Applied:</span>
+                                  <span className="text-sm font-black">
+                                    {breakdown.totalDiscount > 0
+                                      ? `-$${breakdown.totalDiscount.toFixed(2)}`
                                       : "$0.00"}
                                   </span>
                                 </div>

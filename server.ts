@@ -7,6 +7,7 @@ import Stripe from "stripe";
 import dotenv from "dotenv";
 import fs from "fs";
 import { db } from "./firebaseConfig.js";
+import { calculateOrderPricing } from "./src/promotions.js";
 
 const __filename = typeof import.meta !== "undefined" && import.meta.url
   ? fileURLToPath(import.meta.url)
@@ -63,102 +64,126 @@ app.use(express.json({ limit: "50mb" }));
     }
 
     try {
-      // Map display price to cents for Stripe
-      const priceMap: Record<string, number> = {
-        Platinum: 9995,
-        Diamond: 12995,
-        Ruby: 23995,
-        Sapphire: 49995,
-        Basic: 4495,
-        Gold: 8995,
-        Premium: 9995,
-        "Window Sticker": 2999,
-        "Salvage Information": 14900,
-        "Service & Maintenance Records": 39999,
-      };
-
-      const resolvedPackageName = packageName || "Basic";
-      const packagePriceCents = priceMap[resolvedPackageName] || 4495;
-      const isWindowStickerAddon = Boolean(
-        includeWindowSticker && resolvedPackageName !== "Window Sticker",
-      );
-      const isBasicPackage = resolvedPackageName === "Basic";
-      const windowStickerPriceCents = isWindowStickerAddon ? 2999 : 0;
-      const combinedSubtotalCents = packagePriceCents + windowStickerPriceCents;
-
-      // 5% discount ONLY applies to Basic Report when Window Sticker is included
-      // Calculated from the FULL COMBINED PAYMENT: Basic Report + Window Sticker
-      const discountCents =
-        isBasicPackage && isWindowStickerAddon
-          ? Math.round(combinedSubtotalCents * 0.05) // 375 cents ($3.75)
-          : 0;
-
-      const totalAmountCents = combinedSubtotalCents - discountCents; // 7119 cents ($71.19) for Basic + Sticker
-
-      const productName =
-        resolvedPackageName === "Window Sticker"
-          ? "Official Vehicle Window Sticker"
-          : resolvedPackageName === "Salvage Information"
-            ? "Salvage & Total Loss Information Report"
-            : resolvedPackageName === "Service & Maintenance Records"
-              ? "Vehicle Service & Maintenance Records"
-              : `${resolvedPackageName} Vehicle History Report`;
+      const pricing = calculateOrderPricing(packageName, includeWindowSticker);
+      const totalAmountCents = Math.round(pricing.finalAmountPaid * 100);
 
       let line_items: any[] = [];
 
-      if (isBasicPackage && isWindowStickerAddon) {
-        // Basic + Window Sticker bundle with 5% discount applied across the order
-        // 4495 * 0.95 = 4270, 2999 * 0.95 = 2849, 4270 + 2849 = 7119 ($71.19)
-        const discountedBasicCents = 4270;
-        const discountedStickerCents = 2849;
-        line_items = [
-          {
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: "Basic Vehicle History Report (5% Combo Discount Applied)",
-                description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
-              },
-              unit_amount: discountedBasicCents,
+      if (pricing.packageTier === "basic") {
+        line_items.push({
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "Basic Vehicle History Report",
+              description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
             },
-            quantity: 1,
+            unit_amount: Math.round(pricing.packageOriginalPrice * 100), // 4495 ($44.95)
           },
-          {
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: "Window Sticker Add-on (5% Combo Discount Applied)",
-                description: `Official Vehicle Window Label Verification & OEM Window Sticker for VIN: ${vin || "Pending"}`,
-              },
-              unit_amount: discountedStickerCents,
-            },
-            quantity: 1,
-          },
-        ];
-      } else {
-        line_items = [
-          {
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: productName,
-                description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
-              },
-              unit_amount: packagePriceCents,
-            },
-            quantity: 1,
-          },
-        ];
+          quantity: 1,
+        });
 
-        if (isWindowStickerAddon) {
+        if (pricing.windowStickerIncluded) {
           line_items.push({
             price_data: {
               currency: "usd",
               product_data: {
-                name: "Official Vehicle Window Sticker Add-on",
+                name: "Window Sticker Add-on (25% Promotional Discount Applied)",
                 description: `Official Vehicle Window Label Verification & OEM Window Sticker for VIN: ${vin || "Pending"}`,
               },
-              unit_amount: 2999,
+              unit_amount: Math.round(pricing.windowStickerFinalPrice * 100), // 2249 ($22.49)
+            },
+            quantity: 1,
+          });
+        }
+      } else if (pricing.packageTier === "gold") {
+        line_items.push({
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "Gold Vehicle History Report",
+              description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
+            },
+            unit_amount: Math.round(pricing.packageOriginalPrice * 100), // 8995 ($89.95)
+          },
+          quantity: 1,
+        });
+
+        if (pricing.windowStickerIncluded) {
+          line_items.push({
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: "Window Sticker Add-on (50% Promotional Discount Applied)",
+                description: `Official Vehicle Window Label Verification & OEM Window Sticker for VIN: ${vin || "Pending"}`,
+              },
+              unit_amount: Math.round(pricing.windowStickerFinalPrice * 100), // 1499 ($14.99)
+            },
+            quantity: 1,
+          });
+        }
+      } else if (pricing.packageTier === "platinum") {
+        line_items.push({
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "Platinum Vehicle History Report (Includes FREE Window Sticker)",
+              description: `Official OEM Window Sticker Included FREE ($29.99 Value) | VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
+            },
+            unit_amount: Math.round(pricing.finalAmountPaid * 100), // 9995 ($99.95)
+          },
+          quantity: 1,
+        });
+      } else if (pricing.packageTier === "diamond") {
+        line_items.push({
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "Diamond Vehicle History Report (Includes FREE Window Sticker & FREE Salvage Information)",
+              description: `Window Sticker FREE ($29.99 Value) + Salvage Information FREE ($149.00 Value) | VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
+            },
+            unit_amount: Math.round(pricing.finalAmountPaid * 100), // 12995 ($129.95)
+          },
+          quantity: 1,
+        });
+      } else {
+        const mainAmountCents = Math.round(
+          (pricing.packageTier === "window_sticker" ? 0 : pricing.packageOriginalPrice) * 100
+        );
+        if (mainAmountCents > 0) {
+          line_items.push({
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: pricing.packageName,
+                description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
+              },
+              unit_amount: mainAmountCents,
+            },
+            quantity: 1,
+          });
+        }
+        if (pricing.windowStickerIncluded && Math.round(pricing.windowStickerFinalPrice * 100) > 0) {
+          line_items.push({
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: "Official Vehicle Window Sticker",
+                description: `Official Vehicle Window Label Verification & OEM Window Sticker for VIN: ${vin || "Pending"}`,
+              },
+              unit_amount: Math.round(pricing.windowStickerFinalPrice * 100),
+            },
+            quantity: 1,
+          });
+        }
+        if (pricing.salvageInformationIncluded && Math.round(pricing.salvageInformationFinalPrice * 100) > 0) {
+          line_items.push({
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: "Salvage & Total Loss Information Report",
+                description: `Salvage & Total Loss Information for VIN: ${vin || "Pending"}`,
+              },
+              unit_amount: Math.round(pricing.salvageInformationFinalPrice * 100),
             },
             quantity: 1,
           });
@@ -177,16 +202,28 @@ app.use(express.json({ limit: "50mb" }));
       // Save order data directly to Firebase Firestore
       const newOrder = {
         id: session.id,
-        packageName: resolvedPackageName,
-        packagePrice: packagePriceCents / 100,
-        windowStickerIncluded: isWindowStickerAddon,
-        windowStickerPrice: isWindowStickerAddon ? 29.99 : 0,
-        windowStickerOriginalPrice: isWindowStickerAddon ? 29.99 : 0,
-        combinedSubtotal: combinedSubtotalCents / 100,
-        discountAmount: discountCents / 100,
-        totalDiscount: discountCents / 100,
-        amount: totalAmountCents / 100,
-        finalAmountPaid: totalAmountCents / 100,
+        packageName: pricing.packageName,
+        packageTier: pricing.packageTier,
+        packagePrice: pricing.packageOriginalPrice,
+        packageOriginalPrice: pricing.packageOriginalPrice,
+        windowStickerIncluded: pricing.windowStickerIncluded,
+        windowStickerOriginalPrice: pricing.windowStickerOriginalPrice,
+        windowStickerDiscountPercentage: pricing.windowStickerDiscountPercentage,
+        windowStickerDiscountAmount: pricing.windowStickerDiscountAmount,
+        windowStickerPrice: pricing.windowStickerFinalPrice,
+        windowStickerFinalPrice: pricing.windowStickerFinalPrice,
+        salvageInformationIncluded: pricing.salvageInformationIncluded,
+        salvageInformationOriginalPrice: pricing.salvageInformationOriginalPrice,
+        salvageInformationDiscountAmount: pricing.salvageInformationDiscountAmount,
+        salvageInformationFinalPrice: pricing.salvageInformationFinalPrice,
+        appliedOfferName: pricing.appliedOfferName,
+        discountAmount: pricing.totalDiscount,
+        totalDiscount: pricing.totalDiscount,
+        combinedSubtotal: Number(
+          (pricing.packageOriginalPrice + pricing.windowStickerOriginalPrice + pricing.salvageInformationOriginalPrice).toFixed(2)
+        ),
+        amount: pricing.finalAmountPaid,
+        finalAmountPaid: pricing.finalAmountPaid,
         vin,
         email,
         firstName,
@@ -229,59 +266,30 @@ app.use(express.json({ limit: "50mb" }));
     }
 
     try {
-      const priceMap: Record<string, number> = {
-        Platinum: 9995,
-        Diamond: 12995,
-        Ruby: 23995,
-        Sapphire: 49995,
-        Basic: 4495,
-        Gold: 8995,
-        Premium: 9995,
-        "Window Sticker": 2999,
-        "Salvage Information": 14900,
-        "Service & Maintenance Records": 39999,
-      };
-
-      const resolvedPackageName = packageName || "Basic";
-      const packagePriceCents = priceMap[resolvedPackageName] || 4495;
-      const isWindowStickerAddon = Boolean(
-        includeWindowSticker && resolvedPackageName !== "Window Sticker",
-      );
-      const isBasicPackage = resolvedPackageName === "Basic";
-      const windowStickerPriceCents = isWindowStickerAddon ? 2999 : 0;
-      const combinedSubtotalCents = packagePriceCents + windowStickerPriceCents;
-
-      // 5% discount ONLY applies to Basic Report when Window Sticker is included
-      // Calculated from the FULL COMBINED PAYMENT: Basic Report + Window Sticker
-      const discountCents =
-        isBasicPackage && isWindowStickerAddon
-          ? Math.round(combinedSubtotalCents * 0.05) // 375 cents ($3.75)
-          : 0;
-
-      const totalAmountCents = combinedSubtotalCents - discountCents;
-
-      const productName =
-        resolvedPackageName === "Window Sticker"
-          ? "Official Vehicle Window Sticker"
-          : resolvedPackageName === "Salvage Information"
-            ? "Salvage & Total Loss Information Report"
-            : resolvedPackageName === "Service & Maintenance Records"
-              ? "Vehicle Service & Maintenance Records"
-              : `${resolvedPackageName} Vehicle History Report`;
+      const pricing = calculateOrderPricing(packageName, includeWindowSticker);
+      const totalAmountCents = Math.round(pricing.finalAmountPaid * 100);
 
       const paymentIntent = await client.paymentIntents.create({
         amount: totalAmountCents,
         currency: "usd",
         receipt_email: email,
-        description: `${productName}${isWindowStickerAddon ? " + Window Sticker Add-on" : ""} for VIN: ${vin || "Pending"}`,
+        description: `${pricing.packageName}${pricing.windowStickerIncluded ? " + Window Sticker" : ""}${pricing.salvageInformationIncluded ? " + Salvage Information" : ""} for VIN: ${vin || "Pending"}`,
         metadata: {
-          packageName: resolvedPackageName,
-          packagePrice: (packagePriceCents / 100).toFixed(2),
-          windowStickerIncluded: isWindowStickerAddon ? "true" : "false",
-          windowStickerPrice: isWindowStickerAddon ? "29.99" : "0",
-          combinedSubtotal: (combinedSubtotalCents / 100).toFixed(2),
-          discountAmount: (discountCents / 100).toFixed(2),
-          finalAmountPaid: (totalAmountCents / 100).toFixed(2),
+          packageName: pricing.packageName,
+          packageTier: pricing.packageTier,
+          packagePrice: pricing.packageOriginalPrice.toFixed(2),
+          packageOriginalPrice: pricing.packageOriginalPrice.toFixed(2),
+          windowStickerIncluded: pricing.windowStickerIncluded ? "true" : "false",
+          windowStickerOriginalPrice: pricing.windowStickerOriginalPrice.toFixed(2),
+          windowStickerDiscountPercentage: pricing.windowStickerDiscountPercentage.toString(),
+          windowStickerDiscountAmount: pricing.windowStickerDiscountAmount.toFixed(2),
+          windowStickerFinalPrice: pricing.windowStickerFinalPrice.toFixed(2),
+          salvageInformationIncluded: pricing.salvageInformationIncluded ? "true" : "false",
+          salvageInformationOriginalPrice: pricing.salvageInformationOriginalPrice.toFixed(2),
+          salvageInformationFinalPrice: pricing.salvageInformationFinalPrice.toFixed(2),
+          appliedOfferName: pricing.appliedOfferName,
+          totalDiscount: pricing.totalDiscount.toFixed(2),
+          finalAmountPaid: pricing.finalAmountPaid.toFixed(2),
           vin: vin || "Pending",
           firstName,
           lastName,
@@ -292,16 +300,28 @@ app.use(express.json({ limit: "50mb" }));
       // Save order data directly to Firebase Firestore
       const newOrder = {
         id: paymentIntent.id,
-        packageName: resolvedPackageName,
-        packagePrice: packagePriceCents / 100,
-        windowStickerIncluded: isWindowStickerAddon,
-        windowStickerPrice: isWindowStickerAddon ? 29.99 : 0,
-        windowStickerOriginalPrice: isWindowStickerAddon ? 29.99 : 0,
-        combinedSubtotal: combinedSubtotalCents / 100,
-        discountAmount: discountCents / 100,
-        totalDiscount: discountCents / 100,
-        amount: totalAmountCents / 100,
-        finalAmountPaid: totalAmountCents / 100,
+        packageName: pricing.packageName,
+        packageTier: pricing.packageTier,
+        packagePrice: pricing.packageOriginalPrice,
+        packageOriginalPrice: pricing.packageOriginalPrice,
+        windowStickerIncluded: pricing.windowStickerIncluded,
+        windowStickerOriginalPrice: pricing.windowStickerOriginalPrice,
+        windowStickerDiscountPercentage: pricing.windowStickerDiscountPercentage,
+        windowStickerDiscountAmount: pricing.windowStickerDiscountAmount,
+        windowStickerPrice: pricing.windowStickerFinalPrice,
+        windowStickerFinalPrice: pricing.windowStickerFinalPrice,
+        salvageInformationIncluded: pricing.salvageInformationIncluded,
+        salvageInformationOriginalPrice: pricing.salvageInformationOriginalPrice,
+        salvageInformationDiscountAmount: pricing.salvageInformationDiscountAmount,
+        salvageInformationFinalPrice: pricing.salvageInformationFinalPrice,
+        appliedOfferName: pricing.appliedOfferName,
+        discountAmount: pricing.totalDiscount,
+        totalDiscount: pricing.totalDiscount,
+        combinedSubtotal: Number(
+          (pricing.packageOriginalPrice + pricing.windowStickerOriginalPrice + pricing.salvageInformationOriginalPrice).toFixed(2)
+        ),
+        amount: pricing.finalAmountPaid,
+        finalAmountPaid: pricing.finalAmountPaid,
         vin,
         email,
         firstName,

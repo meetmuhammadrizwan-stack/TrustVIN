@@ -33,6 +33,7 @@ import PrivacyPolicy from "./PrivacyPolicy";
 import TermsAndConditions from "./TermsAndConditions";
 import RefundPolicy from "./RefundPolicy";
 import LiveChat from "./LiveChat";
+import { calculateOrderPricing } from "./promotions";
 
 type View =
   | "home"
@@ -71,6 +72,7 @@ const PACKAGE_PRICES: Record<string, number> = {
 
 export default function App() {
   const [view, setView] = useState<View>("home");
+  const [showPromoPopup, setShowPromoPopup] = useState(true);
   const [selectedPackage, setSelectedPackage] = useState<PackageType>(null);
   const [includeWindowSticker, setIncludeWindowSticker] = useState(true);
   const [vinInput, setVinInput] = useState("");
@@ -105,13 +107,13 @@ export default function App() {
       switch (normalized) {
         case "platinum":
           setSelectedPackage("Platinum");
-          setIncludeWindowSticker(false);
+          setIncludeWindowSticker(true);
           setView("order");
           window.scrollTo(0, 0);
           break;
         case "diamond":
           setSelectedPackage("Diamond");
-          setIncludeWindowSticker(false);
+          setIncludeWindowSticker(true);
           setView("order");
           window.scrollTo(0, 0);
           break;
@@ -136,13 +138,13 @@ export default function App() {
           break;
         case "gold":
           setSelectedPackage("Gold");
-          setIncludeWindowSticker(false);
+          setIncludeWindowSticker(true);
           setView("order");
           window.scrollTo(0, 0);
           break;
         case "premium":
           setSelectedPackage("Premium");
-          setIncludeWindowSticker(false);
+          setIncludeWindowSticker(true);
           setView("order");
           window.scrollTo(0, 0);
           break;
@@ -329,7 +331,8 @@ export default function App() {
     }
     setPolicyAgreed(false);
     const targetPkg = pkg || "Basic";
-    setIncludeWindowSticker(targetPkg === "Basic");
+    const isPromoPackage = ["Basic", "Gold", "Platinum", "Diamond", "Premium"].includes(targetPkg);
+    setIncludeWindowSticker(isPromoPackage);
     const targetHash = targetPkg
       .toLowerCase()
       .replace(/[^a-z0-9]/g, "-")
@@ -367,21 +370,191 @@ export default function App() {
   };
 
   const currentPackageName = selectedPackage || "Basic";
-  const isBasicPackage = currentPackageName === "Basic";
-  const mainPackagePrice = PACKAGE_PRICES[currentPackageName] || 44.95;
-  const isWindowStickerAddon =
-    selectedPackage !== "Window Sticker" && includeWindowSticker;
-  const windowStickerPrice = isWindowStickerAddon ? 29.99 : 0;
-  const combinedSubtotal = mainPackagePrice + windowStickerPrice;
-  // 5% discount ONLY applies to Basic Report when Window Sticker is included
-  // Calculated from the FULL COMBINED PAYMENT (Basic Report + Window Sticker)
-  const discountAmount =
-    isBasicPackage && isWindowStickerAddon ? 3.75 : 0;
-  const finalTotal = combinedSubtotal - discountAmount;
+  const pricing = calculateOrderPricing(
+    currentPackageName,
+    includeWindowSticker
+  );
 
   return (
     <div className="min-h-screen font-sans selection:bg-brand-accent selection:text-white bg-white">
       <LiveChat disabled={view === "admin-dashboard"} />
+
+      {/* Promotional Offers Entry Popup Announcement */}
+      <AnimatePresence>
+        {showPromoPopup && view === "home" && (
+          <div
+            onClick={() => setShowPromoPopup(false)}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs overflow-y-auto"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-[390px] bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-100 overflow-hidden my-auto"
+            >
+              {/* Top Accent Bar */}
+              <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-amber-500" />
+
+              {/* Close Button */}
+              <button
+                onClick={() => setShowPromoPopup(false)}
+                className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer z-10"
+                aria-label="Close promotional announcement"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="p-3.5 sm:p-4.5 space-y-2.5 sm:space-y-3">
+                {/* Header */}
+                <div className="text-center px-6 sm:px-8 space-y-1">
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200/80 rounded-full text-[10px] font-black uppercase tracking-wider">
+                    <Zap className="w-3 h-3" />
+                    Special Promotion
+                  </div>
+                  <h3 className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-tight">
+                    Limited-Time Package Deals
+                  </h3>
+                  <p className="text-[10.5px] sm:text-xs text-slate-500 font-medium">
+                    Discounts apply automatically at checkout
+                  </p>
+                </div>
+
+                {/* 2x2 Clean Compact Grid */}
+                <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+                  {/* Basic */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPromoPopup(false);
+                      navigateToOrder("Basic", true);
+                    }}
+                    className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-50/80 border border-slate-200/70 flex flex-col justify-between text-left hover:border-blue-400 hover:bg-blue-50/40 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer group"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-blue-600 font-black text-base sm:text-lg tracking-tight leading-none">
+                          25% OFF
+                        </div>
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+                      </div>
+                      <div className="font-bold text-slate-900 text-xs sm:text-[13px] mt-1">
+                        Basic
+                      </div>
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] text-slate-500 font-medium mt-1 leading-snug">
+                      + Window Sticker
+                    </div>
+                  </button>
+
+                  {/* Gold */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPromoPopup(false);
+                      navigateToOrder("Gold", true);
+                    }}
+                    className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-amber-50/40 border border-amber-200/70 flex flex-col justify-between text-left hover:border-amber-400 hover:bg-amber-50/60 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer group"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-amber-600 font-black text-base sm:text-lg tracking-tight leading-none">
+                          50% OFF
+                        </div>
+                        <ArrowRight className="w-3.5 h-3.5 text-amber-300 group-hover:text-amber-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+                      </div>
+                      <div className="font-bold text-slate-900 text-xs sm:text-[13px] mt-1">
+                        Gold
+                      </div>
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] text-slate-500 font-medium mt-1 leading-snug">
+                      + Window Sticker
+                    </div>
+                  </button>
+
+                  {/* Platinum */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPromoPopup(false);
+                      navigateToOrder("Platinum", true);
+                    }}
+                    className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-emerald-50/50 border border-emerald-200/70 flex flex-col justify-between text-left hover:border-emerald-400 hover:bg-emerald-50/70 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer group"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-emerald-600 font-black text-base sm:text-lg tracking-tight leading-none">
+                          FREE
+                        </div>
+                        <ArrowRight className="w-3.5 h-3.5 text-emerald-300 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+                      </div>
+                      <div className="font-bold text-slate-900 text-xs sm:text-[13px] mt-1">
+                        Platinum
+                      </div>
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] text-emerald-700 font-semibold mt-1 leading-snug">
+                      + Window Sticker
+                    </div>
+                  </button>
+
+                  {/* Diamond */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPromoPopup(false);
+                      navigateToOrder("Diamond", true);
+                    }}
+                    className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-50/80 to-teal-50/60 border border-emerald-300 flex flex-col justify-between text-left hover:border-emerald-400 hover:from-emerald-50 hover:to-teal-50/80 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer group shadow-2xs"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-emerald-700 font-black text-base sm:text-lg tracking-tight leading-none">
+                          FREE
+                        </div>
+                        <ArrowRight className="w-3.5 h-3.5 text-emerald-400 group-hover:text-emerald-700 group-hover:translate-x-0.5 transition-all shrink-0" />
+                      </div>
+                      <div className="font-bold text-slate-900 text-xs sm:text-[13px] mt-1">
+                        Diamond
+                      </div>
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] text-emerald-700 font-semibold mt-1 leading-tight">
+                      + Window Sticker<br />+ Salvage Information
+                    </div>
+                  </button>
+                </div>
+
+                {/* Footer & CTA */}
+                <div className="space-y-1.5 pt-0.5">
+                  <button
+                    onClick={() => {
+                      setShowPromoPopup(false);
+                      const el = document.getElementById("pricing");
+                      if (el) {
+                        const offset = 80;
+                        const bodyRect = document.body.getBoundingClientRect().top;
+                        const elementRect = el.getBoundingClientRect().top;
+                        const elementPosition = elementRect - bodyRect;
+                        window.scrollTo({
+                          top: elementPosition - offset,
+                          behavior: "smooth",
+                        });
+                      }
+                    }}
+                    className="w-full py-2 sm:py-2.5 bg-slate-900 text-white rounded-xl sm:rounded-2xl font-black text-xs sm:text-[13px] uppercase tracking-wider hover:bg-brand-accent transition-all shadow-md shadow-slate-900/10 active:scale-[0.98] cursor-pointer"
+                  >
+                    Explore Packages
+                  </button>
+                  <p className="text-[10px] text-slate-400 text-center font-medium">
+                    Announcement only. Window Sticker is optional on Basic &amp; Gold.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Navbar - hidden on admin dashboard since it has its own header */}
       {view !== "admin-dashboard" && (
         <nav className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-slate-200/50">
@@ -1651,7 +1824,7 @@ export default function App() {
                     {selectedPackage !== "Window Sticker" && (
                       <div
                         className={`p-5 sm:p-6 rounded-2xl border-2 transition-all ${
-                          includeWindowSticker
+                          pricing.windowStickerIncluded
                             ? "bg-slate-50/90 border-brand-accent/40 shadow-sm"
                             : "bg-slate-50/40 border-slate-200 opacity-75"
                         }`}
@@ -1661,11 +1834,12 @@ export default function App() {
                             <input
                               type="checkbox"
                               id="windowStickerAddonCheckbox"
-                              checked={includeWindowSticker}
+                              checked={pricing.windowStickerIncluded}
+                              disabled={pricing.packageTier === "platinum" || pricing.packageTier === "diamond"}
                               onChange={(e) =>
                                 setIncludeWindowSticker(e.target.checked)
                               }
-                              className="mt-1 w-5 h-5 rounded border-slate-300 text-brand-accent focus:ring-brand-accent cursor-pointer accent-brand-accent"
+                              className="mt-1 w-5 h-5 rounded border-slate-300 text-brand-accent focus:ring-brand-accent cursor-pointer accent-brand-accent disabled:opacity-80"
                             />
                             <label
                               htmlFor="windowStickerAddonCheckbox"
@@ -1673,28 +1847,111 @@ export default function App() {
                             >
                               <div className="flex flex-wrap items-center gap-2">
                                 <span className="font-black text-slate-900 text-base">
-                                  Window Sticker
+                                  {pricing.packageTier === "diamond"
+                                    ? "Window Sticker & Salvage Information"
+                                    : "Window Sticker"}
                                 </span>
-                                {isBasicPackage && (
+                                {pricing.packageTier === "diamond" && (
                                   <span className="bg-emerald-100 text-emerald-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                                    5% Off Applied
+                                    FREE with Diamond
+                                  </span>
+                                )}
+                                {pricing.packageTier === "platinum" && (
+                                  <span className="bg-emerald-100 text-emerald-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                    FREE with Platinum
+                                  </span>
+                                )}
+                                {pricing.packageTier === "gold" && pricing.windowStickerIncluded && (
+                                  <span className="bg-emerald-100 text-emerald-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                    50% Off Applied
+                                  </span>
+                                )}
+                                {pricing.packageTier === "gold" && !pricing.windowStickerIncluded && (
+                                  <span className="bg-blue-100 text-blue-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                    50% Off Promo Available
+                                  </span>
+                                )}
+                                {pricing.packageTier === "basic" && pricing.windowStickerIncluded && (
+                                  <span className="bg-emerald-100 text-emerald-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                    25% Off Applied
+                                  </span>
+                                )}
+                                {pricing.packageTier === "basic" && !pricing.windowStickerIncluded && (
+                                  <span className="bg-blue-100 text-blue-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                    25% Off Promo Available
                                   </span>
                                 )}
                               </div>
                               <p className="text-xs text-slate-500 mt-1 font-medium">
-                                Official vehicle window label verification & original OEM window sticker.
+                                {pricing.packageTier === "diamond"
+                                  ? "Includes Official OEM Window Sticker ($29.99 Value) & Salvage / Total Loss Information ($149.00 Value) 100% FREE."
+                                  : "Official vehicle window label verification & original OEM window sticker."}
                               </p>
                             </label>
                           </div>
 
                           <div className="text-right shrink-0">
                             <div className="flex items-baseline gap-1.5 justify-end">
-                              <span className="text-xl font-black text-brand-blue">
-                                $29.99
-                              </span>
+                              {pricing.packageTier === "diamond" ? (
+                                <>
+                                  <span className="text-xs text-slate-400 line-through font-bold">
+                                    $178.99
+                                  </span>
+                                  <span className="text-xl font-black text-emerald-600">
+                                    FREE
+                                  </span>
+                                </>
+                              ) : pricing.packageTier === "platinum" ? (
+                                <>
+                                  <span className="text-xs text-slate-400 line-through font-bold">
+                                    $29.99
+                                  </span>
+                                  <span className="text-xl font-black text-emerald-600">
+                                    FREE
+                                  </span>
+                                </>
+                              ) : pricing.packageTier === "gold" ? (
+                                pricing.windowStickerIncluded ? (
+                                  <>
+                                    <span className="text-xs text-slate-400 line-through font-bold">
+                                      $29.99
+                                    </span>
+                                    <span className="text-xl font-black text-emerald-600">
+                                      $14.99
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span className="text-xl font-black text-brand-blue">
+                                    $29.99
+                                  </span>
+                                )
+                              ) : pricing.packageTier === "basic" ? (
+                                pricing.windowStickerIncluded ? (
+                                  <>
+                                    <span className="text-xs text-slate-400 line-through font-bold">
+                                      $29.99
+                                    </span>
+                                    <span className="text-xl font-black text-emerald-600">
+                                      $22.49
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span className="text-xl font-black text-brand-blue">
+                                    $29.99
+                                  </span>
+                                )
+                              ) : (
+                                <span className="text-xl font-black text-brand-blue">
+                                  $29.99
+                                </span>
+                              )}
                             </div>
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                              /report
+                              {pricing.windowStickerFinalPrice === 0 &&
+                              (pricing.packageTier === "platinum" ||
+                                pricing.packageTier === "diamond")
+                                ? "Included"
+                                : "/report"}
                             </span>
                           </div>
                         </div>
@@ -1713,6 +1970,13 @@ export default function App() {
                               "Covers Most Vehicles",
                               "Accurate OEM Information",
                               "Easy to Access",
+                              ...(pricing.packageTier === "diamond"
+                                ? [
+                                    "Salvage & Total Loss Records",
+                                    "Insurance Total Loss History",
+                                    "Structural Damage Verification",
+                                  ]
+                                : []),
                             ].map((feature, fIdx) => (
                               <div
                                 key={fIdx}
@@ -1728,27 +1992,34 @@ export default function App() {
                         {/* Quick Toggle / State notice */}
                         <div className="mt-3.5 pt-3 border-t border-slate-200/50 flex justify-between items-center text-xs">
                           <span className="text-slate-500 font-medium">
-                            {includeWindowSticker
-                              ? "Window Sticker is added to your order"
-                              : "Window Sticker removed"}
+                            {pricing.packageTier === "diamond"
+                              ? "Window Sticker & Salvage Information are included FREE with Diamond"
+                              : pricing.packageTier === "platinum"
+                                ? "Window Sticker is included FREE with Platinum"
+                                : includeWindowSticker
+                                  ? "Window Sticker is added to your order"
+                                  : "Window Sticker removed"}
                           </span>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setIncludeWindowSticker(!includeWindowSticker)
-                            }
-                            className={`font-bold transition-colors cursor-pointer ${
-                              includeWindowSticker
-                                ? "text-rose-500 hover:text-rose-600 hover:underline"
-                                : "text-brand-accent hover:text-brand-accent-hover hover:underline"
-                            }`}
-                          >
-                            {includeWindowSticker
-                              ? "Remove Add-on"
-                              : isBasicPackage
-                                ? "+ Add Window Sticker"
-                                : "+ Add Window Sticker ($29.99)"}
-                          </button>
+                          {pricing.packageTier !== "platinum" &&
+                            pricing.packageTier !== "diamond" && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setIncludeWindowSticker(!includeWindowSticker)
+                                }
+                                className={`font-bold transition-colors cursor-pointer ${
+                                  includeWindowSticker
+                                    ? "text-rose-500 hover:text-rose-600 hover:underline"
+                                    : "text-brand-accent hover:text-brand-accent-hover hover:underline"
+                                }`}
+                              >
+                                {includeWindowSticker
+                                  ? "Remove Add-on"
+                                  : pricing.packageTier === "gold"
+                                    ? "+ Add Window Sticker ($14.99)"
+                                    : "+ Add Window Sticker ($22.49)"}
+                              </button>
+                            )}
                         </div>
                       </div>
                     )}
@@ -1836,17 +2107,10 @@ export default function App() {
                         <span className="text-slate-600">Selected Package</span>
                         <div className="text-right">
                           <span className="font-bold text-brand-blue block">
-                            {selectedPackage
-                              ? selectedPackage.includes("Report") ||
-                                selectedPackage.includes("Records") ||
-                                selectedPackage.includes("Information") ||
-                                selectedPackage.includes("Sticker")
-                                ? selectedPackage
-                                : `${selectedPackage} Report`
-                              : "Basic Report"}
+                            {pricing.packageName}
                           </span>
                           <span className="text-xs text-slate-500 font-bold">
-                            ${mainPackagePrice.toFixed(2)}
+                            ${pricing.packageOriginalPrice.toFixed(2)}
                           </span>
                         </div>
                       </div>
@@ -1860,38 +2124,57 @@ export default function App() {
                                 <span className="font-bold text-slate-800">
                                   Window Sticker
                                 </span>
-                                {isWindowStickerAddon && isBasicPackage && (
+                                {pricing.windowStickerIncluded && pricing.windowStickerDiscountPercentage > 0 && (
                                   <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-1.5 py-0.5 rounded">
-                                    -5%
+                                    {pricing.windowStickerDiscountPercentage === 100
+                                      ? "FREE"
+                                      : `-${pricing.windowStickerDiscountPercentage}%`}
                                   </span>
                                 )}
                               </div>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setIncludeWindowSticker(!includeWindowSticker)
-                                }
-                                className={`text-[11px] font-bold mt-0.5 block hover:underline cursor-pointer ${
-                                  includeWindowSticker
-                                    ? "text-rose-500"
-                                    : "text-brand-accent"
-                                }`}
-                              >
-                                {includeWindowSticker
-                                  ? "Remove"
-                                  : isBasicPackage
-                                    ? "+ Add"
-                                    : "+ Add ($29.99)"}
-                              </button>
+                              {pricing.packageTier !== "platinum" && pricing.packageTier !== "diamond" && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setIncludeWindowSticker(!includeWindowSticker)
+                                  }
+                                  className={`text-[11px] font-bold mt-0.5 block hover:underline cursor-pointer ${
+                                    includeWindowSticker
+                                      ? "text-rose-500"
+                                      : "text-brand-accent"
+                                  }`}
+                                >
+                                  {includeWindowSticker
+                                    ? "Remove"
+                                    : pricing.packageTier === "gold"
+                                      ? "+ Add ($14.99)"
+                                      : "+ Add ($22.49)"}
+                                </button>
+                              )}
                             </div>
                             <div className="text-right">
-                              {includeWindowSticker ? (
-                                <span className="font-bold text-brand-blue block">
-                                  $29.99
-                                </span>
+                              {pricing.windowStickerIncluded ? (
+                                <div>
+                                  {pricing.windowStickerDiscountAmount > 0 && (
+                                    <span className="text-[11px] text-slate-400 line-through mr-1.5 font-bold">
+                                      $29.99
+                                    </span>
+                                  )}
+                                  <span
+                                    className={`font-bold inline-block ${
+                                      pricing.windowStickerFinalPrice === 0
+                                        ? "text-emerald-600"
+                                        : "text-brand-blue"
+                                    }`}
+                                  >
+                                    {pricing.windowStickerFinalPrice === 0
+                                      ? "FREE"
+                                      : `$${pricing.windowStickerFinalPrice.toFixed(2)}`}
+                                  </span>
+                                </div>
                               ) : (
                                 <span className="text-xs text-slate-400 font-bold italic">
-                                  Removed
+                                  Removed ($0.00)
                                 </span>
                               )}
                             </div>
@@ -1899,21 +2182,42 @@ export default function App() {
                         </div>
                       )}
 
-                      {/* Combined Subtotal Row */}
-                      {isWindowStickerAddon && (
-                        <div className="flex justify-between items-center text-sm pt-2 border-t border-slate-200/60">
-                          <span className="text-slate-600">Combined Subtotal</span>
-                          <span className="font-bold text-slate-800">
-                            ${combinedSubtotal.toFixed(2)}
-                          </span>
+                      {/* Salvage Information Row for Diamond */}
+                      {pricing.salvageInformationIncluded && (
+                        <div className="pt-3 border-t border-slate-200/60">
+                          <div className="flex justify-between items-start text-sm">
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-bold text-slate-800">
+                                  Salvage Information
+                                </span>
+                                <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-1.5 py-0.5 rounded">
+                                  FREE
+                                </span>
+                              </div>
+                              <span className="text-[11px] text-emerald-600 font-medium block">
+                                Diamond Included Benefit
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-[11px] text-slate-400 line-through mr-1.5 font-bold">
+                                $149.00
+                              </span>
+                              <span className="font-bold text-emerald-600 inline-block">
+                                FREE
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       )}
 
-                      {/* 5% Combined Discount Row - ONLY for Basic with Window Sticker */}
-                      {discountAmount > 0 && (
-                        <div className="flex justify-between items-center text-xs bg-emerald-50 text-emerald-700 px-3 py-2 rounded-xl font-bold border border-emerald-100/80">
-                          <span>5% Combined Discount</span>
-                          <span>-${discountAmount.toFixed(2)}</span>
+                      {/* Applied Offer Banner / Total Discount */}
+                      {pricing.totalDiscount > 0 && (
+                        <div className="space-y-1 pt-1">
+                          <div className="flex justify-between items-center text-xs bg-emerald-50 text-emerald-700 px-3 py-2 rounded-xl font-bold border border-emerald-100/80">
+                            <span className="truncate pr-2">{pricing.appliedOfferName}</span>
+                            <span className="shrink-0 font-black">-${pricing.totalDiscount.toFixed(2)}</span>
+                          </div>
                         </div>
                       )}
 
@@ -1930,7 +2234,7 @@ export default function App() {
                     <div className="space-y-2">
                       <div className="flex justify-between items-center text-2xl font-black text-brand-blue">
                         <span>Total</span>
-                        <span>${finalTotal.toFixed(2)}</span>
+                        <span>${pricing.finalAmountPaid.toFixed(2)}</span>
                       </div>
                       <p className="text-xs text-slate-500 italic">
                         No hidden fees. One-time payment.
