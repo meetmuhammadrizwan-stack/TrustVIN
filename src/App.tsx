@@ -414,10 +414,10 @@ export default function App() {
                     Special Promotion
                   </div>
                   <h3 className="text-sm sm:text-base font-black text-slate-900 tracking-tight leading-tight">
-                    Limited-Time Package Deals
+                    Special Offer: Add a Window Sticker at a Discounted Price
                   </h3>
                   <p className="text-[10.5px] sm:text-xs text-slate-500 font-medium">
-                    Discounts apply automatically at checkout
+                    Offer applies to the Window Sticker add-on only. Your report price remains unchanged.
                   </p>
                 </div>
 
@@ -435,7 +435,7 @@ export default function App() {
                     <div>
                       <div className="flex items-center justify-between">
                         <div className="text-blue-600 font-black text-base sm:text-lg tracking-tight leading-none">
-                          25% OFF
+                          25% OFF Window Sticker
                         </div>
                         <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all shrink-0" />
                       </div>
@@ -460,7 +460,7 @@ export default function App() {
                     <div>
                       <div className="flex items-center justify-between">
                         <div className="text-amber-600 font-black text-base sm:text-lg tracking-tight leading-none">
-                          50% OFF
+                          50% OFF Window Sticker
                         </div>
                         <ArrowRight className="w-3.5 h-3.5 text-amber-300 group-hover:text-amber-600 group-hover:translate-x-0.5 transition-all shrink-0" />
                       </div>
@@ -485,7 +485,7 @@ export default function App() {
                     <div>
                       <div className="flex items-center justify-between">
                         <div className="text-emerald-600 font-black text-base sm:text-lg tracking-tight leading-none">
-                          FREE
+                          FREE Window Sticker
                         </div>
                         <ArrowRight className="w-3.5 h-3.5 text-emerald-300 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all shrink-0" />
                       </div>
@@ -510,7 +510,7 @@ export default function App() {
                     <div>
                       <div className="flex items-center justify-between">
                         <div className="text-emerald-700 font-black text-base sm:text-lg tracking-tight leading-none">
-                          FREE
+                          FREE Window Sticker
                         </div>
                         <ArrowRight className="w-3.5 h-3.5 text-emerald-400 group-hover:text-emerald-700 group-hover:translate-x-0.5 transition-all shrink-0" />
                       </div>
