@@ -53,6 +53,8 @@ app.use(express.json({ limit: "50mb" }));
       lastName,
       country,
       policyAgreed,
+      purchaseDecisionAgreed,
+      inspectionReportAgreed,
       phone,
     } = req.body;
     const client = getStripe();
@@ -197,6 +199,13 @@ app.use(express.json({ limit: "50mb" }));
         success_url: `${process.env.APP_URL || "http://localhost:3000"}/?success=true&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.APP_URL || "http://localhost:3000"}/?canceled=true`,
         customer_email: email,
+        metadata: {
+          packageName: pricing.packageName,
+          vin: vin || "Pending",
+          policyAgreed: policyAgreed ? "true" : "false",
+          purchaseDecisionAgreed: purchaseDecisionAgreed ? "true" : "false",
+          inspectionReportAgreed: inspectionReportAgreed ? "true" : "false",
+        },
       });
 
       // Save order data directly to Firebase Firestore
@@ -233,6 +242,8 @@ app.use(express.json({ limit: "50mb" }));
         createdAt: new Date().toISOString(),
         status: "pending",
         policyAgreed: !!policyAgreed,
+        purchaseDecisionAgreed: !!purchaseDecisionAgreed,
+        inspectionReportAgreed: !!inspectionReportAgreed,
       };
 
       await db.collection("orders").add(newOrder);
@@ -255,6 +266,8 @@ app.use(express.json({ limit: "50mb" }));
       lastName,
       country,
       policyAgreed,
+      purchaseDecisionAgreed,
+      inspectionReportAgreed,
       phone,
     } = req.body;
     const client = getStripe();
@@ -294,6 +307,9 @@ app.use(express.json({ limit: "50mb" }));
           firstName,
           lastName,
           country: country || "United States",
+          policyAgreed: policyAgreed ? "true" : "false",
+          purchaseDecisionAgreed: purchaseDecisionAgreed ? "true" : "false",
+          inspectionReportAgreed: inspectionReportAgreed ? "true" : "false",
         },
       });
 
@@ -331,6 +347,8 @@ app.use(express.json({ limit: "50mb" }));
         createdAt: new Date().toISOString(),
         status: "pending",
         policyAgreed: !!policyAgreed,
+        purchaseDecisionAgreed: !!purchaseDecisionAgreed,
+        inspectionReportAgreed: !!inspectionReportAgreed,
       };
 
       await db.collection("orders").add(newOrder);
@@ -677,17 +695,21 @@ app.use(express.json({ limit: "50mb" }));
     if (process.env.NODE_ENV !== "production") {
       // Dynamically import vite only in local dev - it is a devDependency not
       // available in production / Vercel environments.
-      import("vite").then(({ createServer: createViteServer }) => {
-        createViteServer({
-          server: { middlewareMode: true },
-          appType: "spa",
-        }).then((vite) => {
-          app.use(vite.middlewares);
-          app.listen(PORT, "0.0.0.0", () => {
-            console.log(`Server running on http://localhost:${PORT}`);
+      import("vite")
+        .then(({ createServer: createViteServer }) => {
+          return createViteServer({
+            server: { middlewareMode: true },
+            appType: "spa",
+          }).then((vite) => {
+            app.use(vite.middlewares);
+            app.listen(PORT, "0.0.0.0", () => {
+              console.log(`Server running on http://localhost:${PORT}`);
+            });
           });
+        })
+        .catch((err) => {
+          console.error("Vite setup error:", err);
         });
-      });
     } else {
       const distPath = path.join(__dirname, "dist");
       app.use(express.static(distPath));

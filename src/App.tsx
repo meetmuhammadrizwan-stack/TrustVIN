@@ -267,7 +267,7 @@ export default function App() {
     e.preventDefault();
     if (
       adminEmail === "AllVinReport@gmail.com" &&
-      adminPassword === "AllVinReport@!"
+      adminPassword === "EmpowerPakistan"
     ) {
       localStorage.setItem("adminAuth", "true");
       setIsAdminAuthenticated(true);
@@ -2031,43 +2031,56 @@ export default function App() {
                         required
                         checked={policyAgreed}
                         onChange={(e) => setPolicyAgreed(e.target.checked)}
-                        className="mt-1 w-4 h-4 rounded border-slate-300 text-brand-accent focus:ring-brand-accent cursor-pointer"
+                        className="mt-1 w-4 h-4 rounded border-slate-300 text-brand-accent focus:ring-brand-accent cursor-pointer shrink-0"
                       />
                       <label
                         htmlFor="policyCheckbox"
-                        className="text-xs font-semibold text-slate-600 leading-relaxed select-none cursor-pointer"
+                        className="text-xs leading-relaxed select-none cursor-pointer space-y-2 block w-full"
                       >
-                        I agree to the{" "}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            window.location.hash = "privacy";
-                          }}
-                          className="text-brand-accent hover:underline font-bold inline cursor-pointer"
-                        >
-                          Privacy Policy
-                        </button>
-                        ,{" "}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            window.location.hash = "terms";
-                          }}
-                          className="text-brand-accent hover:underline font-bold inline cursor-pointer"
-                        >
-                          Terms & Conditions
-                        </button>
-                        , and{" "}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            window.location.hash = "refund";
-                          }}
-                          className="text-brand-accent hover:underline font-bold inline cursor-pointer"
-                        >
-                          Refund Policy
-                        </button>
-                        .
+                        <span className="block font-semibold text-slate-600">
+                          I agree to the{" "}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.location.hash = "privacy";
+                            }}
+                            className="text-brand-accent hover:underline font-bold inline cursor-pointer"
+                          >
+                            Privacy Policy
+                          </button>
+                          ,{" "}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.location.hash = "terms";
+                            }}
+                            className="text-brand-accent hover:underline font-bold inline cursor-pointer"
+                          >
+                            Terms & Conditions
+                          </button>
+                          , and{" "}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.location.hash = "refund";
+                            }}
+                            className="text-brand-accent hover:underline font-bold inline cursor-pointer"
+                          >
+                            Refund Policy
+                          </button>
+                          .
+                        </span>
+
+                        <span className="block font-semibold text-[#a02c48]">
+                          • We don't promise you a date to buy the vehicle, you should do it on your own decision.
+                        </span>
+
+                        <span className="block font-semibold text-[#a02c48]">
+                          • I am purchasing a VEHICLE INSPECTION REPORT which will be delivered within the specified timeframe once the payment is processed (acknowledging that once the report is delivered, it cannot be returned).
+                        </span>
                       </label>
                     </div>
 

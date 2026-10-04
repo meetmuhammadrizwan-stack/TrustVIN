@@ -49,6 +49,8 @@ interface Order {
   serialNumber?: number;
   reportStatus?: "not sent" | "sent";
   policyAgreed?: boolean;
+  purchaseDecisionAgreed?: boolean;
+  inspectionReportAgreed?: boolean;
   reportFileName?: string;
   reportFilePath?: string;
   downloads?: Array<{
@@ -535,7 +537,7 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       "Order Created Date/Time",
       "Order Completed Date/Time",
       "Report Uploaded Date/Time",
-      "Policy Agreed",
+      "Policy & Disclaimers Agreed",
       "Report Status",
       "Payment Status",
     ];
@@ -1398,11 +1400,11 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                           </div>
                         </div>
 
-                        {/* Policy agreement validation checkbox display */}
-                        <div className="flex items-center p-4 bg-white border border-slate-200/80 rounded-2xl shadow-xs md:col-span-2 group">
-                          <div className="flex items-center gap-3 w-full">
+                        {/* Policy & Disclaimers agreement validation checkbox display */}
+                        <div className="p-4 bg-white border border-slate-200/80 rounded-2xl shadow-xs md:col-span-2 group">
+                          <div className="flex items-start gap-3 w-full">
                             <div
-                              className={`p-2.5 rounded-xl transition-colors ${
+                              className={`p-2.5 rounded-xl transition-colors shrink-0 mt-0.5 ${
                                 selectedOrder.policyAgreed
                                   ? "bg-emerald-500/10 text-emerald-600"
                                   : "bg-rose-500/10 text-rose-600"
@@ -1410,35 +1412,50 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                             >
                               <CheckSquare className="w-5 h-5" />
                             </div>
-                            <div className="flex-1 flex items-center justify-between">
-                              <div>
-                                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                  Ticked Policy Agreement Checkbox
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between gap-2 mb-2">
+                                <div>
+                                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                    Ticked Policy, Terms & Disclaimers Checkbox
+                                  </div>
+                                  <div className="text-xs text-slate-400 font-semibold mt-0.5">
+                                    Customer checked the consent box before checkout
+                                  </div>
                                 </div>
-                                <div className="text-xs text-slate-400 font-semibold mt-0.5">
-                                  Agreed to Terms, Privacy & Refund policy
-                                  before checkout
+                                <span
+                                  className={`inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border select-none shrink-0 ${
+                                    selectedOrder.policyAgreed
+                                      ? "bg-emerald-50 border-emerald-100 text-emerald-600"
+                                      : "bg-rose-50 border-rose-100 text-rose-500"
+                                  }`}
+                                >
+                                  {selectedOrder.policyAgreed ? (
+                                    <>
+                                      <CheckCircle2 className="w-3.5 h-3.5" />
+                                      Yes, Agreed
+                                    </>
+                                  ) : (
+                                    <>
+                                      <XCircle className="w-3.5 h-3.5" />
+                                      No, Disagreed
+                                    </>
+                                  )}
+                                </span>
+                              </div>
+                              <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-100 space-y-1.5 text-xs">
+                                <div className="font-semibold text-slate-700 flex items-start gap-1.5">
+                                  <span className="text-emerald-500 font-bold">1.</span>
+                                  <span>Agreed to Terms & Conditions, Privacy Policy, and Refund Policy</span>
+                                </div>
+                                <div className="font-semibold text-slate-600 flex items-start gap-1.5">
+                                  <span className="text-brand-accent font-bold">2.</span>
+                                  <span>"We don't promise you a date to buy the vehicle, you should do it on your own decision."</span>
+                                </div>
+                                <div className="font-semibold text-slate-600 flex items-start gap-1.5">
+                                  <span className="text-brand-accent font-bold">3.</span>
+                                  <span>"I am purchasing a VEHICLE INSPECTION REPORT which will be delivered within the specified timeframe once the payment is processed (acknowledging that once the report is delivered, it cannot be returned)."</span>
                                 </div>
                               </div>
-                              <span
-                                className={`inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border select-none ${
-                                  selectedOrder.policyAgreed
-                                    ? "bg-emerald-50 border-emerald-100 text-emerald-600"
-                                    : "bg-rose-50 border-rose-100 text-rose-500"
-                                }`}
-                              >
-                                {selectedOrder.policyAgreed ? (
-                                  <>
-                                    <CheckCircle2 className="w-3.5 h-3.5" />
-                                    Yes, Agreed
-                                  </>
-                                ) : (
-                                  <>
-                                    <XCircle className="w-3.5 h-3.5" />
-                                    No, Disagreed
-                                  </>
-                                )}
-                              </span>
                             </div>
                           </div>
                         </div>
