@@ -92,14 +92,14 @@ export default function App() {
   // Admin State
   const [adminEmail, setAdminEmail] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
-    return localStorage.getItem("adminAuth") === "true";
-  });
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Centralized hash-based routing
   useEffect(() => {
+    // Clear any previously saved admin credentials
+    localStorage.removeItem("adminAuth");
     const parseHashAndSetState = (hash: string) => {
       const raw = decodeURIComponent(hash.replace("#", "")).trim().toLowerCase();
       const normalized = raw.replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
@@ -175,12 +175,8 @@ export default function App() {
           window.scrollTo(0, 0);
           break;
         case "admin":
-          if (localStorage.getItem("adminAuth") === "true") {
-            setIsAdminAuthenticated(true);
-            setView("admin-dashboard");
-          } else {
-            setView("admin-login");
-          }
+          setIsAdminAuthenticated(false);
+          setView("admin-login");
           window.scrollTo(0, 0);
           break;
         case "privacy":
@@ -269,10 +265,11 @@ export default function App() {
       adminEmail === "AllVinReport@gmail.com" &&
       adminPassword === "EmpowerPakistan"
     ) {
-      localStorage.setItem("adminAuth", "true");
+      localStorage.removeItem("adminAuth");
       setIsAdminAuthenticated(true);
       setView("admin-dashboard");
       setLoginError("");
+      setAdminPassword("");
     } else {
       setLoginError("Invalid credentials. Access denied.");
     }
@@ -284,6 +281,9 @@ export default function App() {
     setView("home");
     setAdminEmail("");
     setAdminPassword("");
+    if (window.location.hash === "#admin") {
+      window.location.hash = "";
+    }
   };
 
   const handleCheckout = async (e: React.FormEvent) => {
@@ -1574,7 +1574,7 @@ export default function App() {
                 </p>
               </div>
 
-              <form onSubmit={handleAdminLogin} className="space-y-6">
+              <form onSubmit={handleAdminLogin} className="space-y-6" autoComplete="off">
                 <div className="space-y-2">
                   <label className="text-xs font-black text-slate-400 uppercase tracking-widest pl-1">
                     Email Address
@@ -1586,6 +1586,7 @@ export default function App() {
                       value={adminEmail}
                       onChange={(e) => setAdminEmail(e.target.value)}
                       placeholder="admin@AllVinReport.com"
+                      autoComplete="off"
                       className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-brand-accent/50 focus:bg-white transition-all text-slate-900 font-bold"
                     />
                     <Mail className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5" />
@@ -1603,6 +1604,7 @@ export default function App() {
                       value={adminPassword}
                       onChange={(e) => setAdminPassword(e.target.value)}
                       placeholder="••••••••"
+                      autoComplete="new-password"
                       className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-brand-accent/50 focus:bg-white transition-all text-slate-900 font-bold"
                     />
                     <Lock className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5" />
