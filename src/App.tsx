@@ -34,6 +34,13 @@ import TermsAndConditions from "./TermsAndConditions";
 import RefundPolicy from "./RefundPolicy";
 import LiveChat from "./LiveChat";
 import { calculateOrderPricing } from "./promotions";
+import {
+  auth,
+  initAuthPersistence,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+} from "./firebase";
 
 type View =
   | "home"
@@ -92,13 +99,30 @@ export default function App() {
   // Admin State
   const [adminEmail, setAdminEmail] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
+    return (
+      typeof window !== "undefined" &&
+      (sessionStorage.getItem("adminAuth") === "true" ||
+        sessionStorage.getItem("adminSession") === "true")
+    );
+  });
   const [loginError, setLoginError] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Firebase Auth state listener and persistence configuration
+  useEffect(() => {
+    initAuthPersistence();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        sessionStorage.setItem("adminAuth", "true");
+        setIsAdminAuthenticated(true);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
   // Centralized hash-based routing
   useEffect(() => {
-    // Clear any previously saved admin credentials
     localStorage.removeItem("adminAuth");
     const parseHashAndSetState = (hash: string) => {
       const raw = decodeURIComponent(hash.replace("#", "")).trim().toLowerCase();
@@ -175,8 +199,18 @@ export default function App() {
           window.scrollTo(0, 0);
           break;
         case "admin":
-          setIsAdminAuthenticated(false);
-          setView("admin-login");
+        case "admin-dashboard":
+          if (
+            sessionStorage.getItem("adminAuth") === "true" ||
+            sessionStorage.getItem("adminSession") === "true" ||
+            auth.currentUser
+          ) {
+            setIsAdminAuthenticated(true);
+            setView("admin-dashboard");
+          } else {
+            setIsAdminAuthenticated(false);
+            setView("admin-login");
+          }
           window.scrollTo(0, 0);
           break;
         case "privacy":
@@ -259,14 +293,22 @@ export default function App() {
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError("");
+
     if (
       adminEmail === "AllVinReport@gmail.com" &&
       adminPassword === "EmpowerPakistan"
     ) {
-      localStorage.removeItem("adminAuth");
+      try {
+        await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
+      } catch (fbErr: any) {
+        console.warn("Firebase Auth signIn notice:", fbErr?.code || fbErr?.message);
+      }
+      sessionStorage.setItem("adminAuth", "true");
       setIsAdminAuthenticated(true);
+      window.location.hash = "admin";
       setView("admin-dashboard");
       setLoginError("");
       setAdminPassword("");
@@ -275,13 +317,20 @@ export default function App() {
     }
   };
 
-  const handleAdminLogout = () => {
+  const handleAdminLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.warn("SignOut notice:", e);
+    }
+    sessionStorage.removeItem("adminAuth");
+    sessionStorage.removeItem("adminSession");
     localStorage.removeItem("adminAuth");
     setIsAdminAuthenticated(false);
     setView("home");
     setAdminEmail("");
     setAdminPassword("");
-    if (window.location.hash === "#admin") {
+    if (window.location.hash === "#admin" || window.location.hash === "#admin-dashboard") {
       window.location.hash = "";
     }
   };
