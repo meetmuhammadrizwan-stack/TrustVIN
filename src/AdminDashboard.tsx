@@ -33,6 +33,7 @@ import { calculateOrderPricing } from "./promotions";
 
 interface Order {
   id: string;
+  fbId?: string;
   packageName: string;
   packageTier?: string;
   vin: string;
@@ -232,6 +233,7 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       );
       const withSerials = sortedAsc.map((order: Order, idx: number) => ({
         ...order,
+        id: order.id || order.fbId || `order-${idx + 1}`,
         serialNumber: idx + 1,
       }));
 
@@ -252,13 +254,26 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   };
 
   const filteredOrders = orders.filter((order) => {
+    const term = searchTerm.trim().toLowerCase();
+    const fullName = `${order.firstName || ""} ${order.lastName || ""}`.toLowerCase();
+    const orderId = (order.id || order.fbId || "").toLowerCase();
+    const email = (order.email || "").toLowerCase();
+    const vin = (order.vin || "").toLowerCase();
+    const phone = (order.phone || "").toLowerCase();
+    const packageName = (order.packageName || "").toLowerCase();
+    const country = (order.country || "").toLowerCase();
+    const serialStr = order.serialNumber ? String(order.serialNumber) : "";
+
     const matchesSearch =
-      order.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.vin.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      `${order.firstName} ${order.lastName}`
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      order.id.toLowerCase().includes(searchTerm.toLowerCase());
+      !term ||
+      email.includes(term) ||
+      vin.includes(term) ||
+      fullName.includes(term) ||
+      orderId.includes(term) ||
+      phone.includes(term) ||
+      packageName.includes(term) ||
+      country.includes(term) ||
+      (serialStr ? serialStr.includes(term.replace(/^#/, "")) : false);
 
     const orderDate = new Date(order.createdAt);
     orderDate.setHours(0, 0, 0, 0);
@@ -274,7 +289,7 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 
     const matchesStatus =
       statusFilter === "All" ||
-      order.status.toLowerCase() === statusFilter.toLowerCase();
+      (order.status || "").toLowerCase() === statusFilter.toLowerCase();
 
     return matchesSearch && matchesDate && matchesStatus;
   });
@@ -598,7 +613,10 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     document.body.removeChild(link);
   };
 
-  const selectedOrder = orders.find((o) => o.id === selectedOrderId) || null;
+  const selectedOrder =
+    filteredOrders.find((o) => o.id === selectedOrderId) ||
+    filteredOrders[0] ||
+    null;
 
   // Stats calculation based on filtered orders
   const totalRevenue = filteredOrders
@@ -695,8 +713,18 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                   placeholder="Search by VIN, Email, Name, or ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-brand-accent/50 transition-all text-sm font-semibold placeholder:text-slate-400 shadow-inner"
+                  className="w-full pl-11 pr-10 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-brand-accent/50 transition-all text-sm font-semibold placeholder:text-slate-400 shadow-inner"
                 />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-0.5 cursor-pointer"
+                    title="Clear search"
+                  >
+                    <XCircle className="w-4 h-4" />
+                  </button>
+                )}
               </div>
 
               {/* Expandable date filters */}
@@ -804,7 +832,7 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 </div>
               ) : (
                 filteredOrders.map((order) => {
-                  const isSelected = order.id === selectedOrderId;
+                  const isSelected = order.id === selectedOrder?.id;
                   const isPending = order.status.toLowerCase() === "pending";
                   const isCompleted =
                     order.status.toLowerCase() === "completed";
