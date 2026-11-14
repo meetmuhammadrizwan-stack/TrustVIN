@@ -32,6 +32,7 @@ import AdminDashboard from "./AdminDashboard";
 import PrivacyPolicy from "./PrivacyPolicy";
 import TermsAndConditions from "./TermsAndConditions";
 import RefundPolicy from "./RefundPolicy";
+import CancellationPolicy from "./CancellationPolicy";
 import LiveChat from "./LiveChat";
 import { calculateOrderPricing } from "./promotions";
 import {
@@ -50,7 +51,8 @@ type View =
   | "thanks"
   | "privacy"
   | "terms"
-  | "refund";
+  | "refund"
+  | "cancellation";
 type PackageType =
   | "Platinum"
   | "Diamond"
@@ -223,6 +225,11 @@ export default function App() {
           break;
         case "refund":
           setView("refund");
+          window.scrollTo(0, 0);
+          break;
+        case "cancellation":
+        case "cancellation-policy":
+          setView("cancellation");
           window.scrollTo(0, 0);
           break;
         case "thanks":
@@ -1726,6 +1733,8 @@ export default function App() {
           <TermsAndConditions key="terms" onBack={navigateToHome} />
         ) : view === "refund" ? (
           <RefundPolicy key="refund" onBack={navigateToHome} />
+        ) : view === "cancellation" ? (
+          <CancellationPolicy key="cancellation" onBack={navigateToHome} />
         ) : (
           <motion.div
             key="order"
@@ -2111,7 +2120,7 @@ export default function App() {
                           >
                             Terms & Conditions
                           </button>
-                          , and{" "}
+                          ,{" "}
                           <button
                             type="button"
                             onClick={(e) => {
@@ -2121,6 +2130,17 @@ export default function App() {
                             className="text-brand-accent hover:underline font-bold inline cursor-pointer"
                           >
                             Refund Policy
+                          </button>
+                          , and{" "}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.location.hash = "cancellation";
+                            }}
+                            className="text-brand-accent hover:underline font-bold inline cursor-pointer"
+                          >
+                            Cancellation Policy
                           </button>
                           .
                         </span>
@@ -2413,6 +2433,16 @@ export default function App() {
                   className="hover:text-brand-accent transition-colors text-left"
                 >
                   Refund Policy
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    window.location.hash = "cancellation";
+                  }}
+                  className="hover:text-brand-accent transition-colors text-left"
+                >
+                  Cancellation Policy
                 </button>
               </li>
             </ul>
