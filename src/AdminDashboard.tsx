@@ -1000,12 +1000,12 @@ export default function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                           <span className="font-mono">{selectedOrder.id}</span>
                           <button
                             onClick={() =>
-                              handleCopy(selectedOrder.id, "stripe-id")
+                              handleCopy(selectedOrder.id, "payment-id")
                             }
                             className="p-1 hover:bg-slate-100 rounded-md transition-colors inline cursor-pointer text-slate-400 hover:text-slate-600"
-                            title="Copy Stripe Session ID"
+                            title="Copy Order / Payment ID"
                           >
-                            {copiedField === "stripe-id" ? (
+                            {copiedField === "payment-id" ? (
                               <Check className="w-3 h-3 text-emerald-500" />
                             ) : (
                               <Copy className="w-3 h-3" />

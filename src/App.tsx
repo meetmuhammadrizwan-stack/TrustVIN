@@ -273,22 +273,25 @@ export default function App() {
     // Initial check on page load
     parseHashAndSetState(window.location.hash);
 
-    // Check for Stripe Checkout redirect parameters
+    // Check for payment redirect parameters (Viva Wallet & Stripe)
     const query = new URLSearchParams(window.location.search);
-    if (query.get("success")) {
-      const sessionId = query.get("session_id");
-      if (sessionId) {
-        fetch(`/api/orders/${sessionId}/confirm-payment`, {
-          method: "POST",
-        }).catch((e) => console.warn("Failed to confirm payment status:", e));
-      }
+    const orderCode = query.get("s") || query.get("orderCode") || query.get("session_id");
+    const transactionId = query.get("t");
+    const isSuccess = Boolean(query.get("success") || query.get("s") || query.get("t") || query.get("orderCode"));
+    const isCanceled = Boolean(query.get("canceled") || query.get("cancel") === "true");
+
+    if (isSuccess && orderCode) {
+      fetch(`/api/orders/${encodeURIComponent(orderCode)}/confirm-payment?t=${encodeURIComponent(transactionId || "")}`, {
+        method: "POST",
+      }).catch((e) => console.warn("Failed to confirm payment status:", e));
+
       window.location.hash = "thanks";
       window.history.replaceState(
         {},
         document.title,
         window.location.pathname + window.location.hash,
       );
-    } else if (query.get("canceled")) {
+    } else if (isCanceled) {
       alert("Payment was canceled. You can try again when you're ready.");
       window.history.replaceState(
         {},

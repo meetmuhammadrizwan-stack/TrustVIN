@@ -27,7 +27,56 @@ const app = express();
 app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-  // Stripe Implementation
+  // Viva Payments (Viva Wallet) Implementation
+  const getVivaUrls = () => {
+    const isDemo = process.env.VIVA_ENV === "demo";
+    return {
+      accounts: isDemo ? "https://demo-accounts.vivapayments.com" : "https://accounts.vivapayments.com",
+      api: isDemo ? "https://demo-api.vivapayments.com" : "https://api.vivapayments.com",
+      checkout: isDemo ? "https://demo.vivapayments.com" : "https://www.vivapayments.com",
+    };
+  };
+
+  let cachedVivaToken: { token: string; expiresAt: number } | null = null;
+
+  const getVivaAccessToken = async (): Promise<string> => {
+    const now = Date.now();
+    if (cachedVivaToken && cachedVivaToken.expiresAt > now + 60000) {
+      return cachedVivaToken.token;
+    }
+
+    const clientId = process.env.VIVA_CLIENT_ID;
+    const clientSecret = process.env.VIVA_CLIENT_SECRET;
+    if (!clientId || !clientSecret) {
+      throw new Error("Viva Payments credentials (VIVA_CLIENT_ID / VIVA_CLIENT_SECRET) are missing.");
+    }
+
+    const urls = getVivaUrls();
+    const authHeader = "Basic " + Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+
+    const response = await fetch(`${urls.accounts}/connect/token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": authHeader,
+      },
+      body: "grant_type=client_credentials",
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Failed to obtain Viva access token (${response.status}): ${errText}`);
+    }
+
+    const data: any = await response.json();
+    cachedVivaToken = {
+      token: data.access_token,
+      expiresAt: now + (data.expires_in || 3600) * 1000,
+    };
+    return cachedVivaToken.token;
+  };
+
+  // Stripe Implementation (Fallback / Legacy)
   let stripe: Stripe | null = null;
   const getStripe = () => {
     if (!stripe) {
@@ -57,17 +106,114 @@ app.use(express.json({ limit: "50mb" }));
       inspectionReportAgreed,
       phone,
     } = req.body;
-    const client = getStripe();
-
-    if (!client) {
-      return res
-        .status(500)
-        .json({ error: "Stripe is not configured on the server." });
-    }
 
     try {
       const pricing = calculateOrderPricing(packageName, includeWindowSticker);
       const totalAmountCents = Math.round(pricing.finalAmountPaid * 100);
+
+      // 1. Viva Payments Smart Checkout (Primary)
+      if (process.env.VIVA_CLIENT_ID && process.env.VIVA_CLIENT_SECRET) {
+        const token = await getVivaAccessToken();
+        const urls = getVivaUrls();
+        const customerFullName = `${firstName || ""} ${lastName || ""}`.trim() || "Customer";
+
+        const orderPayload: any = {
+          amount: totalAmountCents,
+          customerTrns: `${pricing.packageName}${pricing.windowStickerIncluded ? " + Window Sticker" : ""}${pricing.salvageInformationIncluded ? " + Salvage Information" : ""} for VIN: ${vin || "Pending"}`,
+          customer: {
+            email: email || "customer@allvinreport.com",
+            fullName: customerFullName,
+            phone: phone || "",
+            countryCode: country && country.length === 2 ? country.toUpperCase() : "US",
+            requestLang: "en",
+          },
+          paymentTimeout: 3600,
+          preauth: false,
+          allowRecurring: false,
+          maxInstallments: 0,
+          paymentNotification: true,
+          tipAmount: 0,
+          disableExactAmount: false,
+          disableCash: true,
+          disablePayAtStore: true,
+          merchantTrns: `Order for VIN: ${vin || "Pending"} (${email || "N/A"})`,
+        };
+
+        if (process.env.VIVA_SOURCE_CODE) {
+          orderPayload.sourceCode = process.env.VIVA_SOURCE_CODE;
+        }
+
+        const vivaRes = await fetch(`${urls.api}/checkout/v2/orders`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(orderPayload),
+        });
+
+        if (!vivaRes.ok) {
+          const errText = await vivaRes.text();
+          console.error("Viva Order Creation Error:", errText);
+          throw new Error(`Viva order creation failed (${vivaRes.status}): ${errText}`);
+        }
+
+        const vivaData: any = await vivaRes.json();
+        const orderCode = String(vivaData.orderCode);
+        const checkoutUrl = `${urls.checkout}/web/checkout?ref=${orderCode}`;
+
+        // Save order data directly to Firebase Firestore
+        const newOrder = {
+          id: orderCode,
+          orderCode,
+          paymentProvider: "viva",
+          packageName: pricing.packageName,
+          packageTier: pricing.packageTier,
+          packagePrice: pricing.packageOriginalPrice,
+          packageOriginalPrice: pricing.packageOriginalPrice,
+          windowStickerIncluded: pricing.windowStickerIncluded,
+          windowStickerOriginalPrice: pricing.windowStickerOriginalPrice,
+          windowStickerDiscountPercentage: pricing.windowStickerDiscountPercentage,
+          windowStickerDiscountAmount: pricing.windowStickerDiscountAmount,
+          windowStickerPrice: pricing.windowStickerFinalPrice,
+          windowStickerFinalPrice: pricing.windowStickerFinalPrice,
+          salvageInformationIncluded: pricing.salvageInformationIncluded,
+          salvageInformationOriginalPrice: pricing.salvageInformationOriginalPrice,
+          salvageInformationDiscountAmount: pricing.salvageInformationDiscountAmount,
+          salvageInformationFinalPrice: pricing.salvageInformationFinalPrice,
+          appliedOfferName: pricing.appliedOfferName,
+          discountAmount: pricing.totalDiscount,
+          totalDiscount: pricing.totalDiscount,
+          combinedSubtotal: Number(
+            (pricing.packageOriginalPrice + pricing.windowStickerOriginalPrice + pricing.salvageInformationOriginalPrice).toFixed(2)
+          ),
+          amount: pricing.finalAmountPaid,
+          finalAmountPaid: pricing.finalAmountPaid,
+          vin,
+          email,
+          firstName,
+          lastName,
+          phone: phone || "",
+          country: country || "United States",
+          createdAt: new Date().toISOString(),
+          status: "pending",
+          policyAgreed: !!policyAgreed,
+          purchaseDecisionAgreed: !!purchaseDecisionAgreed,
+          inspectionReportAgreed: !!inspectionReportAgreed,
+        };
+
+        await db.collection("orders").add(newOrder);
+
+        return res.json({ url: checkoutUrl, orderCode });
+      }
+
+      // 2. Stripe Checkout Session (Fallback)
+      const client = getStripe();
+      if (!client) {
+        return res
+          .status(500)
+          .json({ error: "Payment gateway is not configured on the server." });
+      }
 
       let line_items: any[] = [];
 
@@ -360,11 +506,17 @@ app.use(express.json({ limit: "50mb" }));
     }
   });
 
-  // API: Confirm Order Payment (Stripe Checkout return / Intent confirmation)
+  // API: Confirm Order Payment (Viva Wallet return / Stripe Checkout return / Intent confirmation)
   app.post("/api/orders/:id/confirm-payment", async (req, res) => {
     const { id } = req.params;
+    const transactionId = (req.query.t || req.body.t || "") as string;
+
     try {
-      const querySnapshot = await db.collection("orders").where("id", "==", id).get();
+      let querySnapshot = await db.collection("orders").where("id", "==", id).get();
+      if (querySnapshot.empty) {
+        querySnapshot = await db.collection("orders").where("orderCode", "==", id).get();
+      }
+
       if (querySnapshot.empty) {
         return res.status(404).json({ error: "Order not found" });
       }
@@ -393,10 +545,15 @@ app.use(express.json({ limit: "50mb" }));
         const docRef = db.collection("orders").doc(fbDoc.id);
         const currentData = fbDoc.data() || {};
         const completedAt = currentData.completedAt || new Date().toISOString();
-        await docRef.update({
+        const updateData: any = {
           status: "completed",
           completedAt,
-        });
+        };
+        if (transactionId) {
+          updateData.vivaTransactionId = transactionId;
+        }
+
+        await docRef.update(updateData);
         return res.json({ success: true, status: "completed", completedAt });
       }
 
@@ -404,6 +561,46 @@ app.use(express.json({ limit: "50mb" }));
     } catch (error: any) {
       console.error("Error confirming payment:", error);
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Viva Webhook Verification Endpoint (GET)
+  app.get("/api/viva/webhook", (req, res) => {
+    const verificationKey = process.env.VIVA_WEBHOOK_VERIFICATION_KEY || process.env.VIVA_API_KEY || "";
+    res.json({ Key: verificationKey });
+  });
+
+  // Viva Webhook Transaction Notification (POST)
+  app.post("/api/viva/webhook", async (req, res) => {
+    try {
+      const event = req.body;
+      console.log("Viva Webhook received:", JSON.stringify(event));
+
+      const eventData = event?.EventData || event;
+      const orderCode = eventData?.OrderCode ? String(eventData.OrderCode) : null;
+      const statusId = eventData?.StatusId;
+
+      if (orderCode && (!statusId || statusId === "F")) {
+        let querySnapshot = await db.collection("orders").where("id", "==", orderCode).get();
+        if (querySnapshot.empty) {
+          querySnapshot = await db.collection("orders").where("orderCode", "==", orderCode).get();
+        }
+
+        if (!querySnapshot.empty) {
+          const fbDoc = querySnapshot.docs[0];
+          await db.collection("orders").doc(fbDoc.id).update({
+            status: "completed",
+            completedAt: new Date().toISOString(),
+            ...(eventData?.TransactionId ? { vivaTransactionId: eventData.TransactionId } : {}),
+          });
+          console.log(`Order ${orderCode} marked completed via Viva Webhook`);
+        }
+      }
+
+      res.status(200).send("OK");
+    } catch (err: any) {
+      console.error("Viva Webhook Error:", err);
+      res.status(500).json({ error: err.message });
     }
   });
 
