@@ -273,7 +273,7 @@ export default function App() {
     // Initial check on page load
     parseHashAndSetState(window.location.hash);
 
-    // Check for payment redirect parameters (Viva Wallet & Stripe)
+    // Check for payment redirect parameters (Viva Wallet Smart Checkout)
     const query = new URLSearchParams(window.location.search);
     const orderCode = query.get("s") || query.get("orderCode") || query.get("session_id");
     const transactionId = query.get("t");
@@ -804,11 +804,10 @@ export default function App() {
                   <div className="relative p-[1.5px] rounded-2xl bg-gradient-to-r from-blue-500/30 via-indigo-500/40 to-blue-500/30 shadow-xl shadow-blue-950/30 hover:from-blue-500/50 hover:via-indigo-500/60 hover:to-blue-500/50 transition-all duration-300">
                     <div className="flex flex-col sm:flex-row gap-3 p-1.5 sm:p-2 bg-slate-900/95 backdrop-blur-xl rounded-2xl">
                       <div
-                        className={`flex-1 flex items-center gap-3.5 px-4 py-2.5 sm:py-3 rounded-xl transition-all ${
-                          vinError
-                            ? "bg-red-950/50 border border-red-500/80 ring-2 ring-red-500/40"
-                            : "bg-slate-800/80 border border-slate-700/70 hover:border-slate-600 focus-within:border-blue-500 focus-within:bg-slate-800 focus-within:ring-2 focus-within:ring-blue-500/30"
-                        }`}
+                        className={`flex-1 flex items-center gap-3.5 px-4 py-2.5 sm:py-3 rounded-xl transition-all ${vinError
+                          ? "bg-red-950/50 border border-red-500/80 ring-2 ring-red-500/40"
+                          : "bg-slate-800/80 border border-slate-700/70 hover:border-slate-600 focus-within:border-blue-500 focus-within:bg-slate-800 focus-within:ring-2 focus-within:ring-blue-500/30"
+                          }`}
                       >
                         <Car
                           className={`w-5 h-5 shrink-0 ${vinError ? "text-red-400" : "text-blue-400"}`}
@@ -830,11 +829,10 @@ export default function App() {
                       </div>
                       <button
                         onClick={() => navigateToOrder()}
-                        className={`${
-                          vinError
-                            ? "bg-red-600 hover:bg-red-500"
-                            : "bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-md shadow-blue-500/25"
-                        } text-white px-7 py-2.5 sm:py-3 rounded-xl font-black text-sm sm:text-base transition-all duration-200 flex items-center justify-center gap-2 group active:scale-95 whitespace-nowrap`}
+                        className={`${vinError
+                          ? "bg-red-600 hover:bg-red-500"
+                          : "bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-md shadow-blue-500/25"
+                          } text-white px-7 py-2.5 sm:py-3 rounded-xl font-black text-sm sm:text-base transition-all duration-200 flex items-center justify-center gap-2 group active:scale-95 whitespace-nowrap`}
                       >
                         Get Report
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -1207,11 +1205,10 @@ export default function App() {
                         viewport={{ once: true }}
                         transition={{ delay: (idx % 3) * 0.12 }}
                         whileHover={{ y: -10 }}
-                        className={`relative p-6 sm:p-8 lg:p-10 rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[2.5rem] border-2 transition-all flex flex-col justify-between ${
-                          item.popular
-                            ? "bg-slate-900 text-white border-transparent shadow-[0_40px_80px_-15px_rgba(15,23,42,0.3)] py-8 sm:py-10 lg:py-12 z-10"
-                            : "bg-white text-slate-900 border-slate-100 hover:border-brand-accent/20"
-                        }`}
+                        className={`relative p-6 sm:p-8 lg:p-10 rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[2.5rem] border-2 transition-all flex flex-col justify-between ${item.popular
+                          ? "bg-slate-900 text-white border-transparent shadow-[0_40px_80px_-15px_rgba(15,23,42,0.3)] py-8 sm:py-10 lg:py-12 z-10"
+                          : "bg-white text-slate-900 border-slate-100 hover:border-brand-accent/20"
+                          }`}
                       >
                         {item.popular && (
                           <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-brand-accent text-white px-6 py-2 rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-brand-accent/20">
@@ -1275,11 +1272,10 @@ export default function App() {
                             onClick={() => {
                               navigateToOrder(item.type, true);
                             }}
-                            className={`w-full py-3 sm:py-3.5 lg:py-4 rounded-xl sm:rounded-2xl font-black text-sm lg:text-base transition-all active:scale-95 mt-6 ${
-                              item.popular
-                                ? "bg-brand-accent text-white hover:bg-brand-accent-hover shadow-xl shadow-brand-accent/20"
-                                : "bg-slate-900 text-white hover:bg-brand-accent shadow-xl shadow-slate-900/10"
-                            }`}
+                            className={`w-full py-3 sm:py-3.5 lg:py-4 rounded-xl sm:rounded-2xl font-black text-sm lg:text-base transition-all active:scale-95 mt-6 ${item.popular
+                              ? "bg-brand-accent text-white hover:bg-brand-accent-hover shadow-xl shadow-brand-accent/20"
+                              : "bg-slate-900 text-white hover:bg-brand-accent shadow-xl shadow-slate-900/10"
+                              }`}
                           >
                             Get {item.name}
                           </button>
@@ -1359,11 +1355,10 @@ export default function App() {
                         viewport={{ once: true }}
                         transition={{ delay: idx * 0.15 }}
                         whileHover={{ y: -10 }}
-                        className={`relative p-6 sm:p-8 lg:p-10 rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[2.5rem] border-2 transition-all flex flex-col justify-between ${
-                          item.popular
-                            ? "bg-slate-900 text-white border-transparent shadow-[0_40px_80px_-15px_rgba(15,23,42,0.3)] py-8 sm:py-10 lg:py-12 z-10"
-                            : "bg-white text-slate-900 border-slate-100 hover:border-brand-accent/20"
-                        }`}
+                        className={`relative p-6 sm:p-8 lg:p-10 rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[2.5rem] border-2 transition-all flex flex-col justify-between ${item.popular
+                          ? "bg-slate-900 text-white border-transparent shadow-[0_40px_80px_-15px_rgba(15,23,42,0.3)] py-8 sm:py-10 lg:py-12 z-10"
+                          : "bg-white text-slate-900 border-slate-100 hover:border-brand-accent/20"
+                          }`}
                       >
                         {item.popular && (
                           <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-brand-accent text-white px-6 py-2 rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-brand-accent/20">
@@ -1421,11 +1416,10 @@ export default function App() {
                             onClick={() => {
                               navigateToOrder(item.type, true);
                             }}
-                            className={`w-full py-3 sm:py-3.5 lg:py-4 rounded-xl sm:rounded-2xl font-black text-sm lg:text-base transition-all active:scale-95 mt-6 ${
-                              item.popular
-                                ? "bg-brand-accent text-white hover:bg-brand-accent-hover shadow-xl shadow-brand-accent/20"
-                                : "bg-slate-900 text-white hover:bg-brand-accent shadow-xl shadow-slate-900/10"
-                            }`}
+                            className={`w-full py-3 sm:py-3.5 lg:py-4 rounded-xl sm:rounded-2xl font-black text-sm lg:text-base transition-all active:scale-95 mt-6 ${item.popular
+                              ? "bg-brand-accent text-white hover:bg-brand-accent-hover shadow-xl shadow-brand-accent/20"
+                              : "bg-slate-900 text-white hover:bg-brand-accent shadow-xl shadow-slate-900/10"
+                              }`}
                           >
                             Get {item.name}
                           </button>
@@ -1886,11 +1880,10 @@ export default function App() {
                     {/* Window Sticker Add-on Section */}
                     {selectedPackage !== "Window Sticker" && (
                       <div
-                        className={`p-5 sm:p-6 rounded-2xl border-2 transition-all ${
-                          pricing.windowStickerIncluded
-                            ? "bg-slate-50/90 border-brand-accent/40 shadow-sm"
-                            : "bg-slate-50/40 border-slate-200 opacity-75"
-                        }`}
+                        className={`p-5 sm:p-6 rounded-2xl border-2 transition-all ${pricing.windowStickerIncluded
+                          ? "bg-slate-50/90 border-brand-accent/40 shadow-sm"
+                          : "bg-slate-50/40 border-slate-200 opacity-75"
+                          }`}
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex items-start gap-3.5">
@@ -2011,8 +2004,8 @@ export default function App() {
                             </div>
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                               {pricing.windowStickerFinalPrice === 0 &&
-                              (pricing.packageTier === "platinum" ||
-                                pricing.packageTier === "diamond")
+                                (pricing.packageTier === "platinum" ||
+                                  pricing.packageTier === "diamond")
                                 ? "Included"
                                 : "/report"}
                             </span>
@@ -2035,10 +2028,10 @@ export default function App() {
                               "Easy to Access",
                               ...(pricing.packageTier === "diamond"
                                 ? [
-                                    "Salvage & Total Loss Records",
-                                    "Insurance Total Loss History",
-                                    "Structural Damage Verification",
-                                  ]
+                                  "Salvage & Total Loss Records",
+                                  "Insurance Total Loss History",
+                                  "Structural Damage Verification",
+                                ]
                                 : []),
                             ].map((feature, fIdx) => (
                               <div
@@ -2070,11 +2063,10 @@ export default function App() {
                                 onClick={() =>
                                   setIncludeWindowSticker(!includeWindowSticker)
                                 }
-                                className={`font-bold transition-colors cursor-pointer ${
-                                  includeWindowSticker
-                                    ? "text-rose-500 hover:text-rose-600 hover:underline"
-                                    : "text-brand-accent hover:text-brand-accent-hover hover:underline"
-                                }`}
+                                className={`font-bold transition-colors cursor-pointer ${includeWindowSticker
+                                  ? "text-rose-500 hover:text-rose-600 hover:underline"
+                                  : "text-brand-accent hover:text-brand-accent-hover hover:underline"
+                                  }`}
                               >
                                 {includeWindowSticker
                                   ? "Remove Add-on"
@@ -2225,11 +2217,10 @@ export default function App() {
                                   onClick={() =>
                                     setIncludeWindowSticker(!includeWindowSticker)
                                   }
-                                  className={`text-[11px] font-bold mt-0.5 block hover:underline cursor-pointer ${
-                                    includeWindowSticker
-                                      ? "text-rose-500"
-                                      : "text-brand-accent"
-                                  }`}
+                                  className={`text-[11px] font-bold mt-0.5 block hover:underline cursor-pointer ${includeWindowSticker
+                                    ? "text-rose-500"
+                                    : "text-brand-accent"
+                                    }`}
                                 >
                                   {includeWindowSticker
                                     ? "Remove"
@@ -2248,11 +2239,10 @@ export default function App() {
                                     </span>
                                   )}
                                   <span
-                                    className={`font-bold inline-block ${
-                                      pricing.windowStickerFinalPrice === 0
-                                        ? "text-emerald-600"
-                                        : "text-brand-blue"
-                                    }`}
+                                    className={`font-bold inline-block ${pricing.windowStickerFinalPrice === 0
+                                      ? "text-emerald-600"
+                                      : "text-brand-blue"
+                                      }`}
                                   >
                                     {pricing.windowStickerFinalPrice === 0
                                       ? "FREE"

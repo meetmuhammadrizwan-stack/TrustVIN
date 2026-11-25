@@ -3,7 +3,6 @@ import express from "express";
 
 import path from "path";
 import { fileURLToPath } from "url";
-import Stripe from "stripe";
 import dotenv from "dotenv";
 import fs from "fs";
 import { db } from "./firebaseConfig.js";
@@ -89,20 +88,6 @@ app.use(express.json({ limit: "50mb" }));
       expiresAt: now + (data.expires_in || 3600) * 1000,
     };
     return cachedVivaToken.token;
-  };
-
-  // Stripe Implementation (Fallback / Legacy)
-  let stripe: Stripe | null = null;
-  const getStripe = () => {
-    if (!stripe) {
-      const key = process.env.STRIPE_SECRET_KEY;
-      if (!key) {
-        console.warn("STRIPE_SECRET_KEY is missing. Payment features will fail.");
-        return null;
-      }
-      stripe = new Stripe(key);
-    }
-    return stripe;
   };
 
   // API: Create Checkout Session
@@ -291,261 +276,7 @@ app.use(express.json({ limit: "50mb" }));
     }
   });
 
-  // Standalone Stripe Checkout helper (preserved for reference, unused in checkout flow)
-  const createStripeCheckoutSession = async (
-    client: Stripe,
-    pricing: any,
-    vin: string,
-    email: string,
-    firstName: string,
-    lastName: string,
-    policyAgreed: boolean,
-    purchaseDecisionAgreed: boolean,
-    inspectionReportAgreed: boolean
-  ) => {
-    let line_items: any[] = [];
-    if (pricing.packageTier === "basic") {
-      line_items.push({
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: "Basic Vehicle History Report",
-            description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
-          },
-          unit_amount: Math.round(pricing.packageOriginalPrice * 100),
-        },
-        quantity: 1,
-      });
-      if (pricing.windowStickerIncluded) {
-        line_items.push({
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: "Window Sticker Add-on (25% Promotional Discount Applied)",
-              description: `Official Vehicle Window Label Verification & OEM Window Sticker for VIN: ${vin || "Pending"}`,
-            },
-            unit_amount: Math.round(pricing.windowStickerFinalPrice * 100),
-          },
-          quantity: 1,
-        });
-      }
-    } else if (pricing.packageTier === "gold") {
-      line_items.push({
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: "Gold Vehicle History Report",
-            description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
-          },
-          unit_amount: Math.round(pricing.packageOriginalPrice * 100),
-        },
-        quantity: 1,
-      });
-      if (pricing.windowStickerIncluded) {
-        line_items.push({
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: "Window Sticker Add-on (50% Promotional Discount Applied)",
-              description: `Official Vehicle Window Label Verification & OEM Window Sticker for VIN: ${vin || "Pending"}`,
-            },
-            unit_amount: Math.round(pricing.windowStickerFinalPrice * 100),
-          },
-          quantity: 1,
-        });
-      }
-    } else if (pricing.packageTier === "platinum") {
-      line_items.push({
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: "Platinum Vehicle History Report (Includes FREE Window Sticker)",
-            description: `Official OEM Window Sticker Included FREE ($29.99 Value) | VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
-          },
-          unit_amount: Math.round(pricing.finalAmountPaid * 100),
-        },
-        quantity: 1,
-      });
-    } else if (pricing.packageTier === "diamond") {
-      line_items.push({
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: "Diamond Vehicle History Report (Includes FREE Window Sticker & FREE Salvage Information)",
-            description: `Window Sticker FREE ($29.99 Value) + Salvage Information FREE ($149.00 Value) | VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
-          },
-          unit_amount: Math.round(pricing.finalAmountPaid * 100),
-        },
-        quantity: 1,
-      });
-    } else {
-      const mainAmountCents = Math.round(
-        (pricing.packageTier === "window_sticker" ? 0 : pricing.packageOriginalPrice) * 100
-      );
-      if (mainAmountCents > 0) {
-        line_items.push({
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: pricing.packageName,
-              description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
-            },
-            unit_amount: mainAmountCents,
-          },
-          quantity: 1,
-        });
-      }
-      if (pricing.windowStickerIncluded && Math.round(pricing.windowStickerFinalPrice * 100) > 0) {
-        line_items.push({
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: "Official Vehicle Window Sticker",
-              description: `Official Vehicle Window Label Verification & OEM Window Sticker for VIN: ${vin || "Pending"}`,
-            },
-            unit_amount: Math.round(pricing.windowStickerFinalPrice * 100),
-          },
-          quantity: 1,
-        });
-      }
-      if (pricing.salvageInformationIncluded && Math.round(pricing.salvageInformationFinalPrice * 100) > 0) {
-        line_items.push({
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: "Salvage & Total Loss Information Report",
-              description: `Salvage & Total Loss Information for VIN: ${vin || "Pending"}`,
-            },
-            unit_amount: Math.round(pricing.salvageInformationFinalPrice * 100),
-          },
-          quantity: 1,
-        });
-      }
-    }
-
-    return client.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items,
-      mode: "payment",
-      success_url: `${process.env.APP_URL || "http://localhost:3000"}/?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.APP_URL || "http://localhost:3000"}/?canceled=true`,
-      customer_email: email,
-      metadata: {
-        packageName: pricing.packageName,
-        vin: vin || "Pending",
-        policyAgreed: policyAgreed ? "true" : "false",
-        purchaseDecisionAgreed: purchaseDecisionAgreed ? "true" : "false",
-        inspectionReportAgreed: inspectionReportAgreed ? "true" : "false",
-      },
-    });
-  };
-
-  // API: Create Payment Intent
-  app.post("/api/create-payment-intent", async (req, res) => {
-    const {
-      packageName,
-      includeWindowSticker,
-      vin,
-      email,
-      firstName,
-      lastName,
-      country,
-      policyAgreed,
-      purchaseDecisionAgreed,
-      inspectionReportAgreed,
-      phone,
-    } = req.body;
-    const client = getStripe();
-
-    if (!client) {
-      return res
-        .status(500)
-        .json({ error: "Stripe is not configured on the server." });
-    }
-
-    try {
-      const pricing = calculateOrderPricing(packageName, includeWindowSticker);
-      const totalAmountCents = Math.round(pricing.finalAmountPaid * 100);
-
-      const paymentIntent = await client.paymentIntents.create({
-        amount: totalAmountCents,
-        currency: "usd",
-        receipt_email: email,
-        description: `${pricing.packageName}${pricing.windowStickerIncluded ? " + Window Sticker" : ""}${pricing.salvageInformationIncluded ? " + Salvage Information" : ""} for VIN: ${vin || "Pending"}`,
-        metadata: {
-          packageName: pricing.packageName,
-          packageTier: pricing.packageTier,
-          packagePrice: pricing.packageOriginalPrice.toFixed(2),
-          packageOriginalPrice: pricing.packageOriginalPrice.toFixed(2),
-          windowStickerIncluded: pricing.windowStickerIncluded ? "true" : "false",
-          windowStickerOriginalPrice: pricing.windowStickerOriginalPrice.toFixed(2),
-          windowStickerDiscountPercentage: pricing.windowStickerDiscountPercentage.toString(),
-          windowStickerDiscountAmount: pricing.windowStickerDiscountAmount.toFixed(2),
-          windowStickerFinalPrice: pricing.windowStickerFinalPrice.toFixed(2),
-          salvageInformationIncluded: pricing.salvageInformationIncluded ? "true" : "false",
-          salvageInformationOriginalPrice: pricing.salvageInformationOriginalPrice.toFixed(2),
-          salvageInformationFinalPrice: pricing.salvageInformationFinalPrice.toFixed(2),
-          appliedOfferName: pricing.appliedOfferName,
-          totalDiscount: pricing.totalDiscount.toFixed(2),
-          finalAmountPaid: pricing.finalAmountPaid.toFixed(2),
-          vin: vin || "Pending",
-          firstName,
-          lastName,
-          country: country || "United States",
-          policyAgreed: policyAgreed ? "true" : "false",
-          purchaseDecisionAgreed: purchaseDecisionAgreed ? "true" : "false",
-          inspectionReportAgreed: inspectionReportAgreed ? "true" : "false",
-        },
-      });
-
-      // Save order data directly to Firebase Firestore
-      const newOrder = {
-        id: paymentIntent.id,
-        packageName: pricing.packageName,
-        packageTier: pricing.packageTier,
-        packagePrice: pricing.packageOriginalPrice,
-        packageOriginalPrice: pricing.packageOriginalPrice,
-        windowStickerIncluded: pricing.windowStickerIncluded,
-        windowStickerOriginalPrice: pricing.windowStickerOriginalPrice,
-        windowStickerDiscountPercentage: pricing.windowStickerDiscountPercentage,
-        windowStickerDiscountAmount: pricing.windowStickerDiscountAmount,
-        windowStickerPrice: pricing.windowStickerFinalPrice,
-        windowStickerFinalPrice: pricing.windowStickerFinalPrice,
-        salvageInformationIncluded: pricing.salvageInformationIncluded,
-        salvageInformationOriginalPrice: pricing.salvageInformationOriginalPrice,
-        salvageInformationDiscountAmount: pricing.salvageInformationDiscountAmount,
-        salvageInformationFinalPrice: pricing.salvageInformationFinalPrice,
-        appliedOfferName: pricing.appliedOfferName,
-        discountAmount: pricing.totalDiscount,
-        totalDiscount: pricing.totalDiscount,
-        combinedSubtotal: Number(
-          (pricing.packageOriginalPrice + pricing.windowStickerOriginalPrice + pricing.salvageInformationOriginalPrice).toFixed(2)
-        ),
-        amount: pricing.finalAmountPaid,
-        finalAmountPaid: pricing.finalAmountPaid,
-        vin,
-        email,
-        firstName,
-        lastName,
-        phone: phone || "",
-        country: country || "United States",
-        createdAt: new Date().toISOString(),
-        status: "pending",
-        policyAgreed: !!policyAgreed,
-        purchaseDecisionAgreed: !!purchaseDecisionAgreed,
-        inspectionReportAgreed: !!inspectionReportAgreed,
-      };
-
-      await db.collection("orders").add(newOrder);
-
-      res.json({ clientSecret: paymentIntent.client_secret });
-    } catch (error: any) {
-      console.error("Payment Intent Error:", error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  // API: Confirm Order Payment (Viva Wallet return / Stripe Checkout return / Intent confirmation)
+  // API: Confirm Order Payment (Viva Wallet return)
   app.post("/api/orders/:id/confirm-payment", async (req, res) => {
     const { id } = req.params;
     const transactionId = (req.query.t || req.body.t || "") as string;
@@ -560,43 +291,20 @@ app.use(express.json({ limit: "50mb" }));
         return res.status(404).json({ error: "Order not found" });
       }
 
-      const client = getStripe();
-      let isPaid = true;
-
-      if (client && id.startsWith("cs_")) {
-        try {
-          const session = await client.checkout.sessions.retrieve(id);
-          isPaid = session.payment_status === "paid";
-        } catch (stripeErr) {
-          console.warn("Could not verify session with Stripe:", stripeErr);
-        }
-      } else if (client && id.startsWith("pi_")) {
-        try {
-          const intent = await client.paymentIntents.retrieve(id);
-          isPaid = intent.status === "succeeded";
-        } catch (stripeErr) {
-          console.warn("Could not verify intent with Stripe:", stripeErr);
-        }
+      const fbDoc = querySnapshot.docs[0];
+      const docRef = db.collection("orders").doc(fbDoc.id);
+      const currentData = fbDoc.data() || {};
+      const completedAt = currentData.completedAt || new Date().toISOString();
+      const updateData: any = {
+        status: "completed",
+        completedAt,
+      };
+      if (transactionId) {
+        updateData.vivaTransactionId = transactionId;
       }
 
-      if (isPaid) {
-        const fbDoc = querySnapshot.docs[0];
-        const docRef = db.collection("orders").doc(fbDoc.id);
-        const currentData = fbDoc.data() || {};
-        const completedAt = currentData.completedAt || new Date().toISOString();
-        const updateData: any = {
-          status: "completed",
-          completedAt,
-        };
-        if (transactionId) {
-          updateData.vivaTransactionId = transactionId;
-        }
-
-        await docRef.update(updateData);
-        return res.json({ success: true, status: "completed", completedAt });
-      }
-
-      res.json({ success: false, message: "Payment not completed yet" });
+      await docRef.update(updateData);
+      return res.json({ success: true, status: "completed", completedAt });
     } catch (error: any) {
       console.error("Error confirming payment:", error);
       res.status(500).json({ error: error.message });
