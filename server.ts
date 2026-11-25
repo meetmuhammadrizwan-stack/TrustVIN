@@ -54,13 +54,18 @@ app.use(express.json({ limit: "50mb" }));
     const urls = getVivaUrls();
     const authHeader = "Basic " + Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
 
+    const bodyParams = new URLSearchParams({
+      grant_type: "client_credentials",
+      scope: "urn:viva:payments:core:api:redirectcheckout",
+    });
+
     const response = await fetch(`${urls.accounts}/connect/token`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         "Authorization": authHeader,
       },
-      body: "grant_type=client_credentials",
+      body: bodyParams.toString(),
     });
 
     if (!response.ok) {
@@ -72,6 +77,9 @@ app.use(express.json({ limit: "50mb" }));
     }
 
     const data: any = await response.json();
+    if (!data.access_token) {
+      throw new Error("Viva token response did not contain access_token: " + JSON.stringify(data));
+    }
     cachedVivaToken = {
       token: data.access_token,
       expiresAt: now + (data.expires_in || 3600) * 1000,
@@ -116,13 +124,18 @@ app.use(express.json({ limit: "50mb" }));
       const totalAmountCents = Math.round(pricing.finalAmountPaid * 100);
 
       const gateway = (process.env.PAYMENT_GATEWAY || "auto").toLowerCase();
+      const urls = getVivaUrls();
+      const customerFullName = `${firstName || ""} ${lastName || ""}`.trim() || "Customer";
+      const sourceCode = process.env.VIVA_SOURCE_CODE || "Default";
+      const customerCountryCode = country && country.length === 2 ? country.toUpperCase() : "US";
 
-      // 1. Viva Payments Smart Checkout
+      let vivaOrderCode: string | null = null;
+      let vivaCheckoutUrl: string | null = null;
+
+      // 1. Viva Payments Smart Checkout v2 (OAuth 2.0 Bearer Token)
       if (gateway !== "stripe" && process.env.VIVA_CLIENT_ID && process.env.VIVA_CLIENT_SECRET) {
         try {
           const token = await getVivaAccessToken();
-          const urls = getVivaUrls();
-          const customerFullName = `${firstName || ""} ${lastName || ""}`.trim() || "Customer";
 
           const orderPayload: any = {
             amount: totalAmountCents,
@@ -131,7 +144,7 @@ app.use(express.json({ limit: "50mb" }));
               email: email || "customer@allvinreport.com",
               fullName: customerFullName,
               phone: phone || "",
-              countryCode: country && country.length === 2 ? country.toUpperCase() : "US",
+              countryCode: customerCountryCode,
               requestLang: "en",
             },
             paymentTimeout: 3600,
@@ -142,13 +155,9 @@ app.use(express.json({ limit: "50mb" }));
             tipAmount: 0,
             disableExactAmount: false,
             disableCash: true,
-            disablePayAtStore: true,
+            sourceCode: sourceCode,
             merchantTrns: `Order for VIN: ${vin || "Pending"} (${email || "N/A"})`,
           };
-
-          if (process.env.VIVA_SOURCE_CODE) {
-            orderPayload.sourceCode = process.env.VIVA_SOURCE_CODE;
-          }
 
           const vivaRes = await fetch(`${urls.api}/checkout/v2/orders`, {
             method: "POST",
@@ -159,73 +168,121 @@ app.use(express.json({ limit: "50mb" }));
             body: JSON.stringify(orderPayload),
           });
 
-          if (!vivaRes.ok) {
+          if (vivaRes.ok) {
+            const vivaData: any = await vivaRes.json();
+            vivaOrderCode = String(vivaData.orderCode || vivaData.OrderCode);
+            vivaCheckoutUrl = `${urls.checkout}/web/checkout?ref=${vivaOrderCode}`;
+          } else {
             const errText = await vivaRes.text();
-            console.error("Viva Order Creation Error:", errText);
-            throw new Error(`Viva order creation failed (${vivaRes.status}): ${errText}`);
+            console.warn(`[Viva v2 Warning (${vivaRes.status})]:`, errText);
+            vivaError = new Error(`Viva v2 order creation failed (${vivaRes.status}): ${errText}`);
           }
-
-          const vivaData: any = await vivaRes.json();
-          const orderCode = String(vivaData.orderCode);
-          const checkoutUrl = `${urls.checkout}/web/checkout?ref=${orderCode}`;
-
-          // Save order data directly to Firebase Firestore
-          const newOrder = {
-            id: orderCode,
-            orderCode,
-            paymentProvider: "viva",
-            packageName: pricing.packageName,
-            packageTier: pricing.packageTier,
-            packagePrice: pricing.packageOriginalPrice,
-            packageOriginalPrice: pricing.packageOriginalPrice,
-            windowStickerIncluded: pricing.windowStickerIncluded,
-            windowStickerOriginalPrice: pricing.windowStickerOriginalPrice,
-            windowStickerDiscountPercentage: pricing.windowStickerDiscountPercentage,
-            windowStickerDiscountAmount: pricing.windowStickerDiscountAmount,
-            windowStickerPrice: pricing.windowStickerFinalPrice,
-            windowStickerFinalPrice: pricing.windowStickerFinalPrice,
-            salvageInformationIncluded: pricing.salvageInformationIncluded,
-            salvageInformationOriginalPrice: pricing.salvageInformationOriginalPrice,
-            salvageInformationDiscountAmount: pricing.salvageInformationDiscountAmount,
-            salvageInformationFinalPrice: pricing.salvageInformationFinalPrice,
-            appliedOfferName: pricing.appliedOfferName,
-            discountAmount: pricing.totalDiscount,
-            totalDiscount: pricing.totalDiscount,
-            combinedSubtotal: Number(
-              (pricing.packageOriginalPrice + pricing.windowStickerOriginalPrice + pricing.salvageInformationOriginalPrice).toFixed(2)
-            ),
-            amount: pricing.finalAmountPaid,
-            finalAmountPaid: pricing.finalAmountPaid,
-            vin,
-            email,
-            firstName,
-            lastName,
-            phone: phone || "",
-            country: country || "United States",
-            createdAt: new Date().toISOString(),
-            status: "pending",
-            policyAgreed: !!policyAgreed,
-            purchaseDecisionAgreed: !!purchaseDecisionAgreed,
-            inspectionReportAgreed: !!inspectionReportAgreed,
-          };
-
-          await db.collection("orders").add(newOrder);
-
-          return res.json({ url: checkoutUrl, orderCode });
         } catch (err: any) {
+          console.warn("[Viva v2 Exception]:", err.message);
           vivaError = err;
-          console.warn("[Viva Payments Warning]:", err.message);
-          if (gateway === "viva") {
-            return res.status(500).json({
-              error: err.message,
-              solution: "Viva's API is protected by Akamai WAF which blocks requests from certain regions. If testing locally, please connect to a VPN (US/UK/Europe) or set PAYMENT_GATEWAY=stripe in .env.",
-            });
-          }
-          console.warn("[Payment Gateway] Automatically falling back to Stripe Checkout...");
         }
       }
 
-      // 2. Stripe Checkout Session (Fallback)
+      // 2. Viva Payments Smart Checkout v1 (Basic Auth with Merchant ID & API Key fallback)
+      if (!vivaOrderCode && gateway !== "stripe" && process.env.VIVA_MERCHANT_ID && process.env.VIVA_API_KEY) {
+        try {
+          const basicAuth = "Basic " + Buffer.from(`${process.env.VIVA_MERCHANT_ID}:${process.env.VIVA_API_KEY}`).toString("base64");
+          const v1Payload = {
+            Amount: totalAmountCents,
+            CustomerTrns: `${pricing.packageName}${pricing.windowStickerIncluded ? " + Window Sticker" : ""}${pricing.salvageInformationIncluded ? " + Salvage Information" : ""} for VIN: ${vin || "Pending"}`,
+            Customer: {
+              Email: email || "customer@allvinreport.com",
+              FullName: customerFullName,
+              Phone: phone || "",
+              CountryCode: customerCountryCode,
+              RequestLang: "en",
+            },
+            PaymentTimeOut: 3600,
+            SourceCode: sourceCode,
+            MerchantTrns: `Order for VIN: ${vin || "Pending"} (${email || "N/A"})`,
+          };
+
+          const v1Res = await fetch(`${urls.checkout}/api/orders`, {
+            method: "POST",
+            headers: {
+              "Authorization": basicAuth,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(v1Payload),
+          });
+
+          if (v1Res.ok) {
+            const v1Data: any = await v1Res.json();
+            vivaOrderCode = String(v1Data.OrderCode || v1Data.orderCode);
+            vivaCheckoutUrl = `${urls.checkout}/web/checkout?ref=${vivaOrderCode}`;
+            vivaError = null; // v1 succeeded
+          } else {
+            const v1ErrText = await v1Res.text();
+            console.warn(`[Viva v1 Warning (${v1Res.status})]:`, v1ErrText);
+            vivaError = new Error(`${vivaError ? vivaError.message + " | " : ""}Viva v1 order creation failed (${v1Res.status}): ${v1ErrText}`);
+          }
+        } catch (v1Err: any) {
+          console.warn("[Viva v1 Exception]:", v1Err.message);
+          vivaError = new Error(`${vivaError ? vivaError.message + " | " : ""}Viva v1 exception: ${v1Err.message}`);
+        }
+      }
+
+      // If Viva succeeded via either v2 or v1:
+      if (vivaOrderCode && vivaCheckoutUrl) {
+        const newOrder = {
+          id: vivaOrderCode,
+          orderCode: vivaOrderCode,
+          paymentProvider: "viva",
+          packageName: pricing.packageName,
+          packageTier: pricing.packageTier,
+          packagePrice: pricing.packageOriginalPrice,
+          packageOriginalPrice: pricing.packageOriginalPrice,
+          windowStickerIncluded: pricing.windowStickerIncluded,
+          windowStickerOriginalPrice: pricing.windowStickerOriginalPrice,
+          windowStickerDiscountPercentage: pricing.windowStickerDiscountPercentage,
+          windowStickerDiscountAmount: pricing.windowStickerDiscountAmount,
+          windowStickerPrice: pricing.windowStickerFinalPrice,
+          windowStickerFinalPrice: pricing.windowStickerFinalPrice,
+          salvageInformationIncluded: pricing.salvageInformationIncluded,
+          salvageInformationOriginalPrice: pricing.salvageInformationOriginalPrice,
+          salvageInformationDiscountAmount: pricing.salvageInformationDiscountAmount,
+          salvageInformationFinalPrice: pricing.salvageInformationFinalPrice,
+          appliedOfferName: pricing.appliedOfferName,
+          discountAmount: pricing.totalDiscount,
+          totalDiscount: pricing.totalDiscount,
+          combinedSubtotal: Number(
+            (pricing.packageOriginalPrice + pricing.windowStickerOriginalPrice + pricing.salvageInformationOriginalPrice).toFixed(2)
+          ),
+          amount: pricing.finalAmountPaid,
+          finalAmountPaid: pricing.finalAmountPaid,
+          vin,
+          email,
+          firstName,
+          lastName,
+          phone: phone || "",
+          country: country || "United States",
+          createdAt: new Date().toISOString(),
+          status: "pending",
+          policyAgreed: !!policyAgreed,
+          purchaseDecisionAgreed: !!purchaseDecisionAgreed,
+          inspectionReportAgreed: !!inspectionReportAgreed,
+        };
+
+        await db.collection("orders").add(newOrder);
+
+        return res.json({ url: vivaCheckoutUrl, orderCode: vivaOrderCode });
+      }
+
+      if (gateway === "viva") {
+        return res.status(500).json({
+          error: vivaError ? vivaError.message : "Viva Payments failed to initialize checkout.",
+          solution: "Viva's API may be restricted or blocked. Check your Viva credentials and source code.",
+        });
+      }
+
+      console.warn("[Payment Gateway] Automatically falling back to Stripe Checkout...");
+
+      // 3. Stripe Checkout Session (Fallback)
       const client = getStripe();
       if (!client) {
         return res
