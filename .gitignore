@@ -29,3 +29,4 @@ Thumbs.db
 
 #service account key
 serviceAccountKey.json
+*firebase-adminsdk*.json

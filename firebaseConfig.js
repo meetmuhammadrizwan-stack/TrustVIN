@@ -14,24 +14,34 @@ const __dirname = path.dirname(__filename);
 let app;
 if (admin.apps.length === 0) {
   const localKeyPath = path.join(__dirname, "serviceAccountKey.json");
+  const namedKeyPath = path.join(__dirname, "trustedvin-15d6f-firebase-adminsdk-fbsvc-87ad51ceb5.json");
   const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT;
   
-  if (fs.existsSync(localKeyPath)) {
+  const keyFileToUse = fs.existsSync(localKeyPath)
+    ? localKeyPath
+    : fs.existsSync(namedKeyPath)
+      ? namedKeyPath
+      : null;
+
+  if (keyFileToUse) {
     try {
-      const serviceAccount = JSON.parse(fs.readFileSync(localKeyPath, "utf8"));
+      const serviceAccount = JSON.parse(fs.readFileSync(keyFileToUse, "utf8"));
       app = admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
         projectId: serviceAccount.project_id
       });
-      console.log(`Firebase Admin initialized via local serviceAccountKey.json file (Project: ${serviceAccount.project_id}).`);
+      console.log(`Firebase Admin initialized via local ${path.basename(keyFileToUse)} file (Project: ${serviceAccount.project_id}).`);
     } catch (e) {
-      console.error("Failed to parse local serviceAccountKey.json:", e);
+      console.error(`Failed to parse local ${path.basename(keyFileToUse)}:`, e);
     }
   }
   
   if (!app && serviceAccountKey) {
     try {
-      const serviceAccount = JSON.parse(serviceAccountKey);
+      let serviceAccount = typeof serviceAccountKey === "string" ? JSON.parse(serviceAccountKey) : serviceAccountKey;
+      if (serviceAccount.private_key) {
+        serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
+      }
       app = admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
         projectId: serviceAccount.project_id
@@ -44,9 +54,9 @@ if (admin.apps.length === 0) {
   
   if (!app) {
     app = admin.initializeApp({
-      projectId: "VinTrust-15d6f"
+      projectId: "trustedvin-15d6f"
     });
-    console.log("Firebase Admin initialized with project ID VinTrust-15d6f (no credential).");
+    console.log("Firebase Admin initialized with project ID trustedvin-15d6f (no credential).");
   }
 } else {
   app = admin.app();
