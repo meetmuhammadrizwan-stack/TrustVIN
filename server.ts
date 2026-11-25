@@ -71,7 +71,11 @@ app.use(express.json({ limit: "50mb" }));
     if (!response.ok) {
       const errText = await response.text();
       if (response.status === 403 && (errText.includes("Access Denied") || errText.includes("edgesuite.net"))) {
-        throw new Error("Viva Payments rejected connection (403 Forbidden - Akamai WAF Geo-Block). The endpoint blocks non-EU/US consumer IPs. If developing locally, please connect to a VPN (Europe/US/UK) or switch PAYMENT_GATEWAY=stripe in .env.");
+        throw new Error(
+          "Viva Payments connection rejected (403 Forbidden - Akamai Edge Geo-Block). " +
+          "Akamai WAF restricts direct API calls from non-serviced consumer IP regions to Viva production. " +
+          "Production deployments in cloud regions (such as Vercel AWS US/EU) connect directly and are fully authorized."
+        );
       }
       throw new Error(`Failed to obtain Viva access token (${response.status}): ${errText}`);
     }
@@ -133,7 +137,7 @@ app.use(express.json({ limit: "50mb" }));
       let vivaCheckoutUrl: string | null = null;
 
       // 1. Viva Payments Smart Checkout v2 (OAuth 2.0 Bearer Token)
-      if (gateway !== "stripe" && process.env.VIVA_CLIENT_ID && process.env.VIVA_CLIENT_SECRET) {
+      if (process.env.VIVA_CLIENT_ID && process.env.VIVA_CLIENT_SECRET) {
         try {
           const token = await getVivaAccessToken();
 
@@ -147,6 +151,7 @@ app.use(express.json({ limit: "50mb" }));
               countryCode: customerCountryCode,
               requestLang: "en",
             },
+            currencyCode: process.env.VIVA_CURRENCY_CODE || "978",
             paymentTimeout: 3600,
             preauth: false,
             allowRecurring: false,
@@ -184,7 +189,7 @@ app.use(express.json({ limit: "50mb" }));
       }
 
       // 2. Viva Payments Smart Checkout v1 (Basic Auth with Merchant ID & API Key fallback)
-      if (!vivaOrderCode && gateway !== "stripe" && process.env.VIVA_MERCHANT_ID && process.env.VIVA_API_KEY) {
+      if (!vivaOrderCode && process.env.VIVA_MERCHANT_ID && process.env.VIVA_API_KEY) {
         try {
           const basicAuth = "Basic " + Buffer.from(`${process.env.VIVA_MERCHANT_ID}:${process.env.VIVA_API_KEY}`).toString("base64");
           const v1Payload = {
@@ -197,6 +202,7 @@ app.use(express.json({ limit: "50mb" }));
               CountryCode: customerCountryCode,
               RequestLang: "en",
             },
+            CurrencyCode: process.env.VIVA_CURRENCY_CODE || "978",
             PaymentTimeOut: 3600,
             SourceCode: sourceCode,
             MerchantTrns: `Order for VIN: ${vin || "Pending"} (${email || "N/A"})`,
@@ -255,6 +261,7 @@ app.use(express.json({ limit: "50mb" }));
           ),
           amount: pricing.finalAmountPaid,
           finalAmountPaid: pricing.finalAmountPaid,
+          currency: "EUR",
           vin,
           email,
           firstName,
@@ -273,212 +280,165 @@ app.use(express.json({ limit: "50mb" }));
         return res.json({ url: vivaCheckoutUrl, orderCode: vivaOrderCode });
       }
 
-      if (gateway === "viva") {
-        return res.status(500).json({
-          error: vivaError ? vivaError.message : "Viva Payments failed to initialize checkout.",
-          solution: "Viva's API may be restricted or blocked. Check your Viva credentials and source code.",
-        });
-      }
-
-      console.warn("[Payment Gateway] Automatically falling back to Stripe Checkout...");
-
-      // 3. Stripe Checkout Session (Fallback)
-      const client = getStripe();
-      if (!client) {
-        return res
-          .status(500)
-          .json({ error: vivaError ? vivaError.message : "Payment gateway is not configured on the server." });
-      }
-
-      let line_items: any[] = [];
-
-      if (pricing.packageTier === "basic") {
-        line_items.push({
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: "Basic Vehicle History Report",
-              description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
-            },
-            unit_amount: Math.round(pricing.packageOriginalPrice * 100), // 4495 ($44.95)
-          },
-          quantity: 1,
-        });
-
-        if (pricing.windowStickerIncluded) {
-          line_items.push({
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: "Window Sticker Add-on (25% Promotional Discount Applied)",
-                description: `Official Vehicle Window Label Verification & OEM Window Sticker for VIN: ${vin || "Pending"}`,
-              },
-              unit_amount: Math.round(pricing.windowStickerFinalPrice * 100), // 2249 ($22.49)
-            },
-            quantity: 1,
-          });
-        }
-      } else if (pricing.packageTier === "gold") {
-        line_items.push({
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: "Gold Vehicle History Report",
-              description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
-            },
-            unit_amount: Math.round(pricing.packageOriginalPrice * 100), // 8995 ($89.95)
-          },
-          quantity: 1,
-        });
-
-        if (pricing.windowStickerIncluded) {
-          line_items.push({
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: "Window Sticker Add-on (50% Promotional Discount Applied)",
-                description: `Official Vehicle Window Label Verification & OEM Window Sticker for VIN: ${vin || "Pending"}`,
-              },
-              unit_amount: Math.round(pricing.windowStickerFinalPrice * 100), // 1499 ($14.99)
-            },
-            quantity: 1,
-          });
-        }
-      } else if (pricing.packageTier === "platinum") {
-        line_items.push({
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: "Platinum Vehicle History Report (Includes FREE Window Sticker)",
-              description: `Official OEM Window Sticker Included FREE ($29.99 Value) | VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
-            },
-            unit_amount: Math.round(pricing.finalAmountPaid * 100), // 9995 ($99.95)
-          },
-          quantity: 1,
-        });
-      } else if (pricing.packageTier === "diamond") {
-        line_items.push({
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: "Diamond Vehicle History Report (Includes FREE Window Sticker & FREE Salvage Information)",
-              description: `Window Sticker FREE ($29.99 Value) + Salvage Information FREE ($149.00 Value) | VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
-            },
-            unit_amount: Math.round(pricing.finalAmountPaid * 100), // 12995 ($129.95)
-          },
-          quantity: 1,
-        });
-      } else {
-        const mainAmountCents = Math.round(
-          (pricing.packageTier === "window_sticker" ? 0 : pricing.packageOriginalPrice) * 100
-        );
-        if (mainAmountCents > 0) {
-          line_items.push({
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: pricing.packageName,
-                description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
-              },
-              unit_amount: mainAmountCents,
-            },
-            quantity: 1,
-          });
-        }
-        if (pricing.windowStickerIncluded && Math.round(pricing.windowStickerFinalPrice * 100) > 0) {
-          line_items.push({
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: "Official Vehicle Window Sticker",
-                description: `Official Vehicle Window Label Verification & OEM Window Sticker for VIN: ${vin || "Pending"}`,
-              },
-              unit_amount: Math.round(pricing.windowStickerFinalPrice * 100),
-            },
-            quantity: 1,
-          });
-        }
-        if (pricing.salvageInformationIncluded && Math.round(pricing.salvageInformationFinalPrice * 100) > 0) {
-          line_items.push({
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: "Salvage & Total Loss Information Report",
-                description: `Salvage & Total Loss Information for VIN: ${vin || "Pending"}`,
-              },
-              unit_amount: Math.round(pricing.salvageInformationFinalPrice * 100),
-            },
-            quantity: 1,
-          });
-        }
-      }
-
-      const session = await client.checkout.sessions.create({
-        payment_method_types: ["card"],
-        line_items,
-        mode: "payment",
-        success_url: `${process.env.APP_URL || "http://localhost:3000"}/?success=true&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.APP_URL || "http://localhost:3000"}/?canceled=true`,
-        customer_email: email,
-        metadata: {
-          packageName: pricing.packageName,
-          vin: vin || "Pending",
-          policyAgreed: policyAgreed ? "true" : "false",
-          purchaseDecisionAgreed: purchaseDecisionAgreed ? "true" : "false",
-          inspectionReportAgreed: inspectionReportAgreed ? "true" : "false",
-        },
+      // Viva is the exclusive payment gateway - no Stripe fallback
+      console.error("[Viva Payments Failure]:", vivaError ? vivaError.message : "Failed to create order.");
+      return res.status(500).json({
+        error: vivaError ? vivaError.message : "Viva Payments failed to initialize checkout.",
       });
-
-      // Save order data directly to Firebase Firestore
-      const newOrder = {
-        id: session.id,
-        packageName: pricing.packageName,
-        packageTier: pricing.packageTier,
-        packagePrice: pricing.packageOriginalPrice,
-        packageOriginalPrice: pricing.packageOriginalPrice,
-        windowStickerIncluded: pricing.windowStickerIncluded,
-        windowStickerOriginalPrice: pricing.windowStickerOriginalPrice,
-        windowStickerDiscountPercentage: pricing.windowStickerDiscountPercentage,
-        windowStickerDiscountAmount: pricing.windowStickerDiscountAmount,
-        windowStickerPrice: pricing.windowStickerFinalPrice,
-        windowStickerFinalPrice: pricing.windowStickerFinalPrice,
-        salvageInformationIncluded: pricing.salvageInformationIncluded,
-        salvageInformationOriginalPrice: pricing.salvageInformationOriginalPrice,
-        salvageInformationDiscountAmount: pricing.salvageInformationDiscountAmount,
-        salvageInformationFinalPrice: pricing.salvageInformationFinalPrice,
-        appliedOfferName: pricing.appliedOfferName,
-        discountAmount: pricing.totalDiscount,
-        totalDiscount: pricing.totalDiscount,
-        combinedSubtotal: Number(
-          (pricing.packageOriginalPrice + pricing.windowStickerOriginalPrice + pricing.salvageInformationOriginalPrice).toFixed(2)
-        ),
-        amount: pricing.finalAmountPaid,
-        finalAmountPaid: pricing.finalAmountPaid,
-        vin,
-        email,
-        firstName,
-        lastName,
-        phone: phone || "",
-        country: country || "United States",
-        createdAt: new Date().toISOString(),
-        status: "pending",
-        policyAgreed: !!policyAgreed,
-        purchaseDecisionAgreed: !!purchaseDecisionAgreed,
-        inspectionReportAgreed: !!inspectionReportAgreed,
-      };
-
-      await db.collection("orders").add(newOrder);
-
-      res.json({ url: session.url });
     } catch (error: any) {
       console.error("Payment Gateway Error:", error);
-      let errorMsg = error.message;
-      if (vivaError && error.message.includes("cannot currently make live charges")) {
-        errorMsg = `Viva Payments Error: ${vivaError.message}\n(Fallback Stripe failed: ${error.message})`;
-      }
-      res.status(500).json({ error: errorMsg });
+      res.status(500).json({ error: error.message });
     }
   });
+
+  // Standalone Stripe Checkout helper (preserved for reference, unused in checkout flow)
+  const createStripeCheckoutSession = async (
+    client: Stripe,
+    pricing: any,
+    vin: string,
+    email: string,
+    firstName: string,
+    lastName: string,
+    policyAgreed: boolean,
+    purchaseDecisionAgreed: boolean,
+    inspectionReportAgreed: boolean
+  ) => {
+    let line_items: any[] = [];
+    if (pricing.packageTier === "basic") {
+      line_items.push({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: "Basic Vehicle History Report",
+            description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
+          },
+          unit_amount: Math.round(pricing.packageOriginalPrice * 100),
+        },
+        quantity: 1,
+      });
+      if (pricing.windowStickerIncluded) {
+        line_items.push({
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "Window Sticker Add-on (25% Promotional Discount Applied)",
+              description: `Official Vehicle Window Label Verification & OEM Window Sticker for VIN: ${vin || "Pending"}`,
+            },
+            unit_amount: Math.round(pricing.windowStickerFinalPrice * 100),
+          },
+          quantity: 1,
+        });
+      }
+    } else if (pricing.packageTier === "gold") {
+      line_items.push({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: "Gold Vehicle History Report",
+            description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
+          },
+          unit_amount: Math.round(pricing.packageOriginalPrice * 100),
+        },
+        quantity: 1,
+      });
+      if (pricing.windowStickerIncluded) {
+        line_items.push({
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "Window Sticker Add-on (50% Promotional Discount Applied)",
+              description: `Official Vehicle Window Label Verification & OEM Window Sticker for VIN: ${vin || "Pending"}`,
+            },
+            unit_amount: Math.round(pricing.windowStickerFinalPrice * 100),
+          },
+          quantity: 1,
+        });
+      }
+    } else if (pricing.packageTier === "platinum") {
+      line_items.push({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: "Platinum Vehicle History Report (Includes FREE Window Sticker)",
+            description: `Official OEM Window Sticker Included FREE ($29.99 Value) | VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
+          },
+          unit_amount: Math.round(pricing.finalAmountPaid * 100),
+        },
+        quantity: 1,
+      });
+    } else if (pricing.packageTier === "diamond") {
+      line_items.push({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: "Diamond Vehicle History Report (Includes FREE Window Sticker & FREE Salvage Information)",
+            description: `Window Sticker FREE ($29.99 Value) + Salvage Information FREE ($149.00 Value) | VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
+          },
+          unit_amount: Math.round(pricing.finalAmountPaid * 100),
+        },
+        quantity: 1,
+      });
+    } else {
+      const mainAmountCents = Math.round(
+        (pricing.packageTier === "window_sticker" ? 0 : pricing.packageOriginalPrice) * 100
+      );
+      if (mainAmountCents > 0) {
+        line_items.push({
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: pricing.packageName,
+              description: `VIN: ${vin || "Pending"} | For: ${firstName} ${lastName}`,
+            },
+            unit_amount: mainAmountCents,
+          },
+          quantity: 1,
+        });
+      }
+      if (pricing.windowStickerIncluded && Math.round(pricing.windowStickerFinalPrice * 100) > 0) {
+        line_items.push({
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "Official Vehicle Window Sticker",
+              description: `Official Vehicle Window Label Verification & OEM Window Sticker for VIN: ${vin || "Pending"}`,
+            },
+            unit_amount: Math.round(pricing.windowStickerFinalPrice * 100),
+          },
+          quantity: 1,
+        });
+      }
+      if (pricing.salvageInformationIncluded && Math.round(pricing.salvageInformationFinalPrice * 100) > 0) {
+        line_items.push({
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "Salvage & Total Loss Information Report",
+              description: `Salvage & Total Loss Information for VIN: ${vin || "Pending"}`,
+            },
+            unit_amount: Math.round(pricing.salvageInformationFinalPrice * 100),
+          },
+          quantity: 1,
+        });
+      }
+    }
+
+    return client.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items,
+      mode: "payment",
+      success_url: `${process.env.APP_URL || "http://localhost:3000"}/?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.APP_URL || "http://localhost:3000"}/?canceled=true`,
+      customer_email: email,
+      metadata: {
+        packageName: pricing.packageName,
+        vin: vin || "Pending",
+        policyAgreed: policyAgreed ? "true" : "false",
+        purchaseDecisionAgreed: purchaseDecisionAgreed ? "true" : "false",
+        inspectionReportAgreed: inspectionReportAgreed ? "true" : "false",
+      },
+    });
+  };
 
   // API: Create Payment Intent
   app.post("/api/create-payment-intent", async (req, res) => {
