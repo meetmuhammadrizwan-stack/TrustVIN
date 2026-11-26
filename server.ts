@@ -27,12 +27,18 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 const SHOPIFY_CHECKOUT_URLS: Record<string, string> = {
-  diamond:
-    "https://a0hvpi-nr.myshopify.com/checkouts/cn/hWNJbLboINGp4KV5G3RNqtOi/en-gb?_r=AQAB9IZBX3QCWnqMAfdqDPMX36FeACYlqvaXsLvkzq3bx30EqArW&auto_redirect=false&edge_redirect=true&preview_theme_id=206218363222&skip_shop_pay=true",
-  platinum:
-    "https://a0hvpi-nr.myshopify.com/checkouts/cn/hWNJbLfWQ8ag98ZhWBV7c8Ns/en-gb?_r=AQABJf5a2oZMwP-Fl4Husmu13Pu3Sl8nSeoQx_oSQuq0wyV00OLV&auto_redirect=false&edge_redirect=true&preview_theme_id=206218363222&skip_shop_pay=true",
+  basic:
+    "https://a0hvpi-nr.myshopify.com/checkouts/cn/hWNJbShVIAGxfnnXeTyvjWVS/en-gb?_r=AQAB1mpsz4QVa6nx2eupX1FiP0Fhefl6nUoqz2kbwxfOuhZrEREX&preview_theme_id=206218363222&skip_shop_pay=true",
   gold:
     "https://a0hvpi-nr.myshopify.com/checkouts/cn/hWNJbLlkoQr8G2oioGG0xySe/en-gb?_r=AQABEnt87EeEOAaDLxETwLXQZmoW_CNwQ_6HNnPpGCh8ms-4EbJs&auto_redirect=false&edge_redirect=true&preview_theme_id=206218363222&skip_shop_pay=true",
+  platinum:
+    "https://a0hvpi-nr.myshopify.com/checkouts/cn/hWNJbLfWQ8ag98ZhWBV7c8Ns/en-gb?_r=AQABJf5a2oZMwP-Fl4Husmu13Pu3Sl8nSeoQx_oSQuq0wyV00OLV&auto_redirect=false&edge_redirect=true&preview_theme_id=206218363222&skip_shop_pay=true",
+  diamond:
+    "https://a0hvpi-nr.myshopify.com/checkouts/cn/hWNJbLboINGp4KV5G3RNqtOi/en-gb?_r=AQAB9IZBX3QCWnqMAfdqDPMX36FeACYlqvaXsLvkzq3bx30EqArW&auto_redirect=false&edge_redirect=true&preview_theme_id=206218363222&skip_shop_pay=true",
+  ruby:
+    "https://a0hvpi-nr.myshopify.com/checkouts/cn/hWNJbLboINGp4KV5G3RNqtOi/en-gb?_r=AQAB9IZBX3QCWnqMAfdqDPMX36FeACYlqvaXsLvkzq3bx30EqArW&auto_redirect=false&edge_redirect=true&preview_theme_id=206218363222&skip_shop_pay=true",
+  sapphire:
+    "https://a0hvpi-nr.myshopify.com/checkouts/cn/hWNJbLboINGp4KV5G3RNqtOi/en-gb?_r=AQAB9IZBX3QCWnqMAfdqDPMX36FeACYlqvaXsLvkzq3bx30EqArW&auto_redirect=false&edge_redirect=true&preview_theme_id=206218363222&skip_shop_pay=true",
 };
 
   // API: Create Checkout Session (Shopify Checkout)
@@ -52,9 +58,9 @@ const SHOPIFY_CHECKOUT_URLS: Record<string, string> = {
     } = req.body;
 
     try {
-      const pricing = calculateOrderPricing(packageName, includeWindowSticker);
+      const pricing = calculateOrderPricing(packageName, false);
       const pkgLower = (pricing.packageTier || packageName || "").toLowerCase();
-      const checkoutUrl = SHOPIFY_CHECKOUT_URLS[pkgLower] || SHOPIFY_CHECKOUT_URLS.gold;
+      const checkoutUrl = SHOPIFY_CHECKOUT_URLS[pkgLower] || SHOPIFY_CHECKOUT_URLS.basic;
 
       const orderCode = `shopify_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
       const newOrder = {
