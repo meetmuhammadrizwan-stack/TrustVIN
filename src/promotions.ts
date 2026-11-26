@@ -75,6 +75,13 @@ export function normalizePackageTier(input: string | undefined | null): PackageT
 }
 
 /**
+ * Feature flag to temporarily disable the promotional offer / discount system.
+ * Set to `false` to temporarily turn OFF all promotional offers, discounts, and auto-bundles.
+ * Set to `true` to re-enable them.
+ */
+export const OFFERS_ENABLED = false;
+
+/**
  * Calculates complete pricing breakdown for an order according to the promotional rules:
  * - Basic ($44.95): Window Sticker optional ($29.99). 25% discount ONLY on Window Sticker ($22.49, $7.50 off). Total $67.44.
  * - Gold ($89.95): Window Sticker optional ($29.99). 50% discount ONLY on Window Sticker ($14.99, $15.00 off). Total $104.94.
@@ -88,6 +95,47 @@ export function calculateOrderPricing(
   const tier = normalizePackageTier(packageInput);
   const packageOriginalPrice = BASE_PRICES[tier] || 44.95;
   const packageName = PACKAGE_NAMES[tier] || 'Basic Vehicle History Report';
+
+  // If promotional offers are temporarily disabled, charge standard regular prices with no discounts
+  if (!OFFERS_ENABLED) {
+    const isWindowStickerPkg = tier === 'window_sticker';
+    const isSalvageInfoPkg = tier === 'salvage_info';
+    const stickerIncluded = isWindowStickerPkg || includeWindowSticker;
+
+    const windowStickerOriginalPrice = stickerIncluded ? WINDOW_STICKER_ORIGINAL_PRICE : 0;
+    const windowStickerFinalPrice = stickerIncluded ? WINDOW_STICKER_ORIGINAL_PRICE : 0;
+
+    const salvageInformationOriginalPrice = isSalvageInfoPkg ? SALVAGE_INFO_ORIGINAL_PRICE : 0;
+    const salvageInformationFinalPrice = isSalvageInfoPkg ? SALVAGE_INFO_ORIGINAL_PRICE : 0;
+
+    const finalAmountPaid = Number(
+      (
+        (isWindowStickerPkg ? 0 : packageOriginalPrice) +
+        windowStickerFinalPrice +
+        (isSalvageInfoPkg ? 0 : salvageInformationFinalPrice)
+      ).toFixed(2)
+    );
+
+    return {
+      packageName,
+      packageTier: tier,
+      packageOriginalPrice,
+      windowStickerIncluded: stickerIncluded,
+      windowStickerOriginalPrice,
+      windowStickerDiscountPercentage: 0,
+      windowStickerDiscountAmount: 0,
+      windowStickerFinalPrice,
+      salvageInformationIncluded: isSalvageInfoPkg,
+      salvageInformationOriginalPrice,
+      salvageInformationDiscountAmount: 0,
+      salvageInformationFinalPrice,
+      appliedOfferName: 'Standard Package',
+      totalDiscount: 0,
+      finalAmountPaid,
+    };
+  }
+
+  // --- EXISTING OFFER / DISCOUNT SYSTEM (PRESERVED IN FULL) ---
 
   let windowStickerIncluded = false;
   let windowStickerOriginalPrice = 0;

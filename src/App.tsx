@@ -34,7 +34,7 @@ import TermsAndConditions from "./TermsAndConditions";
 import RefundPolicy from "./RefundPolicy";
 import CancellationPolicy from "./CancellationPolicy";
 import LiveChat from "./LiveChat";
-import { calculateOrderPricing } from "./promotions";
+import { calculateOrderPricing, OFFERS_ENABLED } from "./promotions";
 import {
   auth,
   initAuthPersistence,
@@ -79,11 +79,20 @@ const PACKAGE_PRICES: Record<string, number> = {
   "Window Sticker": 29.99,
 };
 
+export const SHOPIFY_CHECKOUT_URLS: Record<string, string> = {
+  diamond:
+    "https://a0hvpi-nr.myshopify.com/checkouts/cn/hWNJbLboINGp4KV5G3RNqtOi/en-gb?_r=AQAB9IZBX3QCWnqMAfdqDPMX36FeACYlqvaXsLvkzq3bx30EqArW&auto_redirect=false&edge_redirect=true&preview_theme_id=206218363222&skip_shop_pay=true",
+  platinum:
+    "https://a0hvpi-nr.myshopify.com/checkouts/cn/hWNJbLfWQ8ag98ZhWBV7c8Ns/en-gb?_r=AQABJf5a2oZMwP-Fl4Husmu13Pu3Sl8nSeoQx_oSQuq0wyV00OLV&auto_redirect=false&edge_redirect=true&preview_theme_id=206218363222&skip_shop_pay=true",
+  gold:
+    "https://a0hvpi-nr.myshopify.com/checkouts/cn/hWNJbLlkoQr8G2oioGG0xySe/en-gb?_r=AQABEnt87EeEOAaDLxETwLXQZmoW_CNwQ_6HNnPpGCh8ms-4EbJs&auto_redirect=false&edge_redirect=true&preview_theme_id=206218363222&skip_shop_pay=true",
+};
+
 export default function App() {
   const [view, setView] = useState<View>("home");
-  const [showPromoPopup, setShowPromoPopup] = useState(true);
+  const [showPromoPopup, setShowPromoPopup] = useState(OFFERS_ENABLED);
   const [selectedPackage, setSelectedPackage] = useState<PackageType>(null);
-  const [includeWindowSticker, setIncludeWindowSticker] = useState(true);
+  const [includeWindowSticker, setIncludeWindowSticker] = useState(OFFERS_ENABLED);
   const [vinInput, setVinInput] = useState("");
   const [vinError, setVinError] = useState(false);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
@@ -273,7 +282,7 @@ export default function App() {
     // Initial check on page load
     parseHashAndSetState(window.location.hash);
 
-    // Check for payment redirect parameters (Viva Wallet Smart Checkout)
+    // Check for payment redirect parameters
     const query = new URLSearchParams(window.location.search);
     const orderCode = query.get("s") || query.get("orderCode") || query.get("session_id");
     const transactionId = query.get("t");
@@ -351,6 +360,13 @@ export default function App() {
       alert("You must agree to the Policies, Terms & Conditions to proceed.");
       return;
     }
+
+    const pkgLower = (selectedPackage || "Basic").toLowerCase();
+    if (SHOPIFY_CHECKOUT_URLS[pkgLower]) {
+      window.location.href = SHOPIFY_CHECKOUT_URLS[pkgLower];
+      return;
+    }
+
     setIsCheckoutLoading(true);
 
     try {
@@ -382,6 +398,13 @@ export default function App() {
   };
 
   const navigateToOrder = (pkg: PackageType = null, bypassCheck = false) => {
+    const targetPkg = pkg || "Basic";
+    const normalizedKey = targetPkg.toLowerCase();
+    if (SHOPIFY_CHECKOUT_URLS[normalizedKey]) {
+      window.location.href = SHOPIFY_CHECKOUT_URLS[normalizedKey];
+      return;
+    }
+
     if (!bypassCheck && !vinInput.trim()) {
       setVinError(true);
       // Reset error after animation
@@ -389,8 +412,7 @@ export default function App() {
       return;
     }
     setPolicyAgreed(false);
-    const targetPkg = pkg || "Basic";
-    const isPromoPackage = ["Basic", "Gold", "Platinum", "Diamond", "Premium"].includes(targetPkg);
+    const isPromoPackage = OFFERS_ENABLED && ["Basic", "Gold", "Platinum", "Diamond", "Premium"].includes(targetPkg);
     setIncludeWindowSticker(isPromoPackage);
     const targetHash = targetPkg
       .toLowerCase()
@@ -440,7 +462,7 @@ export default function App() {
 
       {/* Promotional Offers Entry Popup Announcement */}
       <AnimatePresence>
-        {showPromoPopup && view === "home" && (
+        {OFFERS_ENABLED && showPromoPopup && view === "home" && (
           <div
             onClick={() => setShowPromoPopup(false)}
             className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs overflow-y-auto"
@@ -1270,6 +1292,11 @@ export default function App() {
 
                           <button
                             onClick={() => {
+                              const normalized = item.type.toLowerCase();
+                              if (SHOPIFY_CHECKOUT_URLS[normalized]) {
+                                window.location.href = SHOPIFY_CHECKOUT_URLS[normalized];
+                                return;
+                              }
                               navigateToOrder(item.type, true);
                             }}
                             className={`w-full py-3 sm:py-3.5 lg:py-4 rounded-xl sm:rounded-2xl font-black text-sm lg:text-base transition-all active:scale-95 mt-6 ${item.popular
@@ -1414,6 +1441,11 @@ export default function App() {
 
                           <button
                             onClick={() => {
+                              const normalized = item.type.toLowerCase();
+                              if (SHOPIFY_CHECKOUT_URLS[normalized]) {
+                                window.location.href = SHOPIFY_CHECKOUT_URLS[normalized];
+                                return;
+                              }
                               navigateToOrder(item.type, true);
                             }}
                             className={`w-full py-3 sm:py-3.5 lg:py-4 rounded-xl sm:rounded-2xl font-black text-sm lg:text-base transition-all active:scale-95 mt-6 ${item.popular
@@ -1891,7 +1923,7 @@ export default function App() {
                               type="checkbox"
                               id="windowStickerAddonCheckbox"
                               checked={pricing.windowStickerIncluded}
-                              disabled={pricing.packageTier === "platinum" || pricing.packageTier === "diamond"}
+                              disabled={OFFERS_ENABLED && (pricing.packageTier === "platinum" || pricing.packageTier === "diamond")}
                               onChange={(e) =>
                                 setIncludeWindowSticker(e.target.checked)
                               }
@@ -1903,43 +1935,47 @@ export default function App() {
                             >
                               <div className="flex flex-wrap items-center gap-2">
                                 <span className="font-black text-slate-900 text-base">
-                                  {pricing.packageTier === "diamond"
+                                  {OFFERS_ENABLED && pricing.packageTier === "diamond"
                                     ? "Window Sticker & Salvage Information"
                                     : "Window Sticker"}
                                 </span>
-                                {pricing.packageTier === "diamond" && (
-                                  <span className="bg-emerald-100 text-emerald-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                                    FREE with Diamond
-                                  </span>
-                                )}
-                                {pricing.packageTier === "platinum" && (
-                                  <span className="bg-emerald-100 text-emerald-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                                    FREE with Platinum
-                                  </span>
-                                )}
-                                {pricing.packageTier === "gold" && pricing.windowStickerIncluded && (
-                                  <span className="bg-emerald-100 text-emerald-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                                    50% Off Applied
-                                  </span>
-                                )}
-                                {pricing.packageTier === "gold" && !pricing.windowStickerIncluded && (
-                                  <span className="bg-blue-100 text-blue-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                                    50% Off Promo Available
-                                  </span>
-                                )}
-                                {pricing.packageTier === "basic" && pricing.windowStickerIncluded && (
-                                  <span className="bg-emerald-100 text-emerald-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                                    25% Off Applied
-                                  </span>
-                                )}
-                                {pricing.packageTier === "basic" && !pricing.windowStickerIncluded && (
-                                  <span className="bg-blue-100 text-blue-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                                    25% Off Promo Available
-                                  </span>
+                                {OFFERS_ENABLED && (
+                                  <>
+                                    {pricing.packageTier === "diamond" && (
+                                      <span className="bg-emerald-100 text-emerald-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                        FREE with Diamond
+                                      </span>
+                                    )}
+                                    {pricing.packageTier === "platinum" && (
+                                      <span className="bg-emerald-100 text-emerald-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                        FREE with Platinum
+                                      </span>
+                                    )}
+                                    {pricing.packageTier === "gold" && pricing.windowStickerIncluded && (
+                                      <span className="bg-emerald-100 text-emerald-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                        50% Off Applied
+                                      </span>
+                                    )}
+                                    {pricing.packageTier === "gold" && !pricing.windowStickerIncluded && (
+                                      <span className="bg-blue-100 text-blue-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                        50% Off Promo Available
+                                      </span>
+                                    )}
+                                    {pricing.packageTier === "basic" && pricing.windowStickerIncluded && (
+                                      <span className="bg-emerald-100 text-emerald-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                        25% Off Applied
+                                      </span>
+                                    )}
+                                    {pricing.packageTier === "basic" && !pricing.windowStickerIncluded && (
+                                      <span className="bg-blue-100 text-blue-700 text-[11px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                        25% Off Promo Available
+                                      </span>
+                                    )}
+                                  </>
                                 )}
                               </div>
                               <p className="text-xs text-slate-500 mt-1 font-medium">
-                                {pricing.packageTier === "diamond"
+                                {OFFERS_ENABLED && pricing.packageTier === "diamond"
                                   ? "Includes Official OEM Window Sticker ($29.99 Value) & Salvage / Total Loss Information ($149.00 Value) 100% FREE."
                                   : "Official vehicle window label verification & original OEM window sticker."}
                               </p>
@@ -1948,49 +1984,55 @@ export default function App() {
 
                           <div className="text-right shrink-0">
                             <div className="flex items-baseline gap-1.5 justify-end">
-                              {pricing.packageTier === "diamond" ? (
-                                <>
-                                  <span className="text-xs text-slate-400 line-through font-bold">
-                                    $178.99
-                                  </span>
-                                  <span className="text-xl font-black text-emerald-600">
-                                    FREE
-                                  </span>
-                                </>
-                              ) : pricing.packageTier === "platinum" ? (
-                                <>
-                                  <span className="text-xs text-slate-400 line-through font-bold">
-                                    $29.99
-                                  </span>
-                                  <span className="text-xl font-black text-emerald-600">
-                                    FREE
-                                  </span>
-                                </>
-                              ) : pricing.packageTier === "gold" ? (
-                                pricing.windowStickerIncluded ? (
+                              {OFFERS_ENABLED ? (
+                                pricing.packageTier === "diamond" ? (
+                                  <>
+                                    <span className="text-xs text-slate-400 line-through font-bold">
+                                      $178.99
+                                    </span>
+                                    <span className="text-xl font-black text-emerald-600">
+                                      FREE
+                                    </span>
+                                  </>
+                                ) : pricing.packageTier === "platinum" ? (
                                   <>
                                     <span className="text-xs text-slate-400 line-through font-bold">
                                       $29.99
                                     </span>
                                     <span className="text-xl font-black text-emerald-600">
-                                      $14.99
+                                      FREE
                                     </span>
                                   </>
-                                ) : (
-                                  <span className="text-xl font-black text-brand-blue">
-                                    $29.99
-                                  </span>
-                                )
-                              ) : pricing.packageTier === "basic" ? (
-                                pricing.windowStickerIncluded ? (
-                                  <>
-                                    <span className="text-xs text-slate-400 line-through font-bold">
+                                ) : pricing.packageTier === "gold" ? (
+                                  pricing.windowStickerIncluded ? (
+                                    <>
+                                      <span className="text-xs text-slate-400 line-through font-bold">
+                                        $29.99
+                                      </span>
+                                      <span className="text-xl font-black text-emerald-600">
+                                        $14.99
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <span className="text-xl font-black text-brand-blue">
                                       $29.99
                                     </span>
-                                    <span className="text-xl font-black text-emerald-600">
-                                      $22.49
+                                  )
+                                ) : pricing.packageTier === "basic" ? (
+                                  pricing.windowStickerIncluded ? (
+                                    <>
+                                      <span className="text-xs text-slate-400 line-through font-bold">
+                                        $29.99
+                                      </span>
+                                      <span className="text-xl font-black text-emerald-600">
+                                        $22.49
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <span className="text-xl font-black text-brand-blue">
+                                      $29.99
                                     </span>
-                                  </>
+                                  )
                                 ) : (
                                   <span className="text-xl font-black text-brand-blue">
                                     $29.99
@@ -2003,9 +2045,10 @@ export default function App() {
                               )}
                             </div>
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                              {pricing.windowStickerFinalPrice === 0 &&
-                                (pricing.packageTier === "platinum" ||
-                                  pricing.packageTier === "diamond")
+                              {OFFERS_ENABLED &&
+                              pricing.windowStickerFinalPrice === 0 &&
+                              (pricing.packageTier === "platinum" ||
+                                pricing.packageTier === "diamond")
                                 ? "Included"
                                 : "/report"}
                             </span>
@@ -2026,7 +2069,7 @@ export default function App() {
                               "Covers Most Vehicles",
                               "Accurate OEM Information",
                               "Easy to Access",
-                              ...(pricing.packageTier === "diamond"
+                              ...(OFFERS_ENABLED && pricing.packageTier === "diamond"
                                 ? [
                                   "Salvage & Total Loss Records",
                                   "Insurance Total Loss History",
@@ -2048,16 +2091,17 @@ export default function App() {
                         {/* Quick Toggle / State notice */}
                         <div className="mt-3.5 pt-3 border-t border-slate-200/50 flex justify-between items-center text-xs">
                           <span className="text-slate-500 font-medium">
-                            {pricing.packageTier === "diamond"
+                            {OFFERS_ENABLED && pricing.packageTier === "diamond"
                               ? "Window Sticker & Salvage Information are included FREE with Diamond"
-                              : pricing.packageTier === "platinum"
+                              : OFFERS_ENABLED && pricing.packageTier === "platinum"
                                 ? "Window Sticker is included FREE with Platinum"
                                 : includeWindowSticker
                                   ? "Window Sticker is added to your order"
                                   : "Window Sticker removed"}
                           </span>
-                          {pricing.packageTier !== "platinum" &&
-                            pricing.packageTier !== "diamond" && (
+                          {(!OFFERS_ENABLED ||
+                            (pricing.packageTier !== "platinum" &&
+                              pricing.packageTier !== "diamond")) && (
                               <button
                                 type="button"
                                 onClick={() =>
@@ -2070,9 +2114,11 @@ export default function App() {
                               >
                                 {includeWindowSticker
                                   ? "Remove Add-on"
-                                  : pricing.packageTier === "gold"
+                                  : OFFERS_ENABLED && pricing.packageTier === "gold"
                                     ? "+ Add Window Sticker ($14.99)"
-                                    : "+ Add Window Sticker ($22.49)"}
+                                    : OFFERS_ENABLED && pricing.packageTier === "basic"
+                                      ? "+ Add Window Sticker ($22.49)"
+                                      : "+ Add Window Sticker ($29.99)"}
                               </button>
                             )}
                         </div>
@@ -2203,7 +2249,7 @@ export default function App() {
                                 <span className="font-bold text-slate-800">
                                   Window Sticker
                                 </span>
-                                {pricing.windowStickerIncluded && pricing.windowStickerDiscountPercentage > 0 && (
+                                {OFFERS_ENABLED && pricing.windowStickerIncluded && pricing.windowStickerDiscountPercentage > 0 && (
                                   <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-1.5 py-0.5 rounded">
                                     {pricing.windowStickerDiscountPercentage === 100
                                       ? "FREE"
@@ -2211,7 +2257,7 @@ export default function App() {
                                   </span>
                                 )}
                               </div>
-                              {pricing.packageTier !== "platinum" && pricing.packageTier !== "diamond" && (
+                              {(!OFFERS_ENABLED || (pricing.packageTier !== "platinum" && pricing.packageTier !== "diamond")) && (
                                 <button
                                   type="button"
                                   onClick={() =>
@@ -2224,27 +2270,29 @@ export default function App() {
                                 >
                                   {includeWindowSticker
                                     ? "Remove"
-                                    : pricing.packageTier === "gold"
+                                    : OFFERS_ENABLED && pricing.packageTier === "gold"
                                       ? "+ Add ($14.99)"
-                                      : "+ Add ($22.49)"}
+                                      : OFFERS_ENABLED && pricing.packageTier === "basic"
+                                        ? "+ Add ($22.49)"
+                                        : "+ Add ($29.99)"}
                                 </button>
                               )}
                             </div>
                             <div className="text-right">
                               {pricing.windowStickerIncluded ? (
                                 <div>
-                                  {pricing.windowStickerDiscountAmount > 0 && (
+                                  {OFFERS_ENABLED && pricing.windowStickerDiscountAmount > 0 && (
                                     <span className="text-[11px] text-slate-400 line-through mr-1.5 font-bold">
                                       $29.99
                                     </span>
                                   )}
                                   <span
-                                    className={`font-bold inline-block ${pricing.windowStickerFinalPrice === 0
+                                    className={`font-bold inline-block ${OFFERS_ENABLED && pricing.windowStickerFinalPrice === 0
                                       ? "text-emerald-600"
                                       : "text-brand-blue"
                                       }`}
                                   >
-                                    {pricing.windowStickerFinalPrice === 0
+                                    {OFFERS_ENABLED && pricing.windowStickerFinalPrice === 0
                                       ? "FREE"
                                       : `$${pricing.windowStickerFinalPrice.toFixed(2)}`}
                                   </span>
@@ -2260,7 +2308,7 @@ export default function App() {
                       )}
 
                       {/* Salvage Information Row for Diamond */}
-                      {pricing.salvageInformationIncluded && (
+                      {OFFERS_ENABLED && pricing.salvageInformationIncluded && (
                         <div className="pt-3 border-t border-slate-200/60">
                           <div className="flex justify-between items-start text-sm">
                             <div>
@@ -2289,7 +2337,7 @@ export default function App() {
                       )}
 
                       {/* Applied Offer Banner / Total Discount */}
-                      {pricing.totalDiscount > 0 && (
+                      {OFFERS_ENABLED && pricing.totalDiscount > 0 && (
                         <div className="space-y-1 pt-1">
                           <div className="flex justify-between items-center text-xs bg-emerald-50 text-emerald-700 px-3 py-2 rounded-xl font-bold border border-emerald-100/80">
                             <span className="truncate pr-2">{pricing.appliedOfferName}</span>
